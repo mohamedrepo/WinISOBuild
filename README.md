@@ -10,6 +10,7 @@ and rebuilds a bootable ISO.
 - `Scripts/WinISOService.psm1` - all phase implementations and helpers.
 - `Scripts/Initialize-WorkSpace.ps1` - creates the workspace layout + initial STATE.json.
 - `Scripts/New-UnattendXml.ps1` - generates unattend.xml from parameters.
+- `Scripts/WinISO-GUI.ps1` - WinForms front-end (choices + integrations, live log).
 - `Reports/` - env audit, ISO inventory, and update manifest from a real run
   (Windows 11 25H2, build 26200/26100, x64).
 
@@ -31,6 +32,20 @@ and rebuilds a bootable ISO.
 .\Scripts\Invoke-WinISOService.ps1 -TargetPhase 3 -SourceIso D:\ISO\Win11.iso
 # place .msu/.cab files under Updates\, then:
 .\Scripts\Invoke-WinISOService.ps1 -TargetPhase 8 -SourceIso D:\ISO\Win11.iso
+```
+
+## GUI
+`Scripts/WinISO-GUI.ps1` is a WinForms front-end that exposes the toolchain's
+choices - source ISO, editions to service (`-ImageIndexes`), update set, driver
+injection, customization profile, OOBE/unattend fields and output name - and runs
+the orchestrator as a child process while streaming its log into a pane. It asks
+for confirmation before any mutating phase (>=4) and can stop a run.
+
+Launch it, or validate its wiring headlessly:
+
+```powershell
+.\Scripts\WinISO-GUI.ps1
+.\Scripts\WinISO-GUI.ps1 -SelfTest
 ```
 
 ## Notes
