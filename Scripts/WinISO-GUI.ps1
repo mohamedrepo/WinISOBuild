@@ -106,6 +106,8 @@ function Invoke-WinISOSelfTest {
     if ($u -notcontains '-ComputerName') { $problems += 'unattend arg builder missing -ComputerName' }
     if ($u -notcontains '-LocalAccountAdmin') { $problems += 'unattend arg builder missing -LocalAccountAdmin' }
 
+    $dlg = Join-Path $PSScriptRoot 'Get-WinISOUpdates.ps1'
+    if (-not (Test-Path -LiteralPath $dlg)) { $problems += ('downloader not found: ' + $dlg) }
     $phases = @(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
     if ($phases.Count -ne 10) { $problems += 'phase map is not 1..10' }
 
@@ -163,7 +165,8 @@ $lstEd = New-Object System.Windows.Forms.CheckedListBox
 $lstEd.Location = New-Object System.Drawing.Point(12, 22); $lstEd.Size = New-Object System.Drawing.Size(446, 132)
 $lstEd.CheckOnClick = $true
 $grpEd.Controls.Add($lstEd)
-$btnLoadEd = New-Button 'Load editions from Reports\ISO-INVENTORY.json' 12 158 330 26; $grpEd.Controls.Add($btnLoadEd)
+$btnLoadEd = New-Button 'Load editions from selected ISO' 12 158 280 26; $grpEd.Controls.Add($btnLoadEd)
+$btnLoadRep = New-Button 'from report' 298 158 120 26; $grpEd.Controls.Add($btnLoadRep)
 $form.Controls.Add($grpEd)
 
 # --- Updates group ---
@@ -176,7 +179,8 @@ $grpUp.Controls.Add($rbAll); $grpUp.Controls.Add($rbReq); $grpUp.Controls.Add($r
 $grpUp.Controls.Add((New-Label 'Drop .msu/.cab packages into  <Workspace>\Updates\' 12 100 440))
 $lblUpd = New-Label '' 12 122 450
 $grpUp.Controls.Add($lblUpd)
-$btnUpd = New-Button 'Open Updates folder' 12 148 160 26; $grpUp.Controls.Add($btnUpd)
+$btnUpd = New-Button 'Open Updates folder' 12 148 150 26; $grpUp.Controls.Add($btnUpd)
+$btnDl = New-Button 'Search + download missing updates' 168 148 300 26; $grpUp.Controls.Add($btnDl)
 $form.Controls.Add($grpUp)
 
 # --- Drivers group ---
@@ -282,6 +286,59 @@ function Load-Editions {
     Add-Log ('[gui] loaded ' + $count + ' edition(s) from inventory')
 }
 
+function Load-EditionsFromIso {
+    $iso = ([string]$txtIso.Text).Trim()
+    $lstEd.Items.Clear()
+    if (-not $iso) { Add-Log '[gui] no source ISO selected.'; return }
+    if (-not (Test-Path -LiteralPath $iso)) { Add-Log ('[gui] ISO not found: ' + $iso); return }
+    Add-Log ('[gui] mounting ' + $iso + ' (read-only)')
+    $before = @((Get-PSDrive -PSProvider FileSystem -ErrorAction SilentlyContinue | Where-Object { $_.Name -match '^[A-Z]$' } | ForEach-Object { [string]$_.Name }))
+    $img = $null
+    try { $img = Mount-DiskImage -ImagePath $iso -PassThru -ErrorAction Stop } catch { Add-Log ('[gui] mount failed: ' + $_.Exception.Message); return }
+    try {
+        $letter = ''
+        for ($i = 0; $i -lt 60; $i++) {
+            Start-Sleep -Milliseconds 500
+            $now = @((Get-PSDrive -PSProvider FileSystem -ErrorAction SilentlyContinue | Where-Object { $_.Name -match '^[A-Z]$' } | ForEach-Object { [string]$_.Name }))
+            $new = @($now | Where-Object { $before -notcontains $_ })
+            foreach ($l in $new) { if (Test-Path -LiteralPath ("${l}:\sources\install.wim")) { $letter = $l; break } }
+            if ($letter) { break }
+        }
+        if (-not $letter) { Add-Log '[gui] ISO attached but no drive letter found.'; return }
+        $wim = ("${letter}:\sources\install.wim")
+        if (-not (Test-Path -LiteralPath $wim)) { $wim = ("${letter}:\sources\install.esd") }
+        $out = & "$env:SystemRoot\System32\Dism.exe" /English /Get-WimInfo /WimFile:$wim 2>&1 | Out-String
+        $count = 0
+        foreach ($mm in [regex]::Matches($out, '(?im)^\s*Index\s*:\s*(\d+)\r?\n\s*Name\s*:\s*(.+?)\s*$')) {
+            [void]$lstEd.Items.Add(('{0} = {1}' -f $mm.Groups[1].Value, $mm.Groups[2].Value))
+            $count++
+        }
+        Add-Log ('[gui] loaded ' + $count + ' edition(s) from the selected ISO')
+    }
+    finally {
+        if ($img) { try { Dismount-DiskImage -ImagePath $iso -ErrorAction SilentlyContinue | Out-Null } catch { } }
+    }
+}
+
+function Search-DownloadUpdates {
+    $ws = Get-Workspace
+    $iso = ([string]$txtIso.Text).Trim()
+    if (-not $ws) { [void][System.Windows.Forms.MessageBox]::Show('Workspace is required.'); return }
+    $dl = Join-Path $PSScriptRoot 'Get-WinISOUpdates.ps1'
+    if (-not (Test-Path -LiteralPath $dl)) { Add-Log ('[gui] downloader not found: ' + $dl); return }
+    $a = @('-NoProfile','-ExecutionPolicy','Bypass','-File',$dl,'-Workspace',$ws,'-OutDir',(Join-Path $ws 'Updates'))
+    if ($iso) { $a += '-Iso'; $a += $iso }
+    $logDir = Join-Path $env:TEMP ('winiso-dl-' + (Get-Date -Format 'yyyyMMdd-HHmmss'))
+    [void](New-Item -ItemType Directory -Path $logDir -Force)
+    $script:LogOut = Join-Path $logDir 'stdout.log'; $script:LogErr = Join-Path $logDir 'stderr.log'
+    $script:ShownOut = 0; $script:ShownErr = 0; $script:Finished = $false
+    [System.IO.File]::WriteAllText($script:LogOut, ''); [System.IO.File]::WriteAllText($script:LogErr, '')
+    Add-Log ('[gui] downloader: powershell ' + ($a -join ' '))
+    $lblStatus.Text = 'Searching / downloading updates ...'
+    $script:Child = Start-Process -FilePath 'powershell.exe' -ArgumentList $a -PassThru -WindowStyle Hidden -RedirectStandardOutput $script:LogOut -RedirectStandardError $script:LogErr
+    $script:TailTimer.Start()
+}
+
 function Get-SelectedIndexes {
     $idx = @()
     foreach ($it in $lstEd.CheckedItems) {
@@ -347,7 +404,9 @@ $btnWs.Add_Click({ $d = New-Object System.Windows.Forms.FolderBrowserDialog; if 
 $btnIso.Add_Click({ $d = New-Object System.Windows.Forms.OpenFileDialog; $d.Filter = 'ISO images (*.iso)|*.iso|All files (*.*)|*.*'; if ($d.ShowDialog() -eq 'OK') { $txtIso.Text = $d.FileName } })
 $btnDrv.Add_Click({ $d = New-Object System.Windows.Forms.FolderBrowserDialog; if ($d.ShowDialog() -eq 'OK') { $txtDrv.Text = $d.SelectedPath } })
 $btnUpd.Add_Click({ $u = Join-Path (Get-Workspace) 'Updates'; if (-not (Test-Path -LiteralPath $u)) { [void](New-Item -ItemType Directory -Path $u -Force) }; Start-Process explorer.exe $u })
-$btnLoadEd.Add_Click({ Load-Editions })
+$btnLoadEd.Add_Click({ Load-EditionsFromIso })
+$btnLoadRep.Add_Click({ Load-Editions })
+$btnDl.Add_Click({ Search-DownloadUpdates })
 $btnInsp.Add_Click({ Load-Editions; Start-Run -TargetPhase 3 -ReadOnly })
 $btnP3.Add_Click({ Start-Run -TargetPhase 3 -ReadOnly })
 $btnP4.Add_Click({ Start-Run -TargetPhase 4 })
