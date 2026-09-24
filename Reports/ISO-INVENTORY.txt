@@ -1,0 +1,36 @@
+WINDOWS ISO SERVICING TOOLCHAIN - ISO INVENTORY
+Generated (UTC): 2026-09-18T15:51:08.4990492Z
+
+[SOURCE]
+  Path       : D:\WimMount\ISO\Win11_25H2_English_x64_v2.iso
+  Kind       : iso
+  Size       : 8471603200 bytes
+  SHA-256    : 
+
+[DETECTED]
+  Product    : Windows 11
+  Build      : 26200.8037
+  Arch       : x64
+  Language   : 
+  Editions   : 
+
+[WIM FILES]
+  install.wim (install, wim, 7578075168 bytes)
+    Index 1: Windows 11 Home | build 26200.8037 | x64 |  | 
+    Index 2: Windows 11 Home N | build 26200.8037 | x64 |  | 
+    Index 3: Windows 11 Home Single Language | build 26200.8037 | x64 |  | 
+    Index 4: Windows 11 Education | build 26200.8037 | x64 |  | 
+    Index 5: Windows 11 Education N | build 26200.8037 | x64 |  | 
+    Index 6: Windows 11 Pro | build 26200.8037 | x64 |  | 
+    Index 7: Windows 11 Pro N | build 26200.8037 | x64 |  | 
+    Index 8: Windows 11 Pro Education | build 26200.8037 | x64 |  | 
+    Index 9: Windows 11 Pro Education N | build 26200.8037 | x64 |  | 
+    Index 10: Windows 11 Pro for Workstations | build 26200.8037 | x64 |  | 
+    Index 11: Windows 11 Pro N for Workstations | build 26200.8037 | x64 |  | 
+  boot.wim (boot, wim, 614809152 bytes)
+    Index 1: Microsoft Windows PE (amd64) | build 26100.8037 | x64 |  | 
+    Index 2: Microsoft Windows Setup (amd64) | build 26100.8037 | x64 |  | 
+
+[DEFERRED CHECKS]
+  - Package inventory (Get-WindowsPackage) and driver inventory (Get-WindowsDriver) require a mounted image and are performed in Phase 4.
+  - Setup version and Dynamic Update state are recorded during Phase 4/Phase 7 when boot.wim is serviced.

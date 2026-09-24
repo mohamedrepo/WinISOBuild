@@ -1,0 +1,16 @@
+# Build artefacts / large binaries (never commit)
+Backup/
+ExtractedISO/
+Mount/
+ISO/
+Updates/
+Output/
+Source/
+Logs/
+Drivers/
+*.iso
+*.wim
+*.esd
+*.msu
+*.cab
+*.swm

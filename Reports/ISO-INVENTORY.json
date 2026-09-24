@@ -1,0 +1,234 @@
+{
+    "generated_utc":  "2026-09-18T15:51:08.4990492Z",
+    "source":  {
+                   "path":  "D:\\WimMount\\ISO\\Win11_25H2_English_x64_v2.iso",
+                   "kind":  "iso",
+                   "size_bytes":  8471603200,
+                   "sha256":  ""
+               },
+    "detected":  {
+                     "product":  "Windows 11",
+                     "build":  26200,
+                     "revision":  8037,
+                     "architecture":  "x64",
+                     "language":  "",
+                     "editions":  [
+
+                                  ],
+                     "builds":  [
+                                    26200
+                                ],
+                     "architectures":  [
+                                           "x64"
+                                       ],
+                     "languages":  [
+
+                                   ]
+                 },
+    "wim_files":  [
+                      {
+                          "file":  "install.wim",
+                          "path":  "G:\\sources\\install.wim",
+                          "kind":  "install",
+                          "format":  "wim",
+                          "size_bytes":  7578075168,
+                          "images":  [
+                                         {
+                                             "index":  1,
+                                             "name":  "Windows 11 Home",
+                                             "description":  "Windows 11 Home",
+                                             "edition_id":  "",
+                                             "architecture":  "x64",
+                                             "version":  "10.0.26200",
+                                             "build":  26200,
+                                             "revision":  8037,
+                                             "language":  "",
+                                             "flags":  "",
+                                             "installation_type":  "Client",
+                                             "product_type":  "WinNT",
+                                             "size_bytes":  23831001491
+                                         },
+                                         {
+                                             "index":  2,
+                                             "name":  "Windows 11 Home N",
+                                             "description":  "Windows 11 Home N",
+                                             "edition_id":  "",
+                                             "architecture":  "x64",
+                                             "version":  "10.0.26200",
+                                             "build":  26200,
+                                             "revision":  8037,
+                                             "language":  "",
+                                             "flags":  "",
+                                             "installation_type":  "Client",
+                                             "product_type":  "WinNT",
+                                             "size_bytes":  23199846364
+                                         },
+                                         {
+                                             "index":  3,
+                                             "name":  "Windows 11 Home Single Language",
+                                             "description":  "Windows 11 Home Single Language",
+                                             "edition_id":  "",
+                                             "architecture":  "x64",
+                                             "version":  "10.0.26200",
+                                             "build":  26200,
+                                             "revision":  8037,
+                                             "language":  "",
+                                             "flags":  "",
+                                             "installation_type":  "Client",
+                                             "product_type":  "WinNT",
+                                             "size_bytes":  23827797728
+                                         },
+                                         {
+                                             "index":  4,
+                                             "name":  "Windows 11 Education",
+                                             "description":  "Windows 11 Education",
+                                             "edition_id":  "",
+                                             "architecture":  "x64",
+                                             "version":  "10.0.26200",
+                                             "build":  26200,
+                                             "revision":  8037,
+                                             "language":  "",
+                                             "flags":  "",
+                                             "installation_type":  "Client",
+                                             "product_type":  "WinNT",
+                                             "size_bytes":  24857318874
+                                         },
+                                         {
+                                             "index":  5,
+                                             "name":  "Windows 11 Education N",
+                                             "description":  "Windows 11 Education N",
+                                             "edition_id":  "",
+                                             "architecture":  "x64",
+                                             "version":  "10.0.26200",
+                                             "build":  26200,
+                                             "revision":  8037,
+                                             "language":  "",
+                                             "flags":  "",
+                                             "installation_type":  "Client",
+                                             "product_type":  "WinNT",
+                                             "size_bytes":  24212002647
+                                         },
+                                         {
+                                             "index":  6,
+                                             "name":  "Windows 11 Pro",
+                                             "description":  "Windows 11 Pro",
+                                             "edition_id":  "",
+                                             "architecture":  "x64",
+                                             "version":  "10.0.26200",
+                                             "build":  26200,
+                                             "revision":  8037,
+                                             "language":  "",
+                                             "flags":  "",
+                                             "installation_type":  "Client",
+                                             "product_type":  "WinNT",
+                                             "size_bytes":  24860631795
+                                         },
+                                         {
+                                             "index":  7,
+                                             "name":  "Windows 11 Pro N",
+                                             "description":  "Windows 11 Pro N",
+                                             "edition_id":  "",
+                                             "architecture":  "x64",
+                                             "version":  "10.0.26200",
+                                             "build":  26200,
+                                             "revision":  8037,
+                                             "language":  "",
+                                             "flags":  "",
+                                             "installation_type":  "Client",
+                                             "product_type":  "WinNT",
+                                             "size_bytes":  24233167534
+                                         },
+                                         {
+                                             "index":  8,
+                                             "name":  "Windows 11 Pro Education",
+                                             "description":  "Windows 11 Pro Education",
+                                             "edition_id":  "",
+                                             "architecture":  "x64",
+                                             "version":  "10.0.26200",
+                                             "build":  26200,
+                                             "revision":  8037,
+                                             "language":  "",
+                                             "flags":  "",
+                                             "installation_type":  "Client",
+                                             "product_type":  "WinNT",
+                                             "size_bytes":  24857369512
+                                         },
+                                         {
+                                             "index":  9,
+                                             "name":  "Windows 11 Pro Education N",
+                                             "description":  "Windows 11 Pro Education N",
+                                             "edition_id":  "",
+                                             "architecture":  "x64",
+                                             "version":  "10.0.26200",
+                                             "build":  26200,
+                                             "revision":  8037,
+                                             "language":  "",
+                                             "flags":  "",
+                                             "installation_type":  "Client",
+                                             "product_type":  "WinNT",
+                                             "size_bytes":  24212028416
+                                         },
+                                         {
+                                             "index":  10,
+                                             "name":  "Windows 11 Pro for Workstations",
+                                             "description":  "Windows 11 Pro for Workstations",
+                                             "edition_id":  "",
+                                             "architecture":  "x64",
+                                             "version":  "10.0.26200",
+                                             "build":  26200,
+                                             "revision":  8037,
+                                             "language":  "",
+                                             "flags":  "",
+                                             "installation_type":  "Client",
+                                             "product_type":  "WinNT",
+                                             "size_bytes":  24857420150
+                                         },
+                                         {
+                                             "index":  11,
+                                             "name":  "Windows 11 Pro N for Workstations",
+                                             "description":  "Windows 11 Pro N for Workstations",
+                                             "edition_id":  "",
+                                             "architecture":  "x64",
+                                             "version":  "10.0.26200",
+                                             "build":  26200,
+                                             "revision":  8037,
+                                             "language":  "",
+                                             "flags":  "",
+                                             "installation_type":  "Client",
+                                             "product_type":  "WinNT",
+                                             "size_bytes":  24212054185
+                                         }
+                                     ]
+                      },
+                      {
+                          "file":  "boot.wim",
+                          "path":  "G:\\sources\\boot.wim",
+                          "kind":  "boot",
+                          "format":  "wim",
+                          "size_bytes":  614809152,
+                          "images":  [
+                                         {
+                                             "index":  1,
+                                             "name":  "Microsoft Windows PE (amd64)",
+                                             "build":  26100,
+                                             "revision":  8037,
+                                             "architecture":  "x64"
+                                         },
+                                         {
+                                             "index":  2,
+                                             "name":  "Microsoft Windows Setup (amd64)",
+                                             "build":  26100,
+                                             "revision":  8037,
+                                             "architecture":  "x64"
+                                         }
+                                     ]
+                      }
+                  ],
+    "deferred_checks":  [
+                            "Package inventory (Get-WindowsPackage) and driver inventory (Get-WindowsDriver) require a mounted image and are performed in Phase 4.",
+                            "Setup version and Dynamic Update state are recorded during Phase 4/Phase 7 when boot.wim is serviced."
+                        ],
+    "notes":  [
+                  "All values below were detected from the media; no edition index, architecture, language, build or WIM/ESD structure was assumed."
+              ]
+}

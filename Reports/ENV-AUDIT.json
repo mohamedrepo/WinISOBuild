@@ -1,0 +1,92 @@
+{
+    "TimestampUtc":  "2026-09-18T15:51:00.0711069Z",
+    "HostName":  "MYLAB",
+    "User":  "MYLAB\\niphd",
+    "OsCaption":  "Microsoft Windows 11 Pro",
+    "OsVersion":  "10.0.26200",
+    "OsBuildNumber":  "26200",
+    "OsArchitecture":  "64-bit",
+    "OsUbr":  "9457",
+    "IsAdministrator":  true,
+    "CpuName":  "Intel(R) Core(TM) i7-9850H CPU @ 2.60GHz",
+    "CpuCores":  6,
+    "CpuLogicalProcessors":  12,
+    "ProcessArchitecture":  "AMD64",
+    "RamGB":  31.76,
+    "Disks":  [
+                  {
+                      "DeviceId":  "C:",
+                      "VolumeName":  "",
+                      "SizeGB":  199.17,
+                      "FreeGB":  78.14
+                  },
+                  {
+                      "DeviceId":  "D:",
+                      "VolumeName":  "",
+                      "SizeGB":  276.73,
+                      "FreeGB":  39.4
+                  }
+              ],
+    "WorkspaceDrive":  "D:",
+    "WorkspaceDriveFreeGB":  39.4,
+    "MinimumFreeGB":  25,
+    "RecommendedFreeGB":  25,
+    "DismPath":  "C:\\WINDOWS\\System32\\Dism.exe",
+    "DismVersion":  "10.0.26100.8457 (WinBuild.160101.0800)",
+    "AdkKitsRoots":  [
+                         "C:\\Program Files (x86)\\Windows Kits\\10\\",
+                         "C:\\Program Files (x86)\\Windows Kits\\10",
+                         "C:\\Program Files (x86)\\Windows Kits\\8.1"
+                     ],
+    "AdkDeploymentToolsRoots":  [
+                                    "C:\\Program Files (x86)\\Windows Kits\\10\\Assessment and Deployment Kit\\Deployment Tools",
+                                    "C:\\Program Files (x86)\\Windows Kits\\10\\Assessment and Deployment Kit\\Deployment Tools"
+                                ],
+    "AdkOscdimgCandidates":  [
+                                 "C:\\Program Files (x86)\\Windows Kits\\10\\Assessment and Deployment Kit\\Deployment Tools\\x86\\OSCDIMG\\oscdimg.exe",
+                                 "C:\\Program Files (x86)\\Windows Kits\\10\\Assessment and Deployment Kit\\Deployment Tools\\amd64\\OSCDIMG\\oscdimg.exe",
+                                 "C:\\Program Files (x86)\\Windows Kits\\10\\Assessment and Deployment Kit\\Deployment Tools\\arm64\\OSCDIMG\\oscdimg.exe",
+                                 "C:\\Program Files (x86)\\Windows Kits\\10\\Assessment and Deployment Kit\\Deployment Tools\\x86\\OSCDIMG\\oscdimg.exe",
+                                 "C:\\Program Files (x86)\\Windows Kits\\10\\Assessment and Deployment Kit\\Deployment Tools\\amd64\\OSCDIMG\\oscdimg.exe",
+                                 "C:\\Program Files (x86)\\Windows Kits\\10\\Assessment and Deployment Kit\\Deployment Tools\\arm64\\OSCDIMG\\oscdimg.exe"
+                             ],
+    "AdkWinPEPaths":  [
+
+                      ],
+    "AdkAvailable":  true,
+    "OscdimgAvailable":  true,
+    "WinPEAvailable":  false,
+    "PowerShellVersion":  "5.1.26100.9444",
+    "PowerShellEdition":  "Desktop",
+    "PowerShellClrVersion":  "4.0.30319.42000",
+    "Pwsh7Available":  false,
+    "Pwsh7Path":  "",
+    "DotNetFramework":  "v4: unknown (release=533509) | v3.5: enabled",
+    "DotNetCliAvailable":  true,
+    "SevenZipAvailable":  false,
+    "SevenZipPaths":  [
+
+                      ],
+    "WorkspaceDirectories":  {
+                                 "Source":  true,
+                                 "ExtractedISO":  true,
+                                 "Mount":  true,
+                                 "Updates":  true,
+                                 "Drivers":  true,
+                                 "Scripts":  true,
+                                 "Logs":  true,
+                                 "Output":  true,
+                                 "Backup":  true,
+                                 "Reports":  true,
+                                 "State":  true
+                             },
+    "WorkspaceComplete":  true,
+    "SourceIsoCandidates":  [
+                                "D:\\WimMount\\ISO\\Win11_25H2_English_x64_v2.iso"
+                            ],
+    "SourceIsoFound":  true,
+    "AdvisoryFreeSpace":  "Free space meets the 25 GB servicing recommendation.",
+    "GateErrors":  [
+
+                   ]
+}

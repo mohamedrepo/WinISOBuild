@@ -1,0 +1,71 @@
+WINDOWS ISO SERVICING TOOLCHAIN - ENVIRONMENT AUDIT
+Generated (UTC): 2026-09-18T15:51:00.0711069Z
+
+[HOST]
+  Host name        : MYLAB
+  User             : MYLAB\niphd
+  OS               : Microsoft Windows 11 Pro (10.0.26200, build 26200.9457)
+  OS architecture  : 64-bit
+
+[PRIVILEGE]
+  Administrator    : True
+
+[CPU]
+  Processor        : Intel(R) Core(TM) i7-9850H CPU @ 2.60GHz
+  Cores            : 6
+  Logical CPUs     : 12
+  Process arch     : AMD64
+
+[MEMORY]
+  Total RAM        : 31.76 GB
+
+[FIXED DISKS]
+  C:  size=199.17 GB  free=78.14 GB  volume=
+  D:  size=276.73 GB  free=39.4 GB  volume=
+  Workspace drive  : D:  free=39.4 GB
+  Configured min   : 25 GB (fail-fast gate)
+  Recommended      : 25 GB
+  Advisory         : Free space meets the 25 GB servicing recommendation.
+
+[DISM]
+  Path             : C:\WINDOWS\System32\Dism.exe
+  Version          : 10.0.26100.8457 (WinBuild.160101.0800)
+
+[ADK / DEPLOYMENT TOOLS]
+  ADK available    : True
+  Kits roots       : C:\Program Files (x86)\Windows Kits\10\; C:\Program Files (x86)\Windows Kits\10; C:\Program Files (x86)\Windows Kits\8.1
+  Deployment tools : C:\Program Files (x86)\Windows Kits\10\Assessment and Deployment Kit\Deployment Tools; C:\Program Files (x86)\Windows Kits\10\Assessment and Deployment Kit\Deployment Tools
+  oscdimg.exe      : FOUND - C:\Program Files (x86)\Windows Kits\10\Assessment and Deployment Kit\Deployment Tools\x86\OSCDIMG\oscdimg.exe; C:\Program Files (x86)\Windows Kits\10\Assessment and Deployment Kit\Deployment Tools\amd64\OSCDIMG\oscdimg.exe; C:\Program Files (x86)\Windows Kits\10\Assessment and Deployment Kit\Deployment Tools\arm64\OSCDIMG\oscdimg.exe; C:\Program Files (x86)\Windows Kits\10\Assessment and Deployment Kit\Deployment Tools\x86\OSCDIMG\oscdimg.exe; C:\Program Files (x86)\Windows Kits\10\Assessment and Deployment Kit\Deployment Tools\amd64\OSCDIMG\oscdimg.exe; C:\Program Files (x86)\Windows Kits\10\Assessment and Deployment Kit\Deployment Tools\arm64\OSCDIMG\oscdimg.exe
+  WinPE add-on     : NOT FOUND
+
+[POWERSHELL]
+  Version          : 5.1.26100.9444 (Desktop)
+  CLR              : 4.0.30319.42000
+  pwsh 7           : NOT FOUND
+
+[.NET]
+  .NET Framework   : v4: unknown (release=533509) | v3.5: enabled
+  dotnet CLI       : present
+
+[7-ZIP]
+  Available        : False
+  Paths            : 
+
+[WORKSPACE DIRECTORIES]
+  Source        : PRESENT
+  ExtractedISO  : PRESENT
+  Mount         : PRESENT
+  Updates       : PRESENT
+  Drivers       : PRESENT
+  Scripts       : PRESENT
+  Logs          : PRESENT
+  Output        : PRESENT
+  Backup        : PRESENT
+  Reports       : PRESENT
+  State         : PRESENT
+
+[SOURCE ISO DETECTION]
+  FOUND: D:\WimMount\ISO\Win11_25H2_English_x64_v2.iso
+
+[GATE RESULTS]
+  PASS: elevated and workspace drive free space above the configured minimum.
