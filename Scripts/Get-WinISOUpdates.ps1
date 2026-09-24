@@ -112,6 +112,7 @@ function Select-WinISOApplicable {
         elseif ($title -match '(?i)\barm64\b') { $ta = 'arm64' }
         elseif ($title -match '(?i)\bx86\b') { $ta = 'x86' }
         $ok = $true
+        if ($title -match '(?i)\bpreview\b') { $ok = $false }
         if ($Version -and $tv -and $tv -ne $Version.ToUpper()) { $ok = $false }
         if ($Architecture -and $ta -and $ta -ne $Architecture) { $ok = $false }
         if ($ok) { $out.Add($r) }
@@ -212,7 +213,7 @@ if ($candidates.Count -eq 0) { Write-Host 'No applicable updates found (or catal
 
 if ($ListOnly) {
     Write-Host ''
-    Write-Host 'LIST ONLY - nothing downloaded. Re-run without -ListOnly to download into: ' + $OutDir
+    Write-Host ('LIST ONLY - nothing downloaded. Re-run without -ListOnly to download into: ' + $OutDir)
     exit 0
 }
 
