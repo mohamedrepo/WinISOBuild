@@ -1452,7 +1452,7 @@ function Expand-WinISOMsuToCab {
     $null = Invoke-WinISOProcess -FilePath (Join-Path $env:SystemRoot 'System32\expand.exe') -ArgumentList @('-F:*', $PackagePath, $dest) -TimeoutSeconds 600 -LogPath $LogPath
     $cabs = @(Get-ChildItem -LiteralPath $dest -Filter *.cab -File -ErrorAction SilentlyContinue | Where-Object { $_.Name -notmatch 'WSUSSCAN' })
     if ($cabs.Count -eq 0) {
-        $null = Invoke-WinISOProcess -FilePath (Join-Path $env:SystemRoot 'System32\wusa.exe') -ArgumentList @($PackagePath, ('/extract:' + $dest)) -TimeoutSeconds 600 -LogPath $LogPath
+        $null = Invoke-WinISOProcess -FilePath (Join-Path $env:SystemRoot 'System32\wusa.exe') -ArgumentList @($PackagePath, ('/extract:' + $dest)) -TimeoutSeconds 90 -LogPath $LogPath
         $cabs = @(Get-ChildItem -LiteralPath $dest -Filter *.cab -File -ErrorAction SilentlyContinue | Where-Object { $_.Name -notmatch 'WSUSSCAN' })
     }
     if ($cabs.Count -eq 0) {
@@ -2066,17 +2066,22 @@ function Copy-WinISOFullMedia {
     $mountedIso = $null
     try {
         if (-not (Test-Path -LiteralPath $DestDir)) { [void](New-Item -ItemType Directory -Path $DestDir -Force) }
-        $mountedIso = Mount-DiskImage -ImagePath $SourceIso -PassThru -ErrorAction Stop
         $before = @((Get-PSDrive -PSProvider FileSystem -ErrorAction SilentlyContinue | Where-Object { $_.Name -match '^[A-Z]$' } | ForEach-Object { [string]$_.Name }))
-        $after = @((Get-PSDrive -PSProvider FileSystem -ErrorAction SilentlyContinue | Where-Object { $_.Name -match '^[A-Z]$' } | ForEach-Object { [string]$_.Name }))
-        $newLetters = @($after | Where-Object { $before -notcontains $_ })
+        $mountedIso = Mount-DiskImage -ImagePath $SourceIso -PassThru -ErrorAction Stop
         $letter = ''
-        foreach ($l in $newLetters) {
-            if (Test-Path -LiteralPath ($l + ':\sources\boot.wim')) { $letter = $l; break }
+        for ($attempt = 0; $attempt -lt 120; $attempt++) {
+            Start-Sleep -Milliseconds 500
+            $after = @((Get-PSDrive -PSProvider FileSystem -ErrorAction SilentlyContinue | Where-Object { $_.Name -match '^[A-Z]$' } | ForEach-Object { [string]$_.Name }))
+            $newLetters = @($after | Where-Object { $before -notcontains $_ })
+            foreach ($l in $newLetters) {
+                if (Test-Path -LiteralPath ($l + ':\sources\boot.wim')) { $letter = $l; break }
+            }
+            if (-not $letter -and $newLetters.Count -gt 0) { $letter = $newLetters[0] }
+            if ($letter) { break }
         }
-        if (-not $letter -and $newLetters.Count -gt 0) { $letter = $newLetters[0] }
         if (-not $letter) { return @{ Ok = $false; Error = 'ISO attached but no drive letter was assigned.' } }
         Copy-Item -Path ($letter + ':\*') -Destination $DestDir -Recurse -Force
+        Get-ChildItem -LiteralPath $DestDir -Recurse -File -ErrorAction SilentlyContinue | ForEach-Object { if ($_.IsReadOnly) { $_.IsReadOnly = $false } }
         if ($LogPath) { Add-WinISOLogLine -Path $LogPath -Line ('Full media extraction: ' + $SourceIso + ' -> ' + $DestDir) }
         return @{ Ok = $true; Error = '' }
     }
