@@ -141,20 +141,16 @@ function Get-WinISOImageLevel {
         if ($letter) {
             $wim = ("${letter}:\sources\install.wim")
             if (-not (Test-Path -LiteralPath $wim)) { $wim = ("${letter}:\sources\install.esd") }
-            $tmp = Join-Path $env:TEMP ('winiso-lvl-' + (Get-Date -Format 'HHmmss'))
-            [void](New-Item -ItemType Directory -Path $tmp -Force)
             try {
-                $null = & $script:Dism /English /Mount-Image /ImageFile:$wim /Index:1 /MountDir:$tmp /ReadOnly 2>&1
-                $pkgs = & $script:Dism /English /Image:$tmp /Get-Packages 2>&1 | Out-String
-                $best = @{ Build = 0; Revision = 0 }
-                foreach ($mm in [regex]::Matches($pkgs, 'Package_for_RollupFix~[^~]+~[^~]+~~(\d{5,6})\.(\d{1,6})')) {
-                    $b = [int]$mm.Groups[1].Value; $rv = [int]$mm.Groups[2].Value
-                    if ($b -gt $best.Build -or ($b -eq $best.Build -and $rv -gt $best.Revision)) { $best = @{ Build = $b; Revision = $rv } }
-                }
-                if ($best.Build -gt 0) { $res.Build = $best.Build; $res.Revision = $best.Revision; $res.Source = 'image packages' }
+                Write-Host ('  reading image level (fast) from ' + $wim)
+                $gi = & $script:Dism /English /Get-ImageInfo /ImageFile:$wim /Index:1 2>&1 | Out-String
+                $gmV = [regex]::Match($gi, '(?im)^\s*Version\s+:\s*10\.0\.(\d+)')
+                if ($gmV.Success) { $res.Build = [int]$gmV.Groups[1].Value }
+                $gmR = [regex]::Match($gi, '(?im)^\s*ServicePack Build\s+:\s*(\d+)')
+                if ($gmR.Success) { $res.Revision = [int]$gmR.Groups[1].Value }
+                if ($res.Build -gt 0) { $res.Source = 'image /Get-ImageInfo' }
             }
             finally {
-                $null = & $script:Dism /English /Unmount-Image /MountDir:$tmp /Discard 2>&1
                 Dismount-DiskImage -ImagePath $IsoPath -ErrorAction SilentlyContinue | Out-Null
             }
         }
