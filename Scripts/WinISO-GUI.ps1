@@ -12,7 +12,7 @@
 #   .\WinISO-GUI.ps1 -SelfTest  # headless wiring validation (exit 0 = OK)
 
 [CmdletBinding()]
-param([switch]$SelfTest)
+param([switch]$SelfTest, [switch]$NoElevate)
 
 Set-StrictMode -Version 2
 $ErrorActionPreference = 'Stop'
@@ -88,6 +88,12 @@ function New-WinISOUnattendArgs {
 # ---------------------------------------------------------------------------
 # Self test
 # ---------------------------------------------------------------------------
+function Test-WinISOGuiAdmin {
+    $id = [System.Security.Principal.WindowsIdentity]::GetCurrent()
+    $pr = New-Object System.Security.Principal.WindowsPrincipal($id)
+    return $pr.IsInRole([System.Security.Principal.WindowsBuiltInRole]::Administrator)
+}
+
 function Invoke-WinISOSelfTest {
     $problems = @()
     if (-not (Test-Path -LiteralPath $script:Orchestrator)) { $problems += ('orchestrator not found: ' + $script:Orchestrator) }
@@ -123,6 +129,16 @@ function Invoke-WinISOSelfTest {
 }
 
 if ($SelfTest) { Invoke-WinISOSelfTest }
+
+if (-not $NoElevate -and -not (Test-WinISOGuiAdmin)) {
+    $psExe = (Get-Process -Id $PID).Path
+    if (-not $psExe) { $psExe = 'powershell.exe' }
+    try {
+        Start-Process -FilePath $psExe -ArgumentList @('-NoProfile','-ExecutionPolicy','Bypass','-File', $PSCommandPath) -Verb RunAs -ErrorAction Stop
+        exit 0
+    }
+    catch { }
+}
 
 # ---------------------------------------------------------------------------
 # GUI
@@ -339,6 +355,9 @@ function Load-EditionsFromIso {
         if ($count -eq 0) {
             $preview = (($out -split "`r?`n") | ForEach-Object { $_.Trim() } | Where-Object { $_ } | Select-Object -First 6) -join ' | '
             Add-Log ('[gui] dism said: ' + $preview)
+            if ($out -match 'Error:\s*740' -or $out -match '(?i)elevated permissions') {
+                Add-Log '[gui] DISM requires elevation: launch WinISO-GUI.ps1 as Administrator (it self-elevates by default).'
+            }
         }
     }
     finally {
