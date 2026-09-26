@@ -25,6 +25,8 @@ $script:LogErr       = ''
 $script:ShownOut     = 0
 $script:ShownErr     = 0
 $script:Finished     = $false
+$script:DetectedBuild    = 0
+$script:DetectedRevision = 0
 
 # ---------------------------------------------------------------------------
 # Argument builder (pure - used by the GUI and by -SelfTest)
@@ -309,13 +311,35 @@ function Load-EditionsFromIso {
         if (-not $letter) { Add-Log '[gui] ISO attached but no drive letter found.'; return }
         $wim = ("${letter}:\sources\install.wim")
         if (-not (Test-Path -LiteralPath $wim)) { $wim = ("${letter}:\sources\install.esd") }
-        $out = & "$env:SystemRoot\System32\Dism.exe" /English /Get-WimInfo /WimFile:$wim 2>&1 | Out-String
+        $dismExe = Join-Path $env:SystemRoot 'System32\Dism.exe'
+        $out = & $dismExe /English /Get-WimInfo /WimFile:$wim 2>&1 | Out-String
         $count = 0
-        foreach ($mm in [regex]::Matches($out, '(?im)^\s*Index\s*:\s*(\d+)\r?\n\s*Name\s*:\s*(.+?)\s*$')) {
-            [void]$lstEd.Items.Add(('{0} = {1}' -f $mm.Groups[1].Value, $mm.Groups[2].Value))
-            $count++
+        $curIdx = -1
+        foreach ($ln in ($out -split "`r?`n")) {
+            $t = $ln.Trim()
+            if ($t -match '^Index\s*:\s*(\d+)') { $curIdx = [int]$Matches[1] }
+            elseif ($t -match '^Name\s*:\s*(.+)$') {
+                if ($curIdx -ge 0) { [void]$lstEd.Items.Add(('{0} = {1}' -f $curIdx, $Matches[1].Trim())); $count++; $curIdx = -1 }
+            }
         }
-        Add-Log ('[gui] loaded ' + $count + ' edition(s) from the selected ISO')
+        $script:DetectedBuild = 0; $script:DetectedRevision = 0
+        $mv = [regex]::Match($out, '(?im)^\s*Version\s*:\s*10\.0\.(\d+)')
+        if ($mv.Success) { $script:DetectedBuild = [int]$mv.Groups[1].Value }
+        $mr = [regex]::Match($out, '(?im)^\s*ServicePack Build\s*:\s*(\d+)')
+        if ($mr.Success) { $script:DetectedRevision = [int]$mr.Groups[1].Value }
+        if ($count -gt 0 -and $script:DetectedBuild -gt 0) {
+            $suffix = [string]$script:DetectedBuild
+            if ($script:DetectedRevision -gt 0) { $suffix = $suffix + '.' + $script:DetectedRevision }
+            $base = [System.IO.Path]::GetFileNameWithoutExtension(([string]$txtOut.Text).Trim())
+            if (-not $base) { $base = 'Win11_Updated' }
+            $base = $base -replace '_[0-9]{5}(\.[0-9]+)?$', ''
+            $txtOut.Text = ($base + '_' + $suffix + '.iso')
+        }
+        Add-Log ('[gui] loaded ' + $count + ' edition(s) from the selected ISO; build ' + $script:DetectedBuild + '.' + $script:DetectedRevision)
+        if ($count -eq 0) {
+            $preview = (($out -split "`r?`n") | ForEach-Object { $_.Trim() } | Where-Object { $_ } | Select-Object -First 6) -join ' | '
+            Add-Log ('[gui] dism said: ' + $preview)
+        }
     }
     finally {
         if ($img) { try { Dismount-DiskImage -ImagePath $iso -ErrorAction SilentlyContinue | Out-Null } catch { } }
