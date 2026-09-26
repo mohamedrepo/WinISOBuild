@@ -341,9 +341,10 @@ function Load-EditionsFromIso {
             }
         }
         $script:DetectedBuild = 0; $script:DetectedRevision = 0
-        $mv = [regex]::Match($out, '(?im)^\s*Version\s*:\s*10\.0\.(\d+)')
+        $gi = & $dismExe /English /Get-ImageInfo /ImageFile:$wim /Index:1 2>&1 | Out-String
+        $mv = [regex]::Match($gi, '(?im)^\s*Version\s+:\s*10\.0\.(\d+)')
         if ($mv.Success) { $script:DetectedBuild = [int]$mv.Groups[1].Value }
-        $mr = [regex]::Match($out, '(?im)^\s*ServicePack Build\s*:\s*(\d+)')
+        $mr = [regex]::Match($gi, '(?im)^\s*ServicePack Build\s+:\s*(\d+)')
         if ($mr.Success) { $script:DetectedRevision = [int]$mr.Groups[1].Value }
         if ($count -gt 0 -and $script:DetectedBuild -gt 0) {
             $suffix = [string]$script:DetectedBuild
