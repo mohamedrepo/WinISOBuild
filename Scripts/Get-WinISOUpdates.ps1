@@ -29,6 +29,7 @@ param(
     [ValidateSet('SSU', 'LatestCU', 'DotNetCU', 'SafeOS', 'SetupDU')]
     [string[]]$Kinds = @('SSU', 'LatestCU', 'DotNetCU', 'SafeOS', 'SetupDU'),
     [switch]$MissedOnly,
+    [switch]$IncludeOptional,
     [switch]$ListOnly,
     [switch]$SelfTest
 )
@@ -88,7 +89,7 @@ function Get-WinISOMissedState {
 }
 
 function Select-WinISOApplicable {
-    param([object[]]$Rows, [string]$Version, [string]$Architecture)
+    param([object[]]$Rows, [string]$Version, [string]$Architecture, [switch]$IncludeOptional)
     $out = New-Object System.Collections.Generic.List[System.Management.Automation.PSObject]
     foreach ($r in @($Rows)) {
         $title = [string]$r.Title
@@ -100,7 +101,7 @@ function Select-WinISOApplicable {
         elseif ($title -match '(?i)\barm64\b') { $ta = 'arm64' }
         elseif ($title -match '(?i)\bx86\b') { $ta = 'x86' }
         $ok = $true
-        if ($title -match '(?i)\bpreview\b') { $ok = $false }
+        if (-not $IncludeOptional -and $title -match '(?i)\bpreview\b') { $ok = $false }
         if ($Version -and $tv -and $tv -ne $Version.ToUpper()) { $ok = $false }
         if ($Architecture -and $ta -and $ta -ne $Architecture) { $ok = $false }
         if ($ok) { $out.Add($r) }
@@ -262,7 +263,7 @@ foreach ($q in $queryPlan) {
     if (-not $res.Ok) { Write-Host ('  catalog query failed: ' + $res.Error); continue }
     $rows = @($res.Rows)
     Write-Host ('  rows: ' + $rows.Count)
-    $applicable = Select-WinISOApplicable -Rows $rows -Version $version -Architecture $Architecture
+    $applicable = Select-WinISOApplicable -Rows $rows -Version $version -Architecture $Architecture -IncludeOptional:$IncludeOptional
     foreach ($r in @($applicable)) {
         $r | Add-Member -NotePropertyName 'Kind' -NotePropertyValue $q.Kind -Force
         $all.Add($r)
@@ -275,6 +276,7 @@ $candidates = @($byKb.Values | Sort-Object { [string]$_.Kb })
 
 foreach ($c in $candidates) {
     $c | Add-Member -NotePropertyName 'MissedState' -NotePropertyValue (Get-WinISOMissedState -Title ([string]$c.Title) -ImageBuild $imgLevel.Build -ImageRevision $imgLevel.Revision) -Force
+    $c | Add-Member -NotePropertyName 'Optional' -NotePropertyValue ([bool]([string]$c.Title -match '(?i)\bpreview\b|\boptional\b')) -Force
 }
 
 $missed = @($candidates | Where-Object { $_.MissedState -eq 'missed' })
@@ -287,7 +289,8 @@ foreach ($c in $candidates) {
     $tag = '[?????]'
     if ($c.MissedState -eq 'missed') { $tag = '[MISSED]' }
     elseif ($c.MissedState -eq 'already-present') { $tag = '[PRESENT]' }
-    Write-Host ('  ' + $tag + ' ' + [string]$c.Kb + '  [' + [string]$c.Kind + ']  ' + [string]$c.Title)
+    $opt = ''; if ($c.Optional) { $opt = ' (optional)' }
+    Write-Host ('  ' + $tag + ' ' + [string]$c.Kb + '  [' + [string]$c.Kind + ']' + $opt + '  ' + [string]$c.Title)
 }
 
 $toProcess = $candidates

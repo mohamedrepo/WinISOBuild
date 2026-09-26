@@ -198,9 +198,11 @@ $grpUp.Controls.Add((New-Label 'Drop .msu/.cab packages into  <Workspace>\Update
 $lblUpd = New-Label '' 12 122 450
 $grpUp.Controls.Add($lblUpd)
 $btnUpd = New-Button 'Open Updates folder' 12 148 150 26; $grpUp.Controls.Add($btnUpd)
-$btnDl = New-Button 'Search + download missing updates' 168 148 220 26; $grpUp.Controls.Add($btnDl)
-$chkMissed = New-Object System.Windows.Forms.CheckBox; $chkMissed.Text = 'Only missed'; $chkMissed.Location = New-Object System.Drawing.Point(394, 152); $chkMissed.Size = New-Object System.Drawing.Size(84, 20); $chkMissed.Checked = $true
+$btnDl = New-Button 'Search + download' 168 148 130 26; $grpUp.Controls.Add($btnDl)
+$chkMissed = New-Object System.Windows.Forms.CheckBox; $chkMissed.Text = 'Only missed'; $chkMissed.Location = New-Object System.Drawing.Point(302, 152); $chkMissed.Size = New-Object System.Drawing.Size(92, 20); $chkMissed.Checked = $true
 $grpUp.Controls.Add($chkMissed)
+$chkOpt = New-Object System.Windows.Forms.CheckBox; $chkOpt.Text = 'Optional'; $chkOpt.Location = New-Object System.Drawing.Point(398, 152); $chkOpt.Size = New-Object System.Drawing.Size(80, 20)
+$grpUp.Controls.Add($chkOpt)
 $form.Controls.Add($grpUp)
 
 # --- Drivers group ---
@@ -374,6 +376,7 @@ function Search-DownloadUpdates {
     $a = @('-NoProfile','-ExecutionPolicy','Bypass','-File',$dl,'-Workspace',$ws,'-OutDir',(Join-Path $ws 'Updates'))
     if ($iso) { $a += '-Iso'; $a += $iso }
     if ($chkMissed.Checked) { $a += '-MissedOnly' }
+    if ($chkOpt.Checked) { $a += '-IncludeOptional' }
     $logDir = Join-Path $env:TEMP ('winiso-dl-' + (Get-Date -Format 'yyyyMMdd-HHmmss'))
     [void](New-Item -ItemType Directory -Path $logDir -Force)
     $script:LogOut = Join-Path $logDir 'stdout.log'; $script:LogErr = Join-Path $logDir 'stderr.log'
