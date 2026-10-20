@@ -64,6 +64,63 @@ function Get-WinISOFilePath {
     return (Join-Path $Workspace $Relative)
 }
 
+function Write-WinISOLatestAppliedMsu {
+    # Records the exact KB/build level of the latest successful servicing run so the
+    # output ISO naming and GUI summary can refer to the latest successfully applied MSU,
+    # not just the resulting image build/revision.
+    param(
+        [Parameter(Mandatory)][string]$Workspace,
+        [Parameter(Mandatory)][object]$ServicingResults,
+        [string]$PostBuild = '',
+        [string]$PostServicePackBuild = '',
+        [string]$OutputIsoMetaPath = ''
+    )
+    $applied = @()
+    foreach ($img in @($ServicingResults.images)) {
+        foreach ($u in @($img.Updates)) {
+            if ([string]$u.Result -eq 'Applied') {
+                $applied += [string]$u.Kb
+            }
+        }
+    }
+    if ($applied.Count -eq 0) { return $false }
+    $bestBuild = '0'
+    $bestSp = '0'
+    if ($PostBuild -match '^[0-9]+$') { $bestBuild = $PostBuild }
+    if ($PostServicePackBuild -match '^[0-9]+$') { $bestSp = $PostServicePackBuild }
+    $block = @{
+        integrated_at      = [DateTime]::UtcNow.ToString('o')
+        applied_kb         = @($applied | Sort-Object -Unique)
+        applied_build      = [string]$bestBuild
+        applied_servicePackBuild = [string]$bestSp
+        source_media       = ''
+        images            = @()
+        output_iso_meta_path  = $OutputIsoMetaPath
+    }
+    $byIndex = @{}
+    foreach ($img in @($ServicingResults.images)) {
+        $kbList = @()
+        foreach ($u in @($img.Updates)) {
+            if ([string]$u.Result -eq 'Applied') { $kbList += [string]$u.Kb }
+        }
+        if ($kbList.Count -gt 0) {
+            $byIndex[[int]$img.Index] = @{
+                index        = [int]$img.Index
+                applied_kb   = @($kbList | Sort-Object -Unique)
+                mounted      = [bool]$img.Mounted
+                committed    = [bool]$img.Committed
+                health       = [string]$img.Health
+            }
+        }
+    }
+    foreach ($idx in (([array]($byIndex.Keys) | Sort-Object)) ) {
+        $block.images += $byIndex[[int]$idx]
+    }
+    $path = Join-Path (Join-Path $Workspace 'State') 'LatestAppliedMsu.json'
+    Write-WinISOJsonFile -Path $path -Object $block
+    return $true
+}
+
 function Write-WinISOFile {
     # Writes text as BOM-less UTF-8, creating the parent directory if needed.
     param([Parameter(Mandatory)][string]$Path, [string]$Content)
@@ -1748,6 +1805,19 @@ function Invoke-WinISOServiceImage {
         $r.Artifacts['servicing-results.txt'] = $resultsTxtPath
         $r.Steps.Add('Wrote ' + $resultsPath + ' and ' + $resultsTxtPath)
 
+        if ($r.Status -eq 'Succeeded') {
+            $postBuild = '0'; $postSp = '0'
+            $wimInfo = Get-WinISOWimInfo -WimPath $installWim -LogPath $log
+            if ($wimInfo.ExitCode -eq 0 -and $wimInfo.Indexes.Count -gt 0) {
+                $first = $wimInfo.Indexes[0]
+                if ($first.Version -match '^(\d+)\.(\d+)\.(\d+)(?:\.(\d+))?$') { $postBuild = $Matches[3] }
+                if ($first.ServicePackBuild -match '^(\d+)$') { $postSp = $Matches[1] }
+            }
+            if (Write-WinISOLatestAppliedMsu -Workspace $full -ServicingResults $summary -PostBuild $postBuild -PostServicePackBuild $postSp) {
+                $r.Steps.Add('Recorded latest applied MSU/KB list in State\LatestAppliedMsu.json.')
+            }
+        }
+
         $hardErrors = 0
         foreach ($img in @($imageResults)) { $hardErrors += @($img.Errors).Count }
         if ($hardErrors -gt 0 -or -not $verified) {
@@ -2184,6 +2254,39 @@ function Invoke-WinISORebuildMedia {
         # Output naming
         $stamp = Get-Date -Format 'yyyyMMdd-HHmmss'
         $isoName = $OutputIsoName
+        if ($isoName) {
+            # If an explicit name was given but it is a bare base name, enrich it with the
+            # latest successfully integrated MSU/build info when available (never overwrite an
+            # explicit full name that already carries a build suffix or looks intentional).
+            $bare = ($isoName -replace '\.iso$', '') -replace '[._-]$',''
+            $looksSuffixed = ($bare -match '[0-9]{4,}')
+            if (-not $looksSuffixed) {
+                $metaPath = Join-Path (Join-Path $full 'Output') 'OUTPUT-ISO-META.json'
+                if (Test-Path -LiteralPath $metaPath) {
+                    try {
+                        $meta = Get-Content -LiteralPath $metaPath -Raw -Encoding UTF8 | ConvertFrom-Json
+                        $suffix = @()
+                        $source = ''
+                        if ($meta.build -is [int] -and $meta.build -gt 0) { $suffix += [string]$meta.build; $source = 'build' }
+                        if ($meta.servicePackBuild -is [int] -and $meta.servicePackBuild -gt 0) { $suffix += [string]$meta.servicePackBuild; $source = 'build+servicePackBuild' }
+                        if ($suffix.Count -eq 0) {
+                            $kb = @()
+                            if ($meta.latest_applied_msu -and $meta.latest_applied_msu.applied_kb) {
+                                $kb = @($meta.latest_applied_msu.applied_kb | Where-Object { $_ } | ForEach-Object { [string]$_ })
+                            }
+                            if ($kb.Count -gt 0) {
+                                $suffix += ('KB' + $kb.Count)
+                                $source = 'appliedKB-count'
+                            }
+                        }
+                        if ($suffix.Count -gt 0) {
+                            $isoName = ($bare + '_' + ($suffix -join '.') + '.iso')
+                            Add-WinISOLogLine -Path $log -Line ('enriched output ISO name from ' + $source + ': ' + $isoName)
+                        }
+                    } catch { }
+                }
+            }
+        }
         if (-not $isoName) { $isoName = ('WinISO-' + $buildStr + '-' + $archStr + '-' + $stamp + '.iso') }
         if ($isoName -notmatch '\.iso$') { $isoName += '.iso' }
         $isoPath = Join-Path (Join-Path $full 'Output') $isoName
@@ -2298,6 +2401,38 @@ function Invoke-WinISORebuildMedia {
         finally {
             if ($attach) { try { Dismount-DiskImage -ImagePath $isoPath -ErrorAction SilentlyContinue | Out-Null } catch { } }
         }
+
+        # Attach the latest successfully applied MSU/KB record to the output ISO metadata.
+        $metaPath = Join-Path (Join-Path $full 'Output') 'OUTPUT-ISO-META.json'
+        $meta = @{
+            output_iso_name    = $isoPath
+            output_iso_base    = [System.IO.Path]::GetFileNameWithoutExtension($isoPath)
+            build              = $buildStr
+            servicePackBuild   = $buildStr
+            generated_utc      = [DateTime]::UtcNow.ToString('o')
+            source_media       = $SourceIso
+            oscdimg_path       = $osc
+            latest_applied_msu = $null
+        }
+        $lamPath = Join-Path (Join-Path $full 'State') 'LatestAppliedMsu.json'
+        if (Test-Path -LiteralPath $lamPath) {
+            try {
+                $lam = Get-Content -LiteralPath $lamPath -Raw -Encoding UTF8 | ConvertFrom-Json
+                if ($lam -and $lam.applied_kb -and $lam.applied_kb.Count -gt 0) {
+                    $meta.latest_applied_msu = @{
+                        integrated_at         = [string]$lam.integrated_at
+                        applied_kb            = @($lam.applied_kb)
+                        applied_build         = [string]$lam.applied_build
+                        applied_servicePackBuild = [string]$lam.applied_servicePackBuild
+                        source_media          = [string]$lam.source_media
+                        output_iso_meta_path  = $metaPath
+                    }
+                }
+            } catch { }
+        }
+        Write-WinISOJsonFile -Path $metaPath -Object $meta
+        Add-WinISOLogLine -Path $log -Line ('recorded output ISO metadata: ' + $metaPath)
+
         if ($r.Errors.Count -gt 0) { $r.Status = 'Failed' } else { $r.Status = 'Succeeded' }
         $r.Summary = 'Media rebuilt: ' + $isoPath + ' (' + $(if ($mediaReport.split_required) { 'split-WIM FAT32 media also produced' } else { 'no split required' }) + ').'
         $r.DurationSeconds = [math]::Round($sw.Elapsed.TotalSeconds, 2)

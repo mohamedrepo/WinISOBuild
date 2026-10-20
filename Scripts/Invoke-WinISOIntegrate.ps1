@@ -104,5 +104,22 @@ if (Test-Path -LiteralPath $outIso) {
     Log ('ISO built: ' + $outIso + '  (' + [math]::Round((Get-Item $outIso).Length / 1GB, 2) + ' GB)')
     Log ('SHA256: ' + $sha)
     [System.IO.File]::WriteAllText((Join-Path $OutDir 'ISO-SHA256.txt'), ($sha + '  ' + $outIso))
+
+    # Persist the build/revision-derived output suffix used for this ISO.
+    $outBase = [System.IO.Path]::GetFileNameWithoutExtension($outIso)
+    $buildRev = @{ }
+    if ($b -match '^[0-9]+$') { $buildRev.build = [int]$b }
+    if ($rv -match '^[0-9]+$') { $buildRev.servicePackBuild = [int]$rv }
+    $meta = @{
+        output_iso_name = $outIso
+        output_iso_base = $outBase
+        build           = $buildRev.build
+        servicePackBuild= $buildRev.servicePackBuild
+        integrated_at   = (Get-Date -Format 'o')
+        source_media    = $SourceIso
+    }
+    $reportPath = Join-Path $OutDir 'OUTPUT-ISO-META.json'
+    [System.IO.File]::WriteAllText($reportPath, ($meta | ConvertTo-Json -Depth 5), (New-Object System.Text.UTF8Encoding($false)))
+    Log ('recorded output ISO metadata: ' + $reportPath)
 } else { Log 'ISO NOT produced' }
 Log 'DONE'
