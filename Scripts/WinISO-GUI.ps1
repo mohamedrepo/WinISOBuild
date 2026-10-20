@@ -1209,10 +1209,14 @@ $form.Add_FormClosing({
             try { $script:Child.Kill() } catch { }
         }
     }
-    if ($script:UsbBurn -and $script:UsbBurn.Running) {
-        try { if ($script:UsbBurnTimer) { $script:UsbBurnTimer.Stop() } } catch { }
-        try { if ($script:UsbBurn.Job) { Stop-Job -Job $script:UsbBurn.Job -ErrorAction SilentlyContinue } } catch { }
-    }
+    try {
+        if (Get-Variable -Name UsbBurn -Scope Script -ErrorAction SilentlyContinue) {
+            if ($script:UsbBurn -and $script:UsbBurn.Running) {
+                try { if (Get-Variable -Name UsbBurnTimer -Scope Script -ErrorAction SilentlyContinue -and $script:UsbBurnTimer) { $script:UsbBurnTimer.Stop() } } catch { }
+                try { if ($script:UsbBurn.Job) { Stop-Job -Job $script:UsbBurn.Job -ErrorAction SilentlyContinue } } catch { }
+            }
+        }
+    } catch { }
 })
 
 # ---------------------------------------------------------------------------
