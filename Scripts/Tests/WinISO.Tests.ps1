@@ -43,7 +43,6 @@ Describe 'Scripts parse cleanly' {
         'Invoke-WinISOIntegrate.ps1',
         'Add-WinISODrivers.ps1',
         'Build-WinISOUpdated.ps1',
-        'Burn-WinISOToUsb.ps1',
         'Validate-WinISO.ps1',
         'Test-WinISOGuiWiring.ps1'
     )
@@ -57,6 +56,46 @@ Describe 'Scripts parse cleanly' {
             [System.Management.Automation.Language.Parser]::ParseFile($path, [ref]$tokens, [ref]$errors) | Out-Null
             @($errors).Count | Should Be 0
         }
+    }
+}
+
+Describe 'External process argument quoting' {
+    It 'passes a -bootdata argument through without doubling its quotes' {
+        Import-Module (Join-Path $script:root 'WinISOService.psm1') -Force -WarningAction SilentlyContinue
+        $r = Invoke-WinISOProcess -FilePath (Join-Path $env:SystemRoot 'System32\cmd.exe') -ArgumentList @(
+            '/c', 'echo', '-bootdata:2#p0,e,bD:\x\boot\etfsboot.com#pEF,e,bD:\x\efi.bin', 'D:\media', 'D:\out.iso')
+        $r.ExitCode | Should Be 0
+        $r.Output.Trim() | Should Be '-bootdata:2#p0,e,bD:\x\boot\etfsboot.com#pEF,e,bD:\x\efi.bin D:\media D:\out.iso'
+        $r.Output | Should Not Match '""'
+    }
+
+    It 'still quotes an argument that contains spaces' {
+        Import-Module (Join-Path $script:root 'WinISOService.psm1') -Force -WarningAction SilentlyContinue
+        $r = Invoke-WinISOProcess -FilePath (Join-Path $env:SystemRoot 'System32\cmd.exe') -ArgumentList @('/c', 'echo', 'two words')
+        $r.ExitCode | Should Be 0
+        $r.Output.Trim() | Should Be '"two words"'
+    }
+}
+
+Describe 'USB burner' {
+    It 'defaults to NTFS and accepts FAT32 and exFAT' {
+        $path = Join-Path $script:root 'Burn-WinISOToUsb.ps1'
+        $tokens = $null
+        $errors = $null
+        $ast = [System.Management.Automation.Language.Parser]::ParseFile($path, [ref]$tokens, [ref]$errors)
+        @($errors).Count | Should Be 0
+        $param = @($ast.ParamBlock.Parameters | Where-Object { $_.Name.VariablePath.UserPath -eq 'FileSystem' })[0]
+        (($param.DefaultValue.Extent.Text).Trim([char]39, [char]34)) | Should Be 'NTFS'
+        $set = [string]$param.Attributes[0].Extent.Text
+        $set | Should Match 'FAT32'
+        $set | Should Match 'exFAT'
+    }
+
+    It 'reports a missing ISO without touching a disk' {
+        $r = Invoke-WinISOChildScript -ScriptPath (Join-Path $script:root 'Burn-WinISOToUsb.ps1') `
+             -ScriptArgs @('-IsoPath', (Join-Path $env:TEMP 'definitely-not-an.iso'), '-DiskNumber', '99', '-DryRun')
+        $r.ExitCode | Should Be 1
+        $r.StdOut | Should Match 'ERROR:source ISO not found'
     }
 }
 
@@ -85,13 +124,6 @@ Describe 'Entry point self tests' {
         $r.ExitCode | Should Be 0
         $r.StdOut | Should Match 'DRY RUN'
         $r.StdOut | Should Match 'Would export index 6'
-    }
-
-    It 'the USB burner reports a missing ISO without touching a disk' {
-        $r = Invoke-WinISOChildScript -ScriptPath (Join-Path $script:root 'Burn-WinISOToUsb.ps1') `
-             -ScriptArgs @('-IsoPath', (Join-Path $env:TEMP 'definitely-not-an.iso'), '-DiskNumber', '99', '-DryRun')
-        $r.ExitCode | Should Be 1
-        $r.StdOut | Should Match 'ERROR:source ISO not found'
     }
 
     It 'the GUI builds headlessly with every control wired' {

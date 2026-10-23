@@ -3,10 +3,13 @@
 # installation medium: it wipes the disk, creates one partition, formats it,
 # mounts the ISO read-only and copies the media tree onto the drive.
 #
-# When the installation image is larger than the FAT32 per-file limit the image
-# is split with DISM /Split-Image into install.swm parts, which Windows Setup
-# reads natively; that keeps the drive single-partition FAT32 and therefore
-# UEFI-bootable. -FileSystem NTFS copies the image whole instead.
+# The filesystem defaults to NTFS, which UEFI firmware on current machines
+# reads natively and which stores the whole install.wim without splitting.
+# -FileSystem FAT32 keeps the drive recognised by the widest range of firmware
+# and splits install.wim with DISM /Split-Image into install.swm parts (Windows
+# Setup reads them natively) so no single file exceeds the 4 GB FAT32 limit.
+# -FileSystem exFAT also stores the image whole and avoids FAT32's per-file
+# limit; -FileSystem Auto picks FAT32 unless the media cannot fit it.
 #
 # Progress protocol: one line per event, echoed to stdout and appended to
 # -ProgressPath (the GUI polls that file):
@@ -19,7 +22,8 @@
 #
 # Examples:
 #   .\Burn-WinISOToUsb.ps1 -IsoPath D:\WimMount\Output\win11.iso -DiskNumber 1
-#   .\Burn-WinISOToUsb.ps1 -IsoPath D:\WimMount\Output\win11.iso -DiskNumber 1 -FileSystem NTFS
+#   .\Burn-WinISOToUsb.ps1 -IsoPath D:\WimMount\Output\win11.iso -DiskNumber 1
+#   .\Burn-WinISOToUsb.ps1 -IsoPath D:\WimMount\Output\win11.iso -DiskNumber 1 -FileSystem FAT32
 #   .\Burn-WinISOToUsb.ps1 -IsoPath D:\WimMount\Output\win11.iso -DiskNumber 1 -DryRun
 
 [CmdletBinding()]
@@ -27,7 +31,7 @@ param(
     [Parameter(Mandatory)][string]$IsoPath,
     [Parameter(Mandatory)][int]$DiskNumber,
     [string]$ProgressPath = '',
-    [ValidateSet('Auto', 'FAT32', 'NTFS')][string]$FileSystem = 'Auto',
+    [ValidateSet('NTFS', 'FAT32', 'exFAT', 'Auto')][string]$FileSystem = 'NTFS',
     [string]$Label = 'WINISO',
     [switch]$Force,
     [switch]$DryRun
@@ -189,13 +193,14 @@ try {
 
     $fileSystem = $FileSystem
     if ($fileSystem -eq 'Auto') {
-        if ($esdTooBig) { $fileSystem = 'NTFS'; $needsSplit = $false }
+        if ($esdTooBig) { $fileSystem = 'NTFS' }
         else { $fileSystem = 'FAT32' }
     }
     if ($fileSystem -eq 'FAT32' -and $esdTooBig) {
         Stop-Burn 'sources\install.esd is 4 GB or larger and cannot be split, so it does not fit on FAT32; re-run with -FileSystem NTFS.'
     }
-    if ($fileSystem -eq 'NTFS') { $needsSplit = $false }
+    # Only FAT32 has the 4 GB per-file limit; NTFS and exFAT store the image whole.
+    if ($fileSystem -ne 'FAT32') { $needsSplit = $false }
 
     $totalBytes = [double]0
     foreach ($f in $files) { $totalBytes += [double]$f.Length }

@@ -194,7 +194,7 @@ $tbl.RowCount = 8
 [void]$tbl.RowStyles.Add((New-Object System.Windows.Forms.RowStyle('Absolute', 112)))  # 4. Drivers + 5. Profile
 [void]$tbl.RowStyles.Add((New-Object System.Windows.Forms.RowStyle('Absolute', 108)))  # 6. OOBE
 [void]$tbl.RowStyles.Add((New-Object System.Windows.Forms.RowStyle('Absolute', 118)))  # 7. Output
-[void]$tbl.RowStyles.Add((New-Object System.Windows.Forms.RowStyle('Absolute', 118)))  # ADK / USB / Actions
+[void]$tbl.RowStyles.Add((New-Object System.Windows.Forms.RowStyle('Absolute', 200)))  # ADK / USB / Actions
 [void]$tbl.RowStyles.Add((New-Object System.Windows.Forms.RowStyle('Percent', 100)))   # Log
 [void]$tbl.RowStyles.Add((New-Object System.Windows.Forms.RowStyle('Absolute', 26)))   # Status
 
@@ -233,7 +233,7 @@ Add-Cell $grpSrc 0 0 2
 
 # ===== ROW 1: 2. Editions (left) | 3. Updates (right) =====
 $grpEd = New-Object System.Windows.Forms.GroupBox
-$grpEd.Text = '2. Editions to service (-ImageIndexes; none checked = all)'; $grpEd.Dock = 'Fill'
+$grpEd.Text = '2. Edition to service (checked = the only edition in the output ISO)'; $grpEd.Dock = 'Fill'
 $grpEd.Size = New-Object System.Drawing.Size(636, 174)
 $lstEd = New-Object System.Windows.Forms.CheckedListBox
 $lstEd.CheckOnClick = $true
@@ -368,13 +368,32 @@ $grpAdk.Controls.AddRange(@($btnAdk, $lblAdk))
 $actRow.Controls.Add($grpAdk, 0, 0)
 
 $grpUsb = New-Object System.Windows.Forms.GroupBox; $grpUsb.Dock = 'Fill'; $grpUsb.Text = 'USB'
-$grpUsb.Size = New-Object System.Drawing.Size(315, 112)
+$grpUsb.Size = New-Object System.Drawing.Size(320, 195)
+$lblBurnIso = New-Object System.Windows.Forms.Label
+$lblBurnIso.Text = 'ISO to burn (blank = Output below)'; $lblBurnIso.AutoSize = $true; $lblBurnIso.Location = '14,20'
+$txtBurnIso = New-Object System.Windows.Forms.TextBox
+$txtBurnIso.Location = '14,40'; $txtBurnIso.Size = New-Object System.Drawing.Size(206, 23); $txtBurnIso.Anchor = 'Top,Left,Right'
+$btnBurnIso = New-Object System.Windows.Forms.Button
+$btnBurnIso.Text = '...'; $btnBurnIso.Size = New-Object System.Drawing.Size(74, 25); $btnBurnIso.Location = '230,39'; $btnBurnIso.Anchor = 'Top,Right'
+$lblFs = New-Object System.Windows.Forms.Label
+$lblFs.Text = 'Format'; $lblFs.AutoSize = $true; $lblFs.Location = '14,74'
+$cmbFs = New-Object System.Windows.Forms.ComboBox
+$cmbFs.DropDownStyle = 'DropDownList'; $cmbFs.Location = '68,70'; $cmbFs.Size = New-Object System.Drawing.Size(86, 23)
+[void]$cmbFs.Items.Add('NTFS')
+[void]$cmbFs.Items.Add('FAT32')
+[void]$cmbFs.Items.Add('exFAT')
+$cmbFs.SelectedIndex = 0
+$chkFullLog = New-Object System.Windows.Forms.CheckBox
+$chkFullLog.Text = 'Full log'; $chkFullLog.AutoSize = $true; $chkFullLog.Checked = $true; $chkFullLog.Location = '176,72'
+$progUsb = New-Object System.Windows.Forms.ProgressBar
+$progUsb.Style = 'Continuous'; $progUsb.Maximum = 100; $progUsb.Visible = $false
+$progUsb.Location = '14,98'; $progUsb.Size = New-Object System.Drawing.Size(290, 16); $progUsb.Anchor = 'Top,Left,Right'
 $btnUsb = New-Object System.Windows.Forms.Button
-$btnUsb.Text = 'Select USB flash drive and burn'; $btnUsb.Size = New-Object System.Drawing.Size(250, 26); $btnUsb.Location = '14,22'
+$btnUsb.Text = 'Select USB flash drive and burn'; $btnUsb.Size = New-Object System.Drawing.Size(290, 26); $btnUsb.Location = '14,122'; $btnUsb.Anchor = 'Top,Left,Right'
 $lblUsb = New-Object System.Windows.Forms.Label
-$lblUsb.Text = 'Formats the drive and copies the ISO install media onto it (install.wim is split under 4 GB for FAT32). Erases the drive.'; $lblUsb.AutoSize = $false
-$lblUsb.Location = '14,54'; $lblUsb.Size = New-Object System.Drawing.Size(280, 46)
-$grpUsb.Controls.AddRange(@($btnUsb, $lblUsb))
+$lblUsb.Text = 'Erases the selected drive, then formats it with the chosen filesystem (NTFS by default) and copies the install media. FAT32 splits install.wim under 4 GB.'; $lblUsb.AutoSize = $false
+$lblUsb.Location = '14,152'; $lblUsb.Size = New-Object System.Drawing.Size(292, 40)
+$grpUsb.Controls.AddRange(@($lblBurnIso, $txtBurnIso, $btnBurnIso, $lblFs, $cmbFs, $chkFullLog, $progUsb, $btnUsb, $lblUsb))
 $actRow.Controls.Add($grpUsb, 1, 0)
 
 $grpAc = New-Object System.Windows.Forms.GroupBox; $grpAc.Dock = 'Fill'; $grpAc.Text = 'Actions'
@@ -456,7 +475,9 @@ function ConvertTo-MetaInt {
     param($Value)
     if ($null -eq $Value) { return 0 }
     $parsed = 0
-    if ([int]::TryParse(([string]$Value).Trim(), [ref]$parsed)) { return $parsed }
+    $text = [string]$Value
+    if ($text -match '(\d+)') { [int]::TryParse($Matches[1], [ref]$parsed) | Out-Null; return $parsed }
+    if ([int]::TryParse($text.Trim(), [ref]$parsed)) { return $parsed }
     return 0
 }
 
@@ -603,6 +624,7 @@ function Load-Editions {
         }
     }
     Add-Log ('[gui] loaded ' + $count + ' edition(s) from inventory')
+    Select-DefaultEdition
 }
 
 function Load-EditionsFromIso {
@@ -649,6 +671,7 @@ function Load-EditionsFromIso {
             Add-Log ('[gui] output ISO name set from the selected image level: ' + $named)
         }
         Add-Log ('[gui] loaded ' + $count + ' edition(s) from the selected ISO; build ' + $script:DetectedBuild + '.' + $script:DetectedRevision)
+        Select-DefaultEdition
         if ($count -eq 0) {
             $preview = (($out -split "`r?`n") | ForEach-Object { $_.Trim() } | Where-Object { $_ } | Select-Object -First 6) -join ' | '
             Add-Log ('[gui] dism said: ' + $preview)
@@ -694,6 +717,22 @@ function Get-SelectedIndexes {
     return ,$idx
 }
 
+# Only the checked editions are exported, serviced and written to the output
+# ISO. When a list is loaded and nothing is checked, pick Pro (or the first
+# edition) so the default run builds a single-edition ISO instead of servicing
+# all eleven images.
+function Select-DefaultEdition {
+    if (-not $lstEd -or $lstEd.Items.Count -eq 0) { return }
+    if ($lstEd.CheckedItems.Count -gt 0) { return }
+    $pick = 0
+    for ($i = 0; $i -lt $lstEd.Items.Count; $i++) {
+        if ([string]$lstEd.Items[$i] -match '(?i)\bPro\b') { $pick = $i; break }
+    }
+    $lstEd.SetItemChecked($pick, $true)
+    if ($lstEd.SelectedIndex -lt 0) { $lstEd.SelectedIndex = $pick }
+    Add-Log ('[gui] edition pre-selected: ' + [string]$lstEd.Items[$pick] + ' (only checked editions are serviced and written to the output ISO)')
+}
+
 function Start-Run {
     param([int]$TargetPhase, [switch]$ReadOnly)
     if ($script:Child -and -not $script:Child.HasExited) { [void][System.Windows.Forms.MessageBox]::Show('A run is already in progress.'); return }
@@ -710,6 +749,15 @@ function Start-Run {
     $drv = ''
     if ($chkDrv.Checked) { $drv = ([string]$txtDrv.Text).Trim() }
     $idx = Get-SelectedIndexes
+    if ($idx.Count -eq 0) {
+        Add-Log '[gui] no edition checked: every edition in the image is serviced and written to the output ISO.'
+    }
+    elseif ($idx.Count -eq 1) {
+        Add-Log ('[gui] single-edition build: index ' + $idx[0] + ' is exported, serviced, then written to the output ISO.')
+    }
+    elseif ($idx.Count -gt 1) {
+        Add-Log ('[gui] multi-edition build: indexes ' + ($idx -join ', ') + ' are exported, serviced, then written to the output ISO.')
+    }
     $outName = ([string]$txtOut.Text).Trim()
 
     $uaFile = ''
@@ -754,19 +802,14 @@ $btnExportDrv.Add_Click({
     $ws = Get-Workspace
     if (-not $ws) { [void][System.Windows.Forms.MessageBox]::Show('Workspace is required.'); return }
     $srcDefault = Join-Path $ws 'Drivers'
-    if (-not (Test-Path -LiteralPath $srcDefault)) { [void](New-Item -ItemType Directory -Path $srcDefault -Force) }
-
-    # MessageBox::Show(text, caption, buttons, icon) - the caption must not be
-    # folded into the text, or 'Question' lands in the buttons slot and the
-    # call throws a PSInvalidCastException.
-    $ask = 'How do you want to export drivers?' + "`n`n" +
-        'Yes  = export the driver store of THIS running Windows machine with' + "`n" +
-        '       Export-WindowsDriver -Online (needs an elevated GUI).' + "`n" +
-        'No   = copy the driver folders already present in <Workspace>\Drivers.' + "`n" +
-        'Cancel = do nothing.'
-    $choose = [System.Windows.Forms.MessageBox]::Show($ask, 'Export drivers - choose method', 'YesNoCancel', 'Question')
-    if ($choose -eq 'Cancel') { return }
-    $modeOnline = ($choose -eq 'Yes')  # Yes = B (online export), No = A (copy existing folders)
+    if (-not (Test-Path -LiteralPath $srcDefault)) { [void](New-Item -ItemType Directory -Path $srcDefault -Force) }        # MessageBox::Show(text, caption, buttons, icon)
+        $ask = 'How do you want to export drivers?' + "`n`n" +
+            'Yes  = export the driver store of THIS running Windows machine with Export-WindowsDriver -Online (needs elevation).' + "`n" +
+            'No   = copy the driver folders already present in <Workspace>\Drivers.' + "`n" +
+            'Cancel = do nothing.'
+        $choose = [System.Windows.Forms.MessageBox]::Show($ask, 'Export drivers - choose method', 'YesNoCancel', 'Question')
+        if ($choose -eq 'Cancel') { return }
+        $modeOnline = ($choose -eq 'Yes')
 
     $d = New-Object System.Windows.Forms.FolderBrowserDialog
     $d.Description = 'Export drivers: choose a destination folder.'
@@ -946,6 +989,17 @@ if ($btnAdk) { $btnAdk.Add_Click({
 # ---------------------------------------------------------------------------
 # 8. Burn the finished ISO to a USB flash drive
 # ---------------------------------------------------------------------------
+if ($btnBurnIso) {
+    $btnBurnIso.Add_Click({
+        $d = New-Object System.Windows.Forms.OpenFileDialog
+        $d.Title = 'Select the ISO to burn to the USB drive'
+        $d.Filter = 'ISO images (*.iso)|*.iso|All files (*.*)|*.*'
+        $startDir = Join-Path (Get-Workspace) 'Output'
+        if (Test-Path -LiteralPath $startDir) { $d.InitialDirectory = $startDir }
+        if ($d.ShowDialog() -eq 'OK') { $txtBurnIso.Text = $d.FileName }
+    })
+}
+
 if ($btnUsb) {
     $btnUsb.Add_Click({
         $nl = [Environment]::NewLine
@@ -957,20 +1011,28 @@ if ($btnUsb) {
             [void][System.Windows.Forms.MessageBox]::Show('A USB burn is already running. Wait for it to finish before starting another.', 'Burn ISO to USB', 'OK', 'Warning')
             return
         }
-        $outName = ([string]$txtOut.Text).Trim()
-        if (-not $outName) {
-            [void][System.Windows.Forms.MessageBox]::Show('Output ISO name is empty.', 'Burn ISO to USB', 'OK', 'Warning')
-            return
-        }
+
+        # The ISO to burn is the explicit choice; when the field is blank the
+        # output ISO of the current build is used.
         $ws = Get-Workspace
-        $iso = Join-Path (Join-Path $ws 'Output') $outName
-        if (-not (Test-Path -LiteralPath $iso)) {
-            $missing = 'Output ISO not found:' + $nl + $iso + $nl + $nl + 'Run a build first (Phase 7).'
+        $iso = ([string]$txtBurnIso.Text).Trim()
+        if (-not $iso) {
+            $outName = ([string]$txtOut.Text).Trim()
+            if (-not $outName) {
+                [void][System.Windows.Forms.MessageBox]::Show(('Choose an ISO to burn with the ... button, or set the output ISO name so ' + $nl + '<Workspace>\Output\<name> can be used.'), 'Burn ISO to USB', 'OK', 'Warning')
+                return
+            }
+            $iso = Join-Path (Join-Path $ws 'Output') $outName
+        }
+        if (-not (Test-Path -LiteralPath $iso -PathType Leaf)) {
+            $missing = 'ISO not found:' + $nl + $iso + $nl + $nl + 'Pick an existing ISO with the ... button, or run a build first (Phase 7).'
             [void][System.Windows.Forms.MessageBox]::Show($missing, 'Burn ISO to USB', 'OK', 'Warning')
             return
         }
+        $fileSystem = 'NTFS'
+        if ($cmbFs.SelectedItem) { $fileSystem = [string]$cmbFs.SelectedItem }
 
-        $confirm = 'This will erase ALL data on the selected USB flash drive, format it, and copy the Windows installation media onto it.'
+        $confirm = 'This will erase ALL data on the selected USB flash drive, format it ' + $fileSystem + ', and copy the Windows installation media onto it.' + $nl + $nl + 'Target ISO: ' + $iso + $nl + $nl + 'Proceed?'
         if ([System.Windows.Forms.MessageBox]::Show($confirm, 'Burn ISO to USB - data loss', 'YesNo', 'Warning') -ne 'Yes') { return }
 
         $drives = @()
@@ -1025,7 +1087,7 @@ if ($btnUsb) {
         $dlg.Controls.Add($lv)
 
         $lblWarn = New-Object System.Windows.Forms.Label
-        $lblWarn.Text = 'The selected drive is ERASED (diskpart clean) before the ISO is copied.'
+        $lblWarn.Text = ('The selected drive is ERASED before the media is copied. Format: ' + $fileSystem)
         $lblWarn.ForeColor = [System.Drawing.Color]::DarkRed
         $lblWarn.AutoSize = $true
         $lblWarn.Location = New-Object System.Drawing.Point(12, 216)
@@ -1073,15 +1135,18 @@ if ($btnUsb) {
         [System.IO.File]::WriteAllText($burnErr, '')
 
         $burnArgs = @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', $script:BurnScript,
-                      '-IsoPath', $iso, '-DiskNumber', ([string]$diskNum), '-ProgressPath', $progPath)
-        Add-Log ('[gui] burning ' + $iso + ' to USB disk ' + $diskNum + ' (progress: ' + $progPath + ')')
+                      '-IsoPath', $iso, '-DiskNumber', ([string]$diskNum), '-ProgressPath', $progPath,
+                      '-FileSystem', $fileSystem)
+        Add-Log ('[gui] burning ' + $iso + ' to USB disk ' + $diskNum + ' as ' + $fileSystem + ' (progress: ' + $progPath + ')')
         Add-Log ('[gui] burner: powershell ' + ($burnArgs -join ' '))
-        $lblStatus.Text = ('Burning ISO to USB disk ' + $diskNum + ' ...')
+        Add-Log ('[gui] burner stdout: ' + $burnOut)
+        $lblStatus.Text = ('Burning ISO to USB disk ' + $diskNum + ' as ' + $fileSystem + ' ...')
 
         $script:UsbBurn = @{
             Running      = $true
             IsoPath      = $iso
             DiskNumber   = $diskNum
+            FileSystem   = $fileSystem
             StartedAt    = (Get-Date)
             ProgressPath = $progPath
             OutPath      = $burnOut
@@ -1090,6 +1155,7 @@ if ($btnUsb) {
             WrittenBytes = [double]0
             Process      = $null
             SeenLines    = 0
+            OutSeen      = 0
             LastPercent  = -1
         }
         try {
@@ -1102,7 +1168,12 @@ if ($btnUsb) {
             [void][System.Windows.Forms.MessageBox]::Show(('Could not start the burner:' + $nl + $_.Exception.Message), 'Burn ISO to USB', 'OK', 'Error')
             return
         }
+        $progUsb.Style = 'Continuous'
+        $progUsb.Value = 0
+        $progUsb.Visible = $true
         $btnUsb.Enabled = $false
+        $btnBurnIso.Enabled = $false
+        $cmbFs.Enabled = $false
         $script:UsbBurnTimer.Start()
     })
 }
@@ -1113,7 +1184,10 @@ if ($btnUsb) {
 $script:UsbBurnTimer = New-Object System.Windows.Forms.Timer
 $script:UsbBurnTimer.Interval = 500
 $script:UsbBurnTimer.Add_Tick({
-    if (-not $script:UsbBurn -or -not $script:UsbBurn.Running) { $script:UsbBurnTimer.Stop(); $btnUsb.Enabled = $true; return }
+    if (-not $script:UsbBurn -or -not $script:UsbBurn.Running) {
+        $script:UsbBurnTimer.Stop(); $btnUsb.Enabled = $true; $btnBurnIso.Enabled = $true; $cmbFs.Enabled = $true
+        return
+    }
 
     $lines = @(Get-Content -LiteralPath $script:UsbBurn.ProgressPath -ErrorAction SilentlyContinue)
     if ($lines.Count -gt $script:UsbBurn.SeenLines) {
@@ -1132,7 +1206,8 @@ $script:UsbBurnTimer.Add_Tick({
                 if ($totalBytes -gt 0) { $pct = [math]::Min(100, [math]::Round(($doneBytes / $totalBytes) * 100, 1)) }
                 if ($pct -ne $script:UsbBurn.LastPercent) {
                     $script:UsbBurn.LastPercent = $pct
-                    $lblStatus.Text = ('Burning ISO to USB disk ' + $script:UsbBurn.DiskNumber + ': ' + $pct + '% (' + [math]::Round($doneBytes / 1MB, 1) + ' of ' + [math]::Round($totalBytes / 1MB, 1) + ' MB)')
+                    $progUsb.Value = [int]$pct
+                    $lblStatus.Text = ('Burning ISO to USB disk ' + $script:UsbBurn.DiskNumber + ' (' + $script:UsbBurn.FileSystem + '): ' + $pct + '% (' + [math]::Round($doneBytes / 1MB, 1) + ' of ' + [math]::Round($totalBytes / 1MB, 1) + ' MB)')
                 }
             }
             elseif ($line -match '^PHASE:(.+)$') {
@@ -1147,6 +1222,9 @@ $script:UsbBurnTimer.Add_Tick({
                 $script:UsbBurn.Running = $false
                 $script:UsbBurnTimer.Stop()
                 $btnUsb.Enabled = $true
+                $btnBurnIso.Enabled = $true
+                $cmbFs.Enabled = $true
+                $progUsb.Value = 100
                 Add-Log ('[gui] USB burn complete: ' + $dest)
                 $lblStatus.Text = 'USB burn complete'
                 [void][System.Windows.Forms.MessageBox]::Show(('ISO written to the USB drive:' + [Environment]::NewLine + $dest), 'Burn ISO to USB', 'OK', 'Information')
@@ -1156,6 +1234,8 @@ $script:UsbBurnTimer.Add_Tick({
                 $script:UsbBurn.Running = $false
                 $script:UsbBurnTimer.Stop()
                 $btnUsb.Enabled = $true
+                $btnBurnIso.Enabled = $true
+                $cmbFs.Enabled = $true
                 Add-Log ('[gui] USB burn FAILED: ' + $reason)
                 $lblStatus.Text = 'USB burn failed'
                 [void][System.Windows.Forms.MessageBox]::Show(('USB burn failed:' + [Environment]::NewLine + [Environment]::NewLine + $reason), 'Burn ISO to USB', 'OK', 'Error')
@@ -1164,6 +1244,20 @@ $script:UsbBurnTimer.Add_Tick({
     }
     if (-not $script:UsbBurn.Running) { return }
 
+    # Full log: every line the burner printed, not only its PHASE/ERROR markers.
+    if ($chkFullLog.Checked -and $script:UsbBurn.OutPath -and (Test-Path -LiteralPath $script:UsbBurn.OutPath)) {
+        $outLines = @(Get-Content -LiteralPath $script:UsbBurn.OutPath -ErrorAction SilentlyContinue)
+        if ($outLines.Count -gt [int]$script:UsbBurn.OutSeen) {
+            $oFrom = [int]$script:UsbBurn.OutSeen
+            if ($oFrom -lt 0) { $oFrom = 0 }
+            foreach ($ol in @($outLines[$oFrom..($outLines.Count - 1)])) {
+                $t = [string]$ol
+                if ($t) { Add-Log ('[usb] ' + $t) }
+            }
+            $script:UsbBurn.OutSeen = $outLines.Count
+        }
+    }
+
     # The burner can stop before it writes a terminal line (crash, missing
     # elevation, drive removed). Never leave the UI "burning" forever.
     $proc = $script:UsbBurn.Process
@@ -1171,6 +1265,8 @@ $script:UsbBurnTimer.Add_Tick({
         $script:UsbBurn.Running = $false
         $script:UsbBurnTimer.Stop()
         $btnUsb.Enabled = $true
+        $btnBurnIso.Enabled = $true
+        $cmbFs.Enabled = $true
         $detail = ''
         if ($script:UsbBurn.ErrPath -and (Test-Path -LiteralPath $script:UsbBurn.ErrPath)) {
             $detail = ([string](Get-Content -LiteralPath $script:UsbBurn.ErrPath -Raw -ErrorAction SilentlyContinue)).Trim()

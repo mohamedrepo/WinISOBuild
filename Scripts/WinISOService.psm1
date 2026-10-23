@@ -207,8 +207,13 @@ function Invoke-WinISOProcess {
         [int]$TimeoutSeconds = 3600,
         [string]$LogPath = ''
     )
+    # Quote only arguments that contain whitespace. An argument that already
+    # carries quotes (oscdimg -bootdata:2#p0,e,b<path>) must pass through
+    # untouched: re-wrapping it produced ""D:\...etfsboot.com"" and oscdimg
+    # failed with "Could not open boot sector file".
     $argString = ($ArgumentList | ForEach-Object {
-        if ($_ -match '[\s"]') { '"' + ($_ -replace '"', '\"') + '"' } else { $_ }
+        $a = [string]$_
+        if ($a -match '\s') { '"' + ($a -replace '"', '\"') + '"' } else { $a }
     }) -join ' '
     $psi = New-Object System.Diagnostics.ProcessStartInfo
     $psi.FileName = $FilePath
@@ -1433,7 +1438,9 @@ function Copy-WinISOSourceWims {
     # Copies boot.wim and install.wim/esd from the (read-only) source into
     # ExtractedISO\sources\. The original source is never modified; servicing
     # always happens on this copy.
-    param([string]$SourcePath, [string]$DestDir, [string]$LogPath = '')
+    # -Force re-copies even when a copy already exists (used to restore the
+    # pristine multi-edition image after a previous run exported one edition).
+    param([string]$SourcePath, [string]$DestDir, [string]$LogPath = '', [switch]$Force)
     $srcDir = Join-Path $DestDir 'sources'
     if (-not (Test-Path -LiteralPath $srcDir)) { [void](New-Item -ItemType Directory -Path $srcDir -Force) }
     $mountedIso = $null
@@ -1469,13 +1476,14 @@ function Copy-WinISOSourceWims {
         $bootDest = ''
         if ($installSrc) {
             $installDest = Join-Path $srcDir ([System.IO.Path]::GetFileName($installSrc))
-            if (-not (Test-Path -LiteralPath $installDest)) {
+            if ($Force -or -not (Test-Path -LiteralPath $installDest)) {
                 Copy-Item -LiteralPath $installSrc -Destination $installDest -Force
                 if ($LogPath) { Add-WinISOLogLine -Path $LogPath -Line ('Copied ' + $installSrc + ' -> ' + $installDest) }
             }
             else {
                 if ($LogPath) { Add-WinISOLogLine -Path $LogPath -Line ('Reusing existing copy ' + $installDest + ' (idempotent)') }
             }
+            if ($Force) { try { Set-ItemProperty -LiteralPath $installDest -Name IsReadOnly -Value $false -ErrorAction SilentlyContinue } catch { } }
         }
         $bootSrc = Join-Path $srcRoot 'sources\boot.wim'
         if (Test-Path -LiteralPath $bootSrc) {
@@ -1616,7 +1624,10 @@ function Invoke-WinISOServiceImage {
             $r.Steps.Add('Pristine pre-servicing backup written to ' + $backupPath)
         }
 
-        # Enumerate indexes to service (all detected indexes unless restricted).
+        # Enumerate indexes to service. A selection is exported out of the
+        # multi-edition WIM into a single-purpose WIM FIRST, so only the chosen
+        # editions are mounted (fast) and only they end up in the output ISO.
+        # The pristine multi-edition image stays in Backup\.
         $wimInfo = Get-WinISOWimInfo -WimPath $installWim -LogPath $log
         if ($wimInfo.ExitCode -ne 0) {
             $r.Status = 'Failed'
@@ -1624,8 +1635,92 @@ function Invoke-WinISOServiceImage {
             $r.Summary = 'WIM metadata read failed before servicing.'
             return $r
         }
-        $targetIndexes = @($ImageIndexes)
-        if ($targetIndexes.Count -eq 0) { $targetIndexes = @($wimInfo.Indexes | ForEach-Object { [int]$_.Index }) }
+        $allIndexes = @($wimInfo.Indexes | ForEach-Object { [int]$_.Index })
+        $requestedIndexes = @($ImageIndexes | ForEach-Object { [int]$_ })
+        $sourceIndexes = @($requestedIndexes | Where-Object { $allIndexes -contains $_ })
+
+        # A previous run may already have written a single-edition WIM here
+        # (Copy-WinISOSourceWims reuses an existing copy), so restore the
+        # pristine image from the source media before exporting the selection.
+        if ($requestedIndexes.Count -gt 0 -and $sourceIndexes.Count -lt $requestedIndexes.Count) {
+            Add-WinISOLogLine -Path $log -Line ('Extracted WIM lacks requested index(es) ' + ($requestedIndexes -join ', ') + '; restoring it from the source media.')
+            try { Remove-Item -LiteralPath $installWim -Force -ErrorAction Stop } catch { }
+            $restore = Copy-WinISOSourceWims -SourcePath $sourcePath -DestDir (Join-Path $full 'ExtractedISO') -LogPath $log -Force
+            if ($restore.Ok -and $restore.InstallWim) {
+                $installWim = [string]$restore.InstallWim
+                $wimInfo = Get-WinISOWimInfo -WimPath $installWim -LogPath $log
+                if ($wimInfo.ExitCode -eq 0) {
+                    $allIndexes = @($wimInfo.Indexes | ForEach-Object { [int]$_.Index })
+                    $sourceIndexes = @($requestedIndexes | Where-Object { $allIndexes -contains $_ })
+                }
+            }
+        }
+        if ($requestedIndexes.Count -gt 0 -and $sourceIndexes.Count -lt $requestedIndexes.Count) {
+            $missingIdx = @($requestedIndexes | Where-Object { $allIndexes -notcontains $_ })
+            $r.Status = 'Failed'
+            $r.Errors.Add('Requested image index(es) ' + ($missingIdx -join ', ') + ' are not present in ' + $installWim + ' (available: ' + ($allIndexes -join ', ') + ').')
+            $r.Summary = 'Requested edition(s) not found in the image.'
+            Add-WinISOLogLine -Path $log -Line ('FAILED: ' + $r.Errors[$r.Errors.Count - 1])
+            return $r
+        }
+        if ($sourceIndexes.Count -eq 0) { $sourceIndexes = @($allIndexes) }
+        $exportedOnly = $false
+
+        if ($sourceIndexes.Count -lt $allIndexes.Count) {
+            $workDir = Join-Path $full 'Work'
+            if (-not (Test-Path -LiteralPath $workDir)) { [void](New-Item -ItemType Directory -Path $workDir -Force) }
+            $ext = [System.IO.Path]::GetExtension($installWim)
+            if (-not $ext) { $ext = '.wim' }
+            $exportTemp = Join-Path $workDir ('install.selected' + $ext)
+            if (Test-Path -LiteralPath $exportTemp) { Remove-Item -LiteralPath $exportTemp -Force }
+            # DISM appends when the destination .wim exists, so the first export
+            # creates the file and later selections add an index to it.
+            $compress = 'max'
+            if ($ext -ieq '.esd') { $compress = 'recovery' }
+            $exportOk = $true
+            foreach ($srcIdx in $sourceIndexes) {
+                $ex = Invoke-WinISODism -Arguments @('/English', '/Export-Image', ('/SourceImageFile:' + $installWim), ('/SourceIndex:' + [string]$srcIdx), ('/DestinationImageFile:' + $exportTemp), ('/Compress:' + $compress), '/CheckIntegrity') -TimeoutSeconds 7200 -LogPath $log
+                if ($ex.ExitCode -ne 0) {
+                    $exportOk = $false
+                    $r.Errors.Add('Exporting index ' + $srcIdx + ' out of ' + $installWim + ' failed (exit ' + $ex.ExitCode + '): ' + [string]$ex.Output)
+                    break
+                }
+                Add-WinISOLogLine -Path $log -Line ('Exported source index ' + $srcIdx + ' into ' + $exportTemp)
+            }
+            if (-not $exportOk) {
+                if (Test-Path -LiteralPath $exportTemp) { Remove-Item -LiteralPath $exportTemp -Force -ErrorAction SilentlyContinue }
+                $r.Status = 'Failed'
+                $r.Summary = 'Could not export the selected edition(s) before servicing.'
+                return $r
+            }
+            $expInfo = Get-WinISOWimInfo -WimPath $exportTemp -LogPath $log
+            $gotIndexes = 0
+            if ($expInfo.ExitCode -eq 0) { $gotIndexes = @($expInfo.Indexes).Count }
+            if ($expInfo.ExitCode -ne 0 -or $gotIndexes -ne $sourceIndexes.Count) {
+                if (Test-Path -LiteralPath $exportTemp) { Remove-Item -LiteralPath $exportTemp -Force -ErrorAction SilentlyContinue }
+                $r.Status = 'Failed'
+                $r.Errors.Add('The exported image holds ' + $gotIndexes + ' index(es) instead of ' + $sourceIndexes.Count + '; refusing to service an unexpected image.')
+                $r.Summary = 'Exported selection verification failed.'
+                return $r
+            }
+            try {
+                Remove-Item -LiteralPath $installWim -Force -ErrorAction Stop
+                Move-Item -LiteralPath $exportTemp -Destination $installWim -Force -ErrorAction Stop
+            }
+            catch {
+                $r.Status = 'Failed'
+                $r.Errors.Add('Could not install the exported selection as ' + $installWim + ': ' + $_.Exception.Message)
+                $r.Summary = 'Could not replace the media image with the exported selection.'
+                return $r
+            }
+            $targetIndexes = @(1..$sourceIndexes.Count)
+            $exportedOnly = $true
+            $r.Steps.Add('Exported only source index(es) ' + ($sourceIndexes -join ', ') + ' into ' + $installWim + '; the output ISO carries just those edition(s).')
+            Add-WinISOLogLine -Path $log -Line ('Media image reduced to the selected edition(s): ' + ($sourceIndexes -join ', ') + ' -> new indexes ' + ($targetIndexes -join ', '))
+        }
+        else {
+            $targetIndexes = $sourceIndexes
+        }
         $r.Steps.Add('Will service indexes: ' + ($targetIndexes -join ', '))
 
         # SSU packages first (prerequisite ordering), everything else after.
@@ -1782,6 +1877,8 @@ function Invoke-WinISOServiceImage {
             source         = $sourcePath
             wim_serviced   = $installWim
             indexes        = @($targetIndexes)
+            source_indexes = @($sourceIndexes)
+            exported_selection_only = $exportedOnly
             updates_requested = @($kbsToAdd)
             updates_missing_files = @($missingKbs)
             drivers_requested = $driversRequested
@@ -2132,7 +2229,10 @@ function Invoke-WinISOProfile {
 
 function Copy-WinISOFullMedia {
     # Full read-only extraction of an ISO into the destination directory.
-    param([string]$SourceIso, [string]$DestDir, [string]$LogPath = '')
+    # -PreserveServicedImage keeps an install.wim/install.esd that already
+    # exists in the destination: re-extracting it would silently replace the
+    # serviced image with the pristine source one.
+    param([string]$SourceIso, [string]$DestDir, [string]$LogPath = '', [switch]$PreserveServicedImage)
     $mountedIso = $null
     try {
         if (-not (Test-Path -LiteralPath $DestDir)) { [void](New-Item -ItemType Directory -Path $DestDir -Force) }
@@ -2150,7 +2250,27 @@ function Copy-WinISOFullMedia {
             if ($letter) { break }
         }
         if (-not $letter) { return @{ Ok = $false; Error = 'ISO attached but no drive letter was assigned.' } }
-        Copy-Item -Path ($letter + ':\*') -Destination $DestDir -Recurse -Force
+        if ($PreserveServicedImage) {
+            $destSources = Join-Path $DestDir 'sources'
+            if (-not (Test-Path -LiteralPath $destSources)) { [void](New-Item -ItemType Directory -Path $destSources -Force) }
+            foreach ($item in @(Get-ChildItem -LiteralPath ($letter + ':\') -Force -ErrorAction Stop)) {
+                if ($item.Name -ieq 'sources') {
+                    foreach ($sub in @(Get-ChildItem -LiteralPath $item.FullName -Force -ErrorAction SilentlyContinue)) {
+                        if ($sub.Name -match '(?i)^install\.(wim|esd)$') {
+                            if ($LogPath) { Add-WinISOLogLine -Path $LogPath -Line ('Kept the serviced media image; not overwritten by ' + $sub.Name) }
+                            continue
+                        }
+                        Copy-Item -LiteralPath $sub.FullName -Destination $destSources -Recurse -Force
+                    }
+                }
+                else {
+                    Copy-Item -LiteralPath $item.FullName -Destination $DestDir -Recurse -Force
+                }
+            }
+        }
+        else {
+            Copy-Item -Path ($letter + ':\*') -Destination $DestDir -Recurse -Force
+        }
         Get-ChildItem -LiteralPath $DestDir -Recurse -File -ErrorAction SilentlyContinue | ForEach-Object { if ($_.IsReadOnly) { $_.IsReadOnly = $false } }
         if ($LogPath) { Add-WinISOLogLine -Path $LogPath -Line ('Full media extraction: ' + $SourceIso + ' -> ' + $DestDir) }
         return @{ Ok = $true; Error = '' }
@@ -2198,7 +2318,7 @@ function Invoke-WinISORebuildMedia {
         }
         # Full extraction if the media tree is incomplete and a source ISO was given.
         if ($SourceIso -and (Test-Path -LiteralPath $SourceIso -PathType Leaf) -and -not (Test-Path -LiteralPath (Join-Path $mediaRoot 'boot\etfsboot.com'))) {
-            $extract = Copy-WinISOFullMedia -SourceIso $SourceIso -DestDir $mediaRoot -LogPath $log
+            $extract = Copy-WinISOFullMedia -SourceIso $SourceIso -DestDir $mediaRoot -LogPath $log -PreserveServicedImage
             if (-not $extract.Ok) {
                 $r.Status = 'Failed'
                 $r.Errors.Add('Full media extraction failed: ' + $extract.Error)
@@ -2287,18 +2407,41 @@ function Invoke-WinISORebuildMedia {
                 }
             }
         }
-        if (-not $isoName) { $isoName = ('WinISO-' + $buildStr + '-' + $archStr + '-' + $stamp + '.iso') }
+        if (-not $isoName) {
+            # Name the ISO after the level the image has AFTER servicing, so the
+            # output never looks like the unmodified source build.
+            $level = ''
+            try {
+                $wimProbe = Join-Path $mediaRoot 'sources\install.wim'
+                if (Test-Path -LiteralPath $wimProbe) {
+                    $gi = Invoke-WinISODism -Arguments @('/English', '/Get-ImageInfo', ('/ImageFile:' + $wimProbe), '/Index:1') -TimeoutSeconds 300 -LogPath $log
+                    if ($gi.ExitCode -eq 0) {
+                        $mb = [regex]::Match($gi.Output, '(?im)^\s*Version\s*:\s*10\.0\.(\d+)')
+                        $mr = [regex]::Match($gi.Output, '(?im)^\s*ServicePack Build\s*:\s*(\d+)')
+                        if ($mb.Success) {
+                            $level = $mb.Groups[1].Value
+                            if ($mr.Success) { $level += '.' + $mr.Groups[1].Value }
+                        }
+                    }
+                }
+            }
+            catch { $level = '' }
+            if ($level) { $isoName = ('Win11_Pro_x64_' + $level + '_Updated_' + (Get-Date -Format 'yyyyMMdd') + '.iso') }
+            else { $isoName = ('WinISO-' + $buildStr + '-' + $archStr + '-' + $stamp + '.iso') }
+        }
         if ($isoName -notmatch '\.iso$') { $isoName += '.iso' }
         $isoPath = Join-Path (Join-Path $full 'Output') $isoName
 
         # Build the UDF ISO with BIOS + UEFI boot entries.
-        $bootdata = '2#p0,e,b"' + $etfs + '"#pEF,e,b"' + $efisys + '"'
+        # oscdimg's -bootdata: list takes bare paths (no quotes); quotes become
+        # part of the file name and the boot sector cannot be opened.
+        $bootdata = '2#p0,e,b' + $etfs + '#pEF,e,b' + $efisys
         $build = Invoke-WinISOProcess -FilePath $osc -ArgumentList @(
             '-m', '-o', '-u2', '-udfver102',
             ('-bootdata:' + $bootdata),
             ('-l' + $label),
-            ('"' + $mediaRoot + '"'),
-            ('"' + $isoPath + '"')
+            $mediaRoot,
+            $isoPath
         ) -TimeoutSeconds 3600 -LogPath $log
         if ($build.ExitCode -ne 0 -or -not (Test-Path -LiteralPath $isoPath)) {
             $r.Status = 'Failed'
@@ -2322,10 +2465,27 @@ function Invoke-WinISORebuildMedia {
             split_files   = @()
             fat32_iso     = ''
         }
-        if ($wimFile.Length -gt 4GB) {
+        $fat32FreeGB = 0
+        try {
+            $drv = Get-PSDrive -Name ((Split-Path -Qualifier $full).TrimEnd(':')) -ErrorAction SilentlyContinue
+            if ($drv) { $fat32FreeGB = [math]::Round($drv.Free / 1GB, 1) }
+        }
+        catch { $fat32FreeGB = 0 }
+        $fat32NeedGB = [math]::Round(([double]$wimFile.Length * 2.3) / 1GB, 1)
+        if ($wimFile.Length -gt 4GB -and $fat32FreeGB -gt 0 -and $fat32FreeGB -lt $fat32NeedGB) {
+            # The UDF ISO is already written; do not fail the phase over an
+            # optional FAT32 companion copy that cannot fit on the volume.
+            Add-WinISOLogLine -Path $log -Line ('Skipping the FAT32 split media: only ' + $fat32FreeGB + ' GB free, about ' + $fat32NeedGB + ' GB needed. The UDF ISO remains complete.')
+            $r.Errors.Add('FAT32 split media skipped: not enough free space (' + $fat32FreeGB + ' GB free, ' + $fat32NeedGB + ' GB needed).')
+        }
+        elseif ($wimFile.Length -gt 4GB) {
             Add-WinISOLogLine -Path $log -Line ('install.wim is ' + [math]::Round($wimFile.Length / 1GB, 2) + ' GiB (> 4 GiB): applying the split-WIM (FAT32 media) strategy.')
             $staging = Join-Path $full 'Output\FAT32-Media'
             if (Test-Path -LiteralPath $staging) { Remove-Item -LiteralPath $staging -Recurse -Force }
+            # The destination must exist first: copying several sources onto a
+            # path that does not exist turns the first item into the target and
+            # the rest fail with "Container cannot be copied onto existing leaf item".
+            [void](New-Item -ItemType Directory -Path $staging -Force)
             Copy-Item -Path (Join-Path $mediaRoot '*') -Destination $staging -Recurse -Force
             $stagingInstall = Join-Path $staging ('sources\' + [System.IO.Path]::GetFileName($installWim))
             if (Test-Path -LiteralPath $stagingInstall) { Remove-Item -LiteralPath $stagingInstall -Force }
@@ -2347,8 +2507,8 @@ function Invoke-WinISORebuildMedia {
                     '-m', '-o', '-u2', '-udfver102',
                     ('-bootdata:' + $bootdata),
                     ('-l' + $label),
-                    ('"' + $staging + '"'),
-                    ('"' + $fat32Iso + '"')
+                    $staging,
+                    $fat32Iso
                 ) -TimeoutSeconds 3600 -LogPath $log
                 if ($build2.ExitCode -eq 0 -and (Test-Path -LiteralPath $fat32Iso)) {
                     $mediaReport.fat32_iso = $fat32Iso
