@@ -43,6 +43,7 @@ Describe 'Scripts parse cleanly' {
         'Invoke-WinISOIntegrate.ps1',
         'Add-WinISODrivers.ps1',
         'Build-WinISOUpdated.ps1',
+        'Burn-WinISOToUsb.ps1',
         'Validate-WinISO.ps1',
         'Test-WinISOGuiWiring.ps1'
     )
@@ -84,6 +85,13 @@ Describe 'Entry point self tests' {
         $r.ExitCode | Should Be 0
         $r.StdOut | Should Match 'DRY RUN'
         $r.StdOut | Should Match 'Would export index 6'
+    }
+
+    It 'the USB burner reports a missing ISO without touching a disk' {
+        $r = Invoke-WinISOChildScript -ScriptPath (Join-Path $script:root 'Burn-WinISOToUsb.ps1') `
+             -ScriptArgs @('-IsoPath', (Join-Path $env:TEMP 'definitely-not-an.iso'), '-DiskNumber', '99', '-DryRun')
+        $r.ExitCode | Should Be 1
+        $r.StdOut | Should Match 'ERROR:source ISO not found'
     }
 
     It 'the GUI builds headlessly with every control wired' {

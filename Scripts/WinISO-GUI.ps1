@@ -19,6 +19,7 @@ $ErrorActionPreference = 'Stop'
 
 $script:Orchestrator = Join-Path $PSScriptRoot 'Invoke-WinISOService.ps1'
 $script:UnattendGen  = Join-Path $PSScriptRoot 'New-UnattendXml.ps1'
+$script:BurnScript   = Join-Path $PSScriptRoot 'Burn-WinISOToUsb.ps1'
 $script:Child        = $null
 $script:LogOut       = ''
 $script:LogErr       = ''
@@ -371,7 +372,7 @@ $grpUsb.Size = New-Object System.Drawing.Size(315, 112)
 $btnUsb = New-Object System.Windows.Forms.Button
 $btnUsb.Text = 'Select USB flash drive and burn'; $btnUsb.Size = New-Object System.Drawing.Size(250, 26); $btnUsb.Location = '14,22'
 $lblUsb = New-Object System.Windows.Forms.Label
-$lblUsb.Text = 'Writes the output ISO to a USB drive (FAT32 under 4 GB, NTFS otherwise). Erases the drive.'; $lblUsb.AutoSize = $false
+$lblUsb.Text = 'Formats the drive and copies the ISO install media onto it (install.wim is split under 4 GB for FAT32). Erases the drive.'; $lblUsb.AutoSize = $false
 $lblUsb.Location = '14,54'; $lblUsb.Size = New-Object System.Drawing.Size(280, 46)
 $grpUsb.Controls.AddRange(@($btnUsb, $lblUsb))
 $actRow.Controls.Add($grpUsb, 1, 0)
@@ -952,6 +953,10 @@ if ($btnUsb) {
             [void][System.Windows.Forms.MessageBox]::Show('A build run is in progress. Wait for it to finish before burning a USB drive.', 'Burn ISO to USB', 'OK', 'Warning')
             return
         }
+        if ($script:UsbBurn -and $script:UsbBurn.Running) {
+            [void][System.Windows.Forms.MessageBox]::Show('A USB burn is already running. Wait for it to finish before starting another.', 'Burn ISO to USB', 'OK', 'Warning')
+            return
+        }
         $outName = ([string]$txtOut.Text).Trim()
         if (-not $outName) {
             [void][System.Windows.Forms.MessageBox]::Show('Output ISO name is empty.', 'Burn ISO to USB', 'OK', 'Warning')
@@ -965,7 +970,7 @@ if ($btnUsb) {
             return
         }
 
-        $confirm = 'This will erase ALL data on the selected USB flash drive and write the ISO to it.' + $nl + $nl + 'Target ISO: ' + $iso + $nl + $nl + 'Proceed?'
+        $confirm = 'This will erase ALL data on the selected USB flash drive, format it, and copy the Windows installation media onto it.'
         if ([System.Windows.Forms.MessageBox]::Show($confirm, 'Burn ISO to USB - data loss', 'YesNo', 'Warning') -ne 'Yes') { return }
 
         $drives = @()
@@ -1052,9 +1057,25 @@ if ($btnUsb) {
             return
         }
 
-        $progPath = Join-Path $env:TEMP ('winiso-usb-' + (Get-Date -Format 'yyyyMMdd-HHmmss') + '.progress')
+        if (-not (Test-Path -LiteralPath $script:BurnScript)) {
+            [void][System.Windows.Forms.MessageBox]::Show(('Burner script not found:' + $nl + $script:BurnScript), 'Burn ISO to USB', 'OK', 'Error')
+            return
+        }
+
+        $stamp = Get-Date -Format 'yyyyMMdd-HHmmss'
+        $progPath = Join-Path $env:TEMP ('winiso-usb-' + $stamp + '.progress')
+        $logDir = Join-Path $env:TEMP ('winiso-usb-' + $stamp)
+        [void](New-Item -ItemType Directory -Path $logDir -Force)
+        $burnOut = Join-Path $logDir 'stdout.log'
+        $burnErr = Join-Path $logDir 'stderr.log'
         [System.IO.File]::WriteAllText($progPath, ('START' + $nl))
+        [System.IO.File]::WriteAllText($burnOut, '')
+        [System.IO.File]::WriteAllText($burnErr, '')
+
+        $burnArgs = @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', $script:BurnScript,
+                      '-IsoPath', $iso, '-DiskNumber', ([string]$diskNum), '-ProgressPath', $progPath)
         Add-Log ('[gui] burning ' + $iso + ' to USB disk ' + $diskNum + ' (progress: ' + $progPath + ')')
+        Add-Log ('[gui] burner: powershell ' + ($burnArgs -join ' '))
         $lblStatus.Text = ('Burning ISO to USB disk ' + $diskNum + ' ...')
 
         $script:UsbBurn = @{
@@ -1063,86 +1084,25 @@ if ($btnUsb) {
             DiskNumber   = $diskNum
             StartedAt    = (Get-Date)
             ProgressPath = $progPath
-            TotalBytes   = (Get-Item -LiteralPath $iso).Length
-            WrittenBytes = 0
-            Job          = $null
-            ProgressRead = 0
+            OutPath      = $burnOut
+            ErrPath      = $burnErr
+            TotalBytes   = [double](Get-Item -LiteralPath $iso).Length
+            WrittenBytes = [double]0
+            Process      = $null
+            SeenLines    = 0
+            LastPercent  = -1
         }
-
-        $script:UsbBurn.Job = Start-Job -ScriptBlock {
-            param([string]$IsoPath, [int]$DiskNumber, [string]$ProgressPath)
-            $nlJob = [Environment]::NewLine
-            function Write-Progress-Line { param([string]$Line)
-                try { [System.IO.File]::AppendAllText($ProgressPath, ($Line + $nlJob)) } catch { }
-            }
-            try {
-                $env:Path = $env:SystemRoot + '\System32;' + $env:SystemRoot + '\System32\WindowsPowerShell\v1.0;' + $env:Path
-                $disk = Get-Disk -Number $DiskNumber -ErrorAction Stop
-                if ($disk.IsBoot) { Write-Progress-Line 'ERROR:refusing to write to the boot disk'; return }
-                if ($disk.IsSystem) { Write-Progress-Line 'ERROR:refusing to write to the system disk'; return }
-                $total = (Get-Item -LiteralPath $IsoPath).Length
-                $fs = 'NTFS'
-                if ($disk.Size -le 32GB -and $total -lt 4294967295) { $fs = 'FAT32' }
-                Write-Progress-Line ('PHASE:formatting disk ' + $DiskNumber + ' as ' + $fs)
-
-                $dpScript = [System.IO.Path]::GetTempFileName()
-                $dpLines = @(
-                    ('SELECT DISK ' + $DiskNumber),
-                    'CLEAN',
-                    'CREATE PARTITION PRIMARY',
-                    ('FORMAT FS=' + $fs + ' LABEL=WINISO QUICK'),
-                    'ASSIGN',
-                    'EXIT'
-                )
-                [System.IO.File]::WriteAllLines($dpScript, $dpLines, (New-Object System.Text.UTF8Encoding($false)))
-                $dp = Start-Process -FilePath (Join-Path $env:SystemRoot 'System32\diskpart.exe') -ArgumentList '/s', $dpScript -NoNewWindow -Wait -PassThru
-                Remove-Item -LiteralPath $dpScript -Force -ErrorAction SilentlyContinue
-                if ($dp.ExitCode -ne 0) { Write-Progress-Line ('ERROR:diskpart failed with exit code ' + $dp.ExitCode); return }
-
-                Write-Progress-Line 'PHASE:waiting for the formatted volume'
-                $letter = ''
-                for ($i = 0; $i -lt 60; $i++) {
-                    Start-Sleep -Milliseconds 500
-                    $vol = Get-Volume -FileSystemLabel 'WINISO' -ErrorAction SilentlyContinue | Where-Object { $_.DriveLetter } | Select-Object -First 1
-                    if ($vol) { $letter = [string]$vol.DriveLetter; break }
-                }
-                if (-not $letter) { Write-Progress-Line 'ERROR:the formatted volume never received a drive letter'; return }
-
-                $dest = $letter + ':\'
-                $tempFile = Join-Path $dest 'winiso-temp.iso'
-                $finalFile = Join-Path $dest ([System.IO.Path]::GetFileName($IsoPath))
-                Write-Progress-Line ('PHASE:copying ISO to ' + $dest)
-                $inStream = [System.IO.File]::OpenRead($IsoPath)
-                $outStream = [System.IO.File]::Create($tempFile)
-                try {
-                    $buf = New-Object byte[] (4MB)
-                    $done = 0
-                    $reported = 0
-                    while ($true) {
-                        $n = $inStream.Read($buf, 0, $buf.Length)
-                        if ($n -le 0) { break }
-                        $outStream.Write($buf, 0, $n)
-                        $done += $n
-                        if (($done - $reported) -ge 32MB) {
-                            $reported = $done
-                            Write-Progress-Line ('PROGRESS:' + $done + ':' + $total)
-                        }
-                    }
-                    $outStream.Flush()
-                }
-                finally {
-                    $inStream.Close()
-                    $outStream.Close()
-                }
-                Write-Progress-Line 'PHASE:finalizing the copy'
-                Move-Item -LiteralPath $tempFile -Destination $finalFile -Force
-                Write-Progress-Line ('DONE:' + $finalFile + ':' + $total + ':' + $total)
-            }
-            catch {
-                Write-Progress-Line ('ERROR:' + $_.Exception.Message)
-            }
-        } -ArgumentList $iso, $diskNum, $progPath
-
+        try {
+            $script:UsbBurn.Process = Start-Process -FilePath 'powershell.exe' -ArgumentList $burnArgs -PassThru -WindowStyle Hidden `
+                    -RedirectStandardOutput $burnOut -RedirectStandardError $burnErr
+        }
+        catch {
+            $script:UsbBurn.Running = $false
+            Add-Log ('[gui] could not start the burner: ' + $_.Exception.Message)
+            [void][System.Windows.Forms.MessageBox]::Show(('Could not start the burner:' + $nl + $_.Exception.Message), 'Burn ISO to USB', 'OK', 'Error')
+            return
+        }
+        $btnUsb.Enabled = $false
         $script:UsbBurnTimer.Start()
     })
 }
@@ -1153,38 +1113,75 @@ if ($btnUsb) {
 $script:UsbBurnTimer = New-Object System.Windows.Forms.Timer
 $script:UsbBurnTimer.Interval = 500
 $script:UsbBurnTimer.Add_Tick({
-    if (-not $script:UsbBurn -or -not $script:UsbBurn.Running) { $script:UsbBurnTimer.Stop(); return }
-    $progPath = [string]$script:UsbBurn.ProgressPath
-    $lines = @(Get-Content -LiteralPath $progPath -ErrorAction SilentlyContinue)
-    $last = ''
-    if ($lines.Count -gt 0) { $last = [string]$lines[$lines.Count - 1] }
-    if ($last -match '^PROGRESS:(\d+):(\d+)$') {
-        $doneBytes = [double]$Matches[1]
-        $totalBytes = [double]$Matches[2]
-        $script:UsbBurn.WrittenBytes = $doneBytes
-        if ($totalBytes -gt 0) { $script:UsbBurn.TotalBytes = $totalBytes }
-        $pct = 0
-        if ($totalBytes -gt 0) { $pct = [math]::Min(100, [math]::Round(($doneBytes / $totalBytes) * 100, 1)) }
-        $lblStatus.Text = ('Burning ISO to USB disk ' + $script:UsbBurn.DiskNumber + ': ' + $pct + '% (' + [math]::Round($doneBytes / 1MB, 1) + ' of ' + [math]::Round($totalBytes / 1MB, 1) + ' MB)')
+    if (-not $script:UsbBurn -or -not $script:UsbBurn.Running) { $script:UsbBurnTimer.Stop(); $btnUsb.Enabled = $true; return }
+
+    $lines = @(Get-Content -LiteralPath $script:UsbBurn.ProgressPath -ErrorAction SilentlyContinue)
+    if ($lines.Count -gt $script:UsbBurn.SeenLines) {
+        $from = [int]$script:UsbBurn.SeenLines
+        if ($from -lt 0) { $from = 0 }
+        $newLines = @($lines[$from..($lines.Count - 1)])
+        $script:UsbBurn.SeenLines = $lines.Count
+        foreach ($rawLine in $newLines) {
+            $line = [string]$rawLine
+            if ($line -match '^PROGRESS:(\d+):(\d+)$') {
+                $doneBytes = [double]$Matches[1]
+                $totalBytes = [double]$Matches[2]
+                $script:UsbBurn.WrittenBytes = $doneBytes
+                if ($totalBytes -gt 0) { $script:UsbBurn.TotalBytes = $totalBytes }
+                $pct = 0
+                if ($totalBytes -gt 0) { $pct = [math]::Min(100, [math]::Round(($doneBytes / $totalBytes) * 100, 1)) }
+                if ($pct -ne $script:UsbBurn.LastPercent) {
+                    $script:UsbBurn.LastPercent = $pct
+                    $lblStatus.Text = ('Burning ISO to USB disk ' + $script:UsbBurn.DiskNumber + ': ' + $pct + '% (' + [math]::Round($doneBytes / 1MB, 1) + ' of ' + [math]::Round($totalBytes / 1MB, 1) + ' MB)')
+                }
+            }
+            elseif ($line -match '^PHASE:(.+)$') {
+                $lblStatus.Text = ('USB burn: ' + $Matches[1])
+                Add-Log ('[gui] usb: ' + $Matches[1])
+            }
+            elseif ($line -match '^INFO:(.+)$') {
+                Add-Log ('[gui] usb: ' + $Matches[1])
+            }
+            elseif ($line -match '^DONE:(.+):(\d+):(\d+)$') {
+                $dest = [string]$Matches[1]
+                $script:UsbBurn.Running = $false
+                $script:UsbBurnTimer.Stop()
+                $btnUsb.Enabled = $true
+                Add-Log ('[gui] USB burn complete: ' + $dest)
+                $lblStatus.Text = 'USB burn complete'
+                [void][System.Windows.Forms.MessageBox]::Show(('ISO written to the USB drive:' + [Environment]::NewLine + $dest), 'Burn ISO to USB', 'OK', 'Information')
+            }
+            elseif ($line -match '^ERROR:(.+)$') {
+                $reason = [string]$Matches[1]
+                $script:UsbBurn.Running = $false
+                $script:UsbBurnTimer.Stop()
+                $btnUsb.Enabled = $true
+                Add-Log ('[gui] USB burn FAILED: ' + $reason)
+                $lblStatus.Text = 'USB burn failed'
+                [void][System.Windows.Forms.MessageBox]::Show(('USB burn failed:' + [Environment]::NewLine + [Environment]::NewLine + $reason), 'Burn ISO to USB', 'OK', 'Error')
+            }
+        }
     }
-    elseif ($last -match '^PHASE:(.+)$') {
-        $lblStatus.Text = ('USB burn: ' + $Matches[1])
-    }
-    elseif ($last -match '^DONE:(.+):(\d+):(\d+)$') {
+    if (-not $script:UsbBurn.Running) { return }
+
+    # The burner can stop before it writes a terminal line (crash, missing
+    # elevation, drive removed). Never leave the UI "burning" forever.
+    $proc = $script:UsbBurn.Process
+    if ($proc -and $proc.HasExited) {
         $script:UsbBurn.Running = $false
         $script:UsbBurnTimer.Stop()
-        Add-Log ('[gui] USB burn complete: ' + $Matches[1])
-        $lblStatus.Text = 'USB burn complete'
-        [void][System.Windows.Forms.MessageBox]::Show(('ISO written to the USB drive:' + [Environment]::NewLine + $Matches[1]), 'Burn ISO to USB', 'OK', 'Information')
-        if ($script:UsbBurn.Job) { try { Remove-Job -Job $script:UsbBurn.Job -Force -ErrorAction SilentlyContinue } catch { } }
-    }
-    elseif ($last -match '^ERROR:(.+)$') {
-        $script:UsbBurn.Running = $false
-        $script:UsbBurnTimer.Stop()
-        Add-Log ('[gui] USB burn FAILED: ' + $Matches[1])
+        $btnUsb.Enabled = $true
+        $detail = ''
+        if ($script:UsbBurn.ErrPath -and (Test-Path -LiteralPath $script:UsbBurn.ErrPath)) {
+            $detail = ([string](Get-Content -LiteralPath $script:UsbBurn.ErrPath -Raw -ErrorAction SilentlyContinue)).Trim()
+        }
+        $code = $proc.ExitCode
+        Add-Log ('[gui] USB burn process exited with code ' + $code + ' without reporting a result.')
+        if ($detail) { Add-Log ('[gui] usb stderr: ' + $detail) }
         $lblStatus.Text = 'USB burn failed'
-        [void][System.Windows.Forms.MessageBox]::Show(('USB burn failed:' + [Environment]::NewLine + [Environment]::NewLine + $Matches[1]), 'Burn ISO to USB', 'OK', 'Error')
-        if ($script:UsbBurn.Job) { try { Remove-Job -Job $script:UsbBurn.Job -Force -ErrorAction SilentlyContinue } catch { } }
+        $msg = 'USB burn failed: the burner stopped without reporting a result (exit code ' + $code + ').'
+        if ($detail) { $msg += [Environment]::NewLine + [Environment]::NewLine + $detail }
+        [void][System.Windows.Forms.MessageBox]::Show($msg, 'Burn ISO to USB', 'OK', 'Error')
     }
 })
 
@@ -1209,14 +1206,15 @@ $form.Add_FormClosing({
             try { $script:Child.Kill() } catch { }
         }
     }
-    try {
-        if (Get-Variable -Name UsbBurn -Scope Script -ErrorAction SilentlyContinue) {
-            if ($script:UsbBurn -and $script:UsbBurn.Running) {
-                try { if (Get-Variable -Name UsbBurnTimer -Scope Script -ErrorAction SilentlyContinue -and $script:UsbBurnTimer) { $script:UsbBurnTimer.Stop() } } catch { }
-                try { if ($script:UsbBurn.Job) { Stop-Job -Job $script:UsbBurn.Job -ErrorAction SilentlyContinue } } catch { }
-            }
+    if ($script:UsbBurn -and $script:UsbBurn.Running) {
+        $burnWarn = 'A USB burn is in progress. Closing now leaves the drive half written.'
+        if ([System.Windows.Forms.MessageBox]::Show($burnWarn, 'Burn in progress', 'YesNo', 'Warning') -ne 'Yes') {
+            $_.Cancel = $true
+        } else {
+            try { if ($script:UsbBurn.Process -and -not $script:UsbBurn.Process.HasExited) { $script:UsbBurn.Process.Kill() } } catch { }
+            $script:UsbBurnTimer.Stop()
         }
-    } catch { }
+    }
 })
 
 # ---------------------------------------------------------------------------
