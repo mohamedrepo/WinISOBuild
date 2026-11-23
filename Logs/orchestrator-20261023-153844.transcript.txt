@@ -1,0 +1,34 @@
+﻿**********************
+Windows PowerShell transcript start
+Start time: 20261023153844
+Username: DESKTOP-ABPNVBL\niphd
+RunAs User: DESKTOP-ABPNVBL\niphd
+Configuration Name: 
+Machine: DESKTOP-ABPNVBL (Microsoft Windows NT 10.0.26300.0)
+Host Application: C:\WINDOWS\System32\WindowsPowerShell\v1.0\powershell.exe -NoProfile -ExecutionPolicy Bypass -File D:\WimMount\Scripts\Invoke-WinISOService.ps1 -Workspace D:\WimMount -TargetPhase 10 -DryRun
+Process ID: 27884
+PSVersion: 5.1.26100.9711
+PSEdition: Desktop
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1.26100.9711
+BuildVersion: 10.0.26100.9711
+CLRVersion: 4.0.30319.42000
+WSManStackVersion: 3.0
+PSRemotingProtocolVersion: 2.3
+SerializationVersion: 1.1.0.1
+**********************
+Transcript started, output file is D:\WimMount\Logs\orchestrator-20261023-153844.transcript.txt
+DRY RUN - phases that would execute:
+ 1. Environment audit -> SKIP (already completed; use -Force)
+ 2. ISO inspection -> SKIP (already completed; use -Force)
+ 3. Update discovery -> SKIP (already completed; use -Force)
+ 4. Image servicing -> SKIP (already completed; use -Force)
+ 5. OOBE / unattend -> SKIP (already completed; use -Force)
+ 6. Customization profile -> SKIP (already completed; use -Force)
+ 7. Boot media rebuild -> SKIP (already completed; use -Force)
+ 8. Validation -> RUN
+ 9. Test installation -> RUN
+10. Final report -> RUN
+**********************
+Windows PowerShell transcript end
+End time: 20261023153844
+**********************

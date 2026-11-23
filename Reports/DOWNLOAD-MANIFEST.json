@@ -1,0 +1,34 @@
+{
+    "generated_utc":  "2026-10-23T12:22:43.9658519Z",
+    "product":  "Windows 11",
+    "build":  26300,
+    "version":  "26H2",
+    "architecture":  "x64",
+    "image_build":  26300,
+    "image_revision":  9457,
+    "image_source":  "image /Get-ImageInfo",
+    "missed_only":  true,
+    "missed_count":  1,
+    "present_count":  1,
+    "out_dir":  "D:\\WimMount\\Updates",
+    "files":  [
+                  {
+                      "kb":  "KB5127648",
+                      "kind":  "LatestCU",
+                      "missed_state":  "missed",
+                      "url":  "https://catalog.sf.dl.delivery.mp.microsoft.com/filestreamingservice/files/4225b261-8248-43e5-a808-34f3faafe3f6/public/windows11.0-kb5127648-x64_2b88d2d308adc938fcd4d2876a68ee0b2a3c4c09.msu",
+                      "file":  "windows11.0-kb5127648-x64_2b88d2d308adc938fcd4d2876a68ee0b2a3c4c09.msu",
+                      "bytes":  4775050195,
+                      "sha256":  "B9686A867C44EC65B4531637608F574AB971EC458B4F68B1C36A17114DF832DE"
+                  },
+                  {
+                      "kb":  "KB5127648",
+                      "kind":  "LatestCU",
+                      "missed_state":  "missed",
+                      "url":  "https://catalog.sf.dl.delivery.mp.microsoft.com/filestreamingservice/files/d8b7f92b-bd35-4b4c-96e5-46ce984b31e0/public/windows11.0-kb5043080-x64_953449672073f8fb99badb4cc6d5d7849b9c83e8.msu",
+                      "file":  "windows11.0-kb5043080-x64_953449672073f8fb99badb4cc6d5d7849b9c83e8.msu",
+                      "bytes":  533761740,
+                      "sha256":  "819632610A101AF11C72907FB13FF05B5FB4222C0E263EE9A03BCC1D1D5F26A4"
+                  }
+              ]
+}

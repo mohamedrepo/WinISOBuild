@@ -1,0 +1,11 @@
+[2026-10-20 17:05:12.378] === Phase7-RebuildMedia started ===
+[2026-10-20 17:05:12.618] CMD> C:\Program Files (x86)\Windows Kits\10\Assessment and Deployment Kit\Deployment Tools\x86\OSCDIMG\oscdimg.exe -m -o -u2 -udfver102 "-bootdata:2#p0,e,b\"D:\WimMount\ExtractedISO\boot\etfsboot.com\"#pEF,e,b\"D:\WimMount\ExtractedISO\efi\microsoft\boot\efisys.bin\"" -lWIN_26300_x64 "\"D:\WimMount\ExtractedISO\"" "\"D:\WimMount\Output\Win11_Updated_26300.9457.iso\""
+[2026-10-20 17:05:12.621] 
+OSCDIMG 2.56 CD-ROM and DVD-ROM Premastering Utility
+Copyright (C) Microsoft, 1993-2012. All rights reserved.
+Licensed only for producing Microsoft authorized content.
+
+
+ERROR: Could not open boot sector file ""D:\WimMount\ExtractedISO\boot\etfsboot.com""
+Error 123: The filename, directory name, or volume label syntax is incorrect.
+

@@ -1,0 +1,2 @@
+IMAGE SERVICING RESULTS
+WIM verified after servicing: True

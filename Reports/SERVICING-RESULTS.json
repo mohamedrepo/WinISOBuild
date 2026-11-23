@@ -1,0 +1,35 @@
+{
+    "generated_utc":  "2026-10-23T04:39:03.6571474Z",
+    "source":  "D:\\Windows11_Client_x64_en-us_26300_9457.iso",
+    "wim_serviced":  "D:\\WimMount\\ExtractedISO\\sources\\install.wim",
+    "indexes":  [
+                    6
+                ],
+    "updates_requested":  [
+                              "KB5127649",
+                              "KB5126666",
+                              "KB5127650",
+                              "KB5127654",
+                              "KB5127651",
+                              "KB5127648",
+                              "KB5127363",
+                              "KB5127690"
+                          ],
+    "updates_missing_files":  [
+                                  "KB5127649",
+                                  "KB5126666",
+                                  "KB5127650",
+                                  "KB5127654",
+                                  "KB5127651",
+                                  "KB5127363",
+                                  "KB5127690"
+                              ],
+    "drivers_requested":  true,
+    "drivers_path":  "D:\\WimMount\\Drivers",
+    "run_cleanup":  false,
+    "images":  [
+
+               ],
+    "wim_verified_after":  true,
+    "backup_path":  "D:\\WimMount\\Backup\\install.wim.pre-servicing"
+}

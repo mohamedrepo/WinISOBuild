@@ -1,0 +1,15 @@
+﻿[06:40:30] Build-WinISOUpdated starting. log=D:\WimMount\Logs\build-20261020-064030.log
+[06:40:30] Source ISO : D:\Windows11_Client_x64_en-us_26300_9457.iso
+[06:40:30] Index      : 6
+[06:40:30] Workspace  : D:\WimMount
+[06:40:30] oscdimg    : C:\Program Files (x86)\Windows Kits\10\Assessment and Deployment Kit\Deployment Tools\amd64\OSCDIMG\oscdimg.exe
+[06:40:30] Resolving packages from D:\WimMount\Updates
+[06:40:30] Package    : D:\WimMount\Updates\windows11.0-kb5127648-x64_2b88d2d308adc938fcd4d2876a68ee0b2a3c4c09.msu  (809.3 MB)
+[06:40:30] Package    : D:\WimMount\Updates\windows11.0-kb5127694-x64-ndp481_a1a6f6d3c61e46a77278881fc5f7245bcf09ce3f.msu  (101.1 MB)
+[06:40:30] Drivers    : D:\WimMount\Drivers (95 .inf files)
+[06:40:30] Free space : 133.2 GB on D:
+[06:40:30] Elevated   : False
+[06:40:30] DRY RUN - no image was mounted or modified.
+[06:40:30] Would export index 6 from D:\Windows11_Client_x64_en-us_26300_9457.iso
+[06:40:30] Would apply 2 package(s) and all driver(s)
+[06:40:30] Would write ISO to D:\WimMount\Output

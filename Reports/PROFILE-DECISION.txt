@@ -1,0 +1,6 @@
+CUSTOMIZATION PROFILE DECISION
+Profile: Safe
+Removals requested: 0
+Removals authorized: 0
+Removals blocked: 0
+  NOTE: SAFE profile: updates only, no component removal, minimal OOBE (Phase 5).

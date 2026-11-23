@@ -1,0 +1,7 @@
+MEDIA BUILD REPORT
+oscdimg: C:\Program Files (x86)\Windows Kits\10\Assessment and Deployment Kit\Deployment Tools\x86\OSCDIMG\oscdimg.exe
+UDF ISO: D:\WimMount\Output\Win11_Pro_x64_26300.9457_Updated_20261023.iso
+install.wim bytes: 8155984950
+Split required (> 4 GiB): True
+Split files: install.swm, install2.swm, install3.swm
+FAT32 ISO: D:\WimMount\Output\Win11_Pro_x64_26300.9457_Updated_20261023-FAT32-split.iso

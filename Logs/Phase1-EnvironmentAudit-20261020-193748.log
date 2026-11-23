@@ -1,0 +1,5 @@
+[2026-10-20 19:37:48.222] === Phase1-EnvironmentAudit started ===
+[2026-10-20 19:37:48.222] Workspace: D:\WimMount
+[2026-10-20 19:37:50.053] Workspace drive D: free: 114.49 GB (configured minimum 25 GB)
+[2026-10-20 19:37:50.066] GATE FAIL: Not elevated. Run from an elevated PowerShell session (Administrator). All servicing phases require elevation.
+[2026-10-20 19:37:50.072] Phase 1 finished with status: Failed

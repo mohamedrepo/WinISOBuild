@@ -1,0 +1,30 @@
+﻿**********************
+Windows PowerShell transcript start
+Start time: 20261020171849
+Username: DESKTOP-ABPNVBL\niphd
+RunAs User: DESKTOP-ABPNVBL\niphd
+Configuration Name: 
+Machine: DESKTOP-ABPNVBL (Microsoft Windows NT 10.0.26300.0)
+Host Application: C:\WINDOWS\System32\WindowsPowerShell\v1.0\powershell.exe -NoProfile -ExecutionPolicy Bypass -File D:\WimMount\Scripts\Invoke-WinISOService.ps1 -Workspace D:\WimMount -SourceIso D:\Windows11_Client_x64_en-us_26300_9457.iso -TargetPhase 4 -Profile Safe -Drivers D:\WimMount\Drivers -ImageIndexes 6 -OutputIsoName Win11_Updated_26300.9457.iso
+Process ID: 24708
+PSVersion: 5.1.26100.9711
+PSEdition: Desktop
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1.26100.9711
+BuildVersion: 10.0.26100.9711
+CLRVersion: 4.0.30319.42000
+WSManStackVersion: 3.0
+PSRemotingProtocolVersion: 2.3
+SerializationVersion: 1.1.0.1
+**********************
+Transcript started, output file is D:\WimMount\Logs\orchestrator-20261020-171849.transcript.txt
+Phase 1 (Environment audit): already completed (state.phase=6); skipping. Use -Force to re-run.
+Phase 2 (ISO inspection): already completed (state.phase=6); skipping. Use -Force to re-run.
+Phase 3 (Update discovery): already completed (state.phase=6); skipping. Use -Force to re-run.
+Phase 4 (Image servicing): already completed (state.phase=6); skipping. Use -Force to re-run.
+
+State phase: 6; status: complete
+Next action: All phases through 4 completed. Review artifacts in Output\ and Reports\.
+**********************
+Windows PowerShell transcript end
+End time: 20261020171849
+**********************

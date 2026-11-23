@@ -1,0 +1,37 @@
+﻿**********************
+Windows PowerShell transcript start
+Start time: 20261020201922
+Username: DESKTOP-ABPNVBL\niphd
+RunAs User: DESKTOP-ABPNVBL\niphd
+Configuration Name: 
+Machine: DESKTOP-ABPNVBL (Microsoft Windows NT 10.0.26300.0)
+Host Application: C:\WINDOWS\System32\WindowsPowerShell\v1.0\powershell.exe -NoProfile -ExecutionPolicy Bypass -File D:\WimMount\Scripts\Invoke-WinISOService.ps1 -Workspace D:\WimMount -SourceIso D:\Windows11_Client_x64_en-us_26300_9457.iso -TargetPhase 10 -Profile Safe -Drivers D:\WimMount\Drivers -ImageIndexes 6 -OutputIsoName Win11_Pro_x64_26300.9457_Updated_20261020.iso
+Process ID: 18020
+PSVersion: 5.1.26100.9711
+PSEdition: Desktop
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1.26100.9711
+BuildVersion: 10.0.26100.9711
+CLRVersion: 4.0.30319.42000
+WSManStackVersion: 3.0
+PSRemotingProtocolVersion: 2.3
+SerializationVersion: 1.1.0.1
+**********************
+Transcript started, output file is D:\WimMount\Logs\orchestrator-20261020-201922.transcript.txt
+Phase 1 (Environment audit): already completed (state.phase=7); skipping. Use -Force to re-run.
+Phase 2 (ISO inspection): already completed (state.phase=7); skipping. Use -Force to re-run.
+Phase 3 (Update discovery): already completed (state.phase=7); skipping. Use -Force to re-run.
+Phase 4 (Image servicing): already completed (state.phase=7); skipping. Use -Force to re-run.
+Phase 5 (OOBE / unattend): already completed (state.phase=7); skipping. Use -Force to re-run.
+Phase 6 (Customization profile): already completed (state.phase=7); skipping. Use -Force to re-run.
+Phase 7 (Boot media rebuild): already completed (state.phase=7); skipping. Use -Force to re-run.
+Phase 8 (Validation): running...
+  -> Skipped: No rebuilt ISO exists in Output\. Build media first (Phase 7).
+Phase 9 (Test installation): running...
+  -> FAILED: Test-ISOInVM.ps1 not found next to the module: D:\WimMount\Scripts\Test-ISOInVM.ps1
+
+State phase: 7; status: failed
+Next action: A phase failed. Review Logs\ and State\STATE.json, fix the cause, then re-run Invoke-WinISOService.ps1 (it resumes automatically).
+**********************
+Windows PowerShell transcript end
+End time: 20261020201922
+**********************

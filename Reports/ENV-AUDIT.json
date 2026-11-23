@@ -1,12 +1,12 @@
 {
-    "TimestampUtc":  "2026-09-18T15:51:00.0711069Z",
-    "HostName":  "MYLAB",
-    "User":  "MYLAB\\niphd",
+    "TimestampUtc":  "2026-10-23T04:02:21.6673748Z",
+    "HostName":  "DESKTOP-ABPNVBL",
+    "User":  "DESKTOP-ABPNVBL\\niphd",
     "OsCaption":  "Microsoft Windows 11 Pro",
-    "OsVersion":  "10.0.26200",
-    "OsBuildNumber":  "26200",
+    "OsVersion":  "10.0.26300",
+    "OsBuildNumber":  "26300",
     "OsArchitecture":  "64-bit",
-    "OsUbr":  "9457",
+    "OsUbr":  "9711",
     "IsAdministrator":  true,
     "CpuName":  "Intel(R) Core(TM) i7-9850H CPU @ 2.60GHz",
     "CpuCores":  6,
@@ -17,18 +17,18 @@
                   {
                       "DeviceId":  "C:",
                       "VolumeName":  "",
-                      "SizeGB":  199.17,
-                      "FreeGB":  78.14
+                      "SizeGB":  199.13,
+                      "FreeGB":  20.38
                   },
                   {
                       "DeviceId":  "D:",
                       "VolumeName":  "",
-                      "SizeGB":  276.73,
-                      "FreeGB":  39.4
+                      "SizeGB":  274.72,
+                      "FreeGB":  137.85
                   }
               ],
     "WorkspaceDrive":  "D:",
-    "WorkspaceDriveFreeGB":  39.4,
+    "WorkspaceDriveFreeGB":  137.85,
     "MinimumFreeGB":  25,
     "RecommendedFreeGB":  25,
     "DismPath":  "C:\\WINDOWS\\System32\\Dism.exe",
@@ -56,12 +56,12 @@
     "AdkAvailable":  true,
     "OscdimgAvailable":  true,
     "WinPEAvailable":  false,
-    "PowerShellVersion":  "5.1.26100.9444",
+    "PowerShellVersion":  "5.1.26100.9711",
     "PowerShellEdition":  "Desktop",
     "PowerShellClrVersion":  "4.0.30319.42000",
     "Pwsh7Available":  false,
     "Pwsh7Path":  "",
-    "DotNetFramework":  "v4: unknown (release=533509) | v3.5: enabled",
+    "DotNetFramework":  "v4: unknown (release=534296) | v3.5: absent",
     "DotNetCliAvailable":  true,
     "SevenZipAvailable":  false,
     "SevenZipPaths":  [
@@ -82,7 +82,7 @@
                              },
     "WorkspaceComplete":  true,
     "SourceIsoCandidates":  [
-                                "D:\\WimMount\\ISO\\Win11_25H2_English_x64_v2.iso"
+                                "D:\\Windows11_Client_x64_en-us_26300_9457.iso"
                             ],
     "SourceIsoFound":  true,
     "AdvisoryFreeSpace":  "Free space meets the 25 GB servicing recommendation.",

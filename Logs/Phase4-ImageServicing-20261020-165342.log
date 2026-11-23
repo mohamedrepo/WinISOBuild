@@ -1,0 +1,1417 @@
+[2026-10-20 16:53:42.901] === Phase4-ImageServicing started ===
+[2026-10-20 16:53:43.551] Reusing existing copy D:\WimMount\ExtractedISO\sources\install.wim (idempotent)
+[2026-10-20 16:53:43.665] Servicing target: D:\WimMount\ExtractedISO\sources\install.wim
+[2026-10-20 16:53:43.842] CMD> C:\WINDOWS\System32\Dism.exe /English /Get-WimInfo /WimFile:D:\WimMount\ExtractedISO\sources\install.wim
+[2026-10-20 16:53:43.845] 
+Deployment Image Servicing and Management tool
+Version: 10.0.26100.9549
+
+Details for image : D:\WimMount\ExtractedISO\sources\install.wim
+
+Index : 1
+Name : Windows 11 Home
+Description : Windows 11 Home
+Size : 25,730,139,683 bytes
+
+Index : 2
+Name : Windows 11 Home N
+Description : Windows 11 Home N
+Size : 25,002,017,930 bytes
+
+Index : 3
+Name : Windows 11 Home Single Language
+Description : Windows 11 Home Single Language
+Size : 25,726,661,488 bytes
+
+Index : 4
+Name : Windows 11 Education
+Description : Windows 11 Education
+Size : 26,767,384,556 bytes
+
+Index : 5
+Name : Windows 11 Education N
+Description : Windows 11 Education N
+Size : 26,016,541,654 bytes
+
+Index : 6
+Name : Windows 11 Pro
+Description : Windows 11 Pro
+Size : 26,770,709,765 bytes
+
+Index : 7
+Name : Windows 11 Pro N
+Description : Windows 11 Pro N
+Size : 26,037,976,877 bytes
+
+Index : 8
+Name : Windows 11 Pro Education
+Description : Windows 11 Pro Education
+Size : 26,767,435,194 bytes
+
+Index : 9
+Name : Windows 11 Pro Education N
+Description : Windows 11 Pro Education N
+Size : 26,016,567,423 bytes
+
+Index : 10
+Name : Windows 11 Pro for Workstations
+Description : Windows 11 Pro for Workstations
+Size : 26,767,485,832 bytes
+
+Index : 11
+Name : Windows 11 Pro N for Workstations
+Description : Windows 11 Pro N for Workstations
+Size : 26,016,593,192 bytes
+
+The operation completed successfully.
+
+[2026-10-20 16:53:43.999] CMD> C:\WINDOWS\System32\Dism.exe /English /Get-ImageInfo /ImageFile:D:\WimMount\ExtractedISO\sources\install.wim /Index:1
+[2026-10-20 16:53:44.001] 
+Deployment Image Servicing and Management tool
+Version: 10.0.26100.9549
+
+Details for image : D:\WimMount\ExtractedISO\sources\install.wim
+
+Index : 1
+Name : Windows 11 Home
+Description : Windows 11 Home
+Size : 25,730,139,683 bytes
+WIM Bootable : No
+Architecture : x64
+Hal : <undefined>
+Version : 10.0.26300
+ServicePack Build : 9457
+ServicePack Level : 0
+Edition : Core
+Installation : Client
+ProductType : WinNT
+ProductSuite : Terminal Server
+System Root : WINDOWS
+Directories : 34424
+Files : 151120
+Created : 13/09/2026 - 09:44:28 ?
+Modified : 13/09/2026 - 10:21:20 ?
+Languages :
+	en-US (Default)
+The operation completed successfully.
+
+[2026-10-20 16:55:48.235] CMD> C:\WINDOWS\System32\Dism.exe /English /Mount-Image /ImageFile:D:\WimMount\ExtractedISO\sources\install.wim /Index:6 /MountDir:D:\WimMount\Mount\Image6
+[2026-10-20 16:55:48.235] 
+Deployment Image Servicing and Management tool
+Version: 10.0.26100.9549
+
+Mounting image
+[                           1.0%                           ] 
+[=                          2.0%                           ] 
+[=                          3.0%                           ] 
+[==                         4.0%                           ] 
+[==                         5.0%                           ] 
+[===                        6.0%                           ] 
+[====                       7.0%                           ] 
+[====                       8.0%                           ] 
+[=====                      9.0%                           ] 
+[=====                      10.0%                          ] 
+[======                     11.0%                          ] 
+[======                     12.0%                          ] 
+[=======                    13.0%                          ] 
+[========                   14.0%                          ] 
+[========                   15.0%                          ] 
+[=========                  16.0%                          ] 
+[=========                  17.0%                          ] 
+[==========                 18.0%                          ] 
+[===========                19.0%                          ] 
+[===========                20.0%                          ] 
+[============               21.0%                          ] 
+[============               22.0%                          ] 
+[=============              23.0%                          ] 
+[=============              24.0%                          ] 
+[==============             25.0%                          ] 
+[===============            26.0%                          ] 
+[===============            27.0%                          ] 
+[================           28.0%                          ] 
+[================           29.0%                          ] 
+[=================          30.0%                          ] 
+[=================          31.0%                          ] 
+[==================         32.0%                          ] 
+[===================        33.0%                          ] 
+[===================        34.0%                          ] 
+[====================       35.0%                          ] 
+[====================       36.0%                          ] 
+[=====================      37.0%                          ] 
+[======================     38.0%                          ] 
+[======================     39.0%                          ] 
+[=======================    40.0%                          ] 
+[=======================    41.0%                          ] 
+[========================   42.0%                          ] 
+[========================   43.0%                          ] 
+[=========================  44.0%                          ] 
+[========================== 45.0%                          ] 
+[========================== 46.0%                          ] 
+[===========================47.0%                          ] 
+[===========================48.0%                          ] 
+[===========================49.0%                          ] 
+[===========================50.0%                          ] 
+[===========================52.0%                          ] 
+[===========================53.0%                          ] 
+[===========================54.0%                          ] 
+[===========================55.0%                          ] 
+[===========================56.0%                          ] 
+[===========================57.0%=                         ] 
+[===========================58.0%=                         ] 
+[===========================59.0%==                        ] 
+[===========================60.0%==                        ] 
+[===========================61.0%===                       ] 
+[===========================62.0%===                       ] 
+[===========================63.0%====                      ] 
+[===========================64.0%=====                     ] 
+[===========================65.0%=====                     ] 
+[===========================66.0%======                    ] 
+[===========================67.0%======                    ] 
+[===========================68.0%=======                   ] 
+[===========================69.0%========                  ] 
+[===========================70.0%========                  ] 
+[===========================71.0%=========                 ] 
+[===========================72.0%=========                 ] 
+[===========================73.0%==========                ] 
+[===========================74.0%==========                ] 
+[===========================75.0%===========               ] 
+[===========================77.0%============              ] 
+[===========================78.0%=============             ] 
+[===========================79.0%=============             ] 
+[===========================80.0%==============            ] 
+[===========================81.0%==============            ] 
+[===========================82.0%===============           ] 
+[===========================83.0%================          ] 
+[===========================84.0%================          ] 
+[===========================85.0%=================         ] 
+[===========================86.0%=================         ] 
+[===========================87.0%==================        ] 
+[===========================88.0%===================       ] 
+[===========================89.0%===================       ] 
+[===========================90.0%====================      ] 
+[===========================91.0%====================      ] 
+[===========================92.0%=====================     ] 
+[===========================93.0%=====================     ] 
+[===========================94.0%======================    ] 
+[===========================95.0%=======================   ] 
+[===========================96.0%=======================   ] 
+[===========================97.0%========================  ] 
+[===========================98.0%========================  ] 
+[===========================99.0%========================= ] 
+[==========================100.0%==========================] 
+The operation completed successfully.
+
+[2026-10-20 16:55:48.235] Mounted index 6 at D:\WimMount\Mount\Image6
+[2026-10-20 16:55:58.193] CMD> C:\WINDOWS\System32\Dism.exe /English /Image:D:\WimMount\Mount\Image6 /Get-Packages
+[2026-10-20 16:55:58.193] 
+Deployment Image Servicing and Management tool
+Version: 10.0.26100.9549
+
+Image Version: 10.0.26300.9457
+
+Packages listing:
+
+Package Identity : Microsoft-OneCore-ApplicationModel-Sync-Desktop-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-OneCore-ApplicationModel-Sync-Desktop-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-OneCore-DirectX-Database-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-OneCore-DirectX-Database-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-Client-LanguagePack-Package~31bf3856ad364e35~amd64~en-US~10.0.26100.1742
+State : Staged
+Release Type : Language Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-Client-LanguagePack-Package~31bf3856ad364e35~amd64~en-US~10.0.26100.9457
+State : Installed
+Release Type : Language Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-Ethernet-Client-Intel-E1i68x64-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-Ethernet-Client-Intel-E1i68x64-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-Ethernet-Client-Intel-E2f68-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-Ethernet-Client-Intel-E2f68-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-Ethernet-Client-Realtek-Rtcx21x64-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-Ethernet-Client-Realtek-Rtcx21x64-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-Ethernet-Client-Vmware-Vmxnet3-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-Ethernet-Client-Vmware-Vmxnet3-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-FodMetadata-Package~31bf3856ad364e35~amd64~~10.0.26100.1
+State : Installed
+Release Type : Feature Pack
+Install Time : 01/04/2024 08:01 ?
+
+Package Identity : Microsoft-Windows-FodMetadataServicing-Desktop-CompDB-Package~31bf3856ad364e35~amd64~~10.0.26100.1
+State : Installed
+Release Type : Feature Pack
+Install Time : 01/04/2024 08:01 ?
+
+Package Identity : Microsoft-Windows-FodMetadataServicing-Desktop-Metadata-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : Feature Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-FodMetadataServicing-Desktop-Metadata-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : Feature Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-Foundation-Package~31bf3856ad364e35~amd64~~10.0.26100.1
+State : Installed
+Release Type : Foundation
+Install Time : 01/04/2024 07:29 ?
+
+Package Identity : Microsoft-Windows-Hello-Face-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-Hello-Face-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-InternetExplorer-Optional-Package~31bf3856ad364e35~amd64~en-US~11.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-InternetExplorer-Optional-Package~31bf3856ad364e35~amd64~en-US~11.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-InternetExplorer-Optional-Package~31bf3856ad364e35~amd64~~11.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-InternetExplorer-Optional-Package~31bf3856ad364e35~amd64~~11.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-Kernel-LA57-FoD-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-Kernel-LA57-FoD-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-LanguageFeatures-Basic-en-us-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-LanguageFeatures-Basic-en-us-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-LanguageFeatures-Handwriting-en-us-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-LanguageFeatures-Handwriting-en-us-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-LanguageFeatures-OCR-en-us-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-LanguageFeatures-OCR-en-us-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-LanguageFeatures-Speech-en-us-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-LanguageFeatures-Speech-en-us-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-LanguageFeatures-TextToSpeech-en-us-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-LanguageFeatures-TextToSpeech-en-us-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-Licenses-Professional-Package~31bf3856ad364e35~amd64~en-US~10.0.26100.1742
+State : Staged
+Release Type : Language Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-Licenses-Professional-Package~31bf3856ad364e35~amd64~en-US~10.0.26100.8117
+State : Installed
+Release Type : Language Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-Licenses-Professional-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : Feature Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-Licenses-Professional-Package~31bf3856ad364e35~amd64~~10.0.26100.8037
+State : Installed
+Release Type : Feature Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-MediaPlayer-Package~31bf3856ad364e35~amd64~en-US~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-MediaPlayer-Package~31bf3856ad364e35~amd64~en-US~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-MediaPlayer-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-MediaPlayer-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-MediaPlayer-Package~31bf3856ad364e35~wow64~en-US~10.0.26100.1
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 01/04/2024 08:03 ?
+
+Package Identity : Microsoft-Windows-MediaPlayer-Package~31bf3856ad364e35~wow64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-MediaPlayer-Package~31bf3856ad364e35~wow64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-Notepad-System-FoD-Package~31bf3856ad364e35~amd64~en-US~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-Notepad-System-FoD-Package~31bf3856ad364e35~amd64~en-US~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-Notepad-System-FoD-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-Notepad-System-FoD-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-Notepad-System-FoD-Package~31bf3856ad364e35~wow64~en-US~10.0.26100.1
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 01/04/2024 08:04 ?
+
+Package Identity : Microsoft-Windows-Notepad-System-FoD-Package~31bf3856ad364e35~wow64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-Notepad-System-FoD-Package~31bf3856ad364e35~wow64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-PowerShell-ISE-FOD-Package~31bf3856ad364e35~amd64~en-US~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-PowerShell-ISE-FOD-Package~31bf3856ad364e35~amd64~en-US~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-PowerShell-ISE-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-PowerShell-ISE-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-PowerShell-ISE-FOD-Package~31bf3856ad364e35~wow64~en-US~10.0.26100.1
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 01/04/2024 08:03 ?
+
+Package Identity : Microsoft-Windows-PowerShell-ISE-FOD-Package~31bf3856ad364e35~wow64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-PowerShell-ISE-FOD-Package~31bf3856ad364e35~wow64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-Printing-PMCPPC-FoD-Package~31bf3856ad364e35~amd64~en-US~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-Printing-PMCPPC-FoD-Package~31bf3856ad364e35~amd64~en-US~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-Printing-PMCPPC-FoD-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-Printing-PMCPPC-FoD-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-SenseClient-FoD-Package~31bf3856ad364e35~amd64~en-US~10.0.26100.1
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 01/04/2024 08:04 ?
+
+Package Identity : Microsoft-Windows-SenseClient-FoD-Package~31bf3856ad364e35~amd64~en-US~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-SenseClient-FoD-Package~31bf3856ad364e35~amd64~~10.0.26100.1
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 01/04/2024 08:04 ?
+
+Package Identity : Microsoft-Windows-SenseClient-FoD-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-StepsRecorder-Package~31bf3856ad364e35~amd64~en-US~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-StepsRecorder-Package~31bf3856ad364e35~amd64~en-US~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-StepsRecorder-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-StepsRecorder-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-StepsRecorder-Package~31bf3856ad364e35~wow64~en-US~10.0.26100.1
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 01/04/2024 08:03 ?
+
+Package Identity : Microsoft-Windows-StepsRecorder-Package~31bf3856ad364e35~wow64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-StepsRecorder-Package~31bf3856ad364e35~wow64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-TabletPCMath-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-TabletPCMath-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-VBSCRIPT-FoD-Package~31bf3856ad364e35~amd64~en-US~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-VBSCRIPT-FoD-Package~31bf3856ad364e35~amd64~en-US~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-VBSCRIPT-FoD-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-VBSCRIPT-FoD-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-VBSCRIPT-FoD-Package~31bf3856ad364e35~wow64~en-US~10.0.26100.1
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 01/04/2024 08:03 ?
+
+Package Identity : Microsoft-Windows-VBSCRIPT-FoD-Package~31bf3856ad364e35~wow64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-VBSCRIPT-FoD-Package~31bf3856ad364e35~wow64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-Wallpaper-Content-Extended-FoD-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-Wallpaper-Content-Extended-FoD-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-Wifi-Client-Broadcom-Bcmpciedhd63-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-Wifi-Client-Broadcom-Bcmpciedhd63-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-Wifi-Client-Broadcom-Bcmwl63a-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-Wifi-Client-Broadcom-Bcmwl63a-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-Wifi-Client-Broadcom-Bcmwl63al-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-Wifi-Client-Broadcom-Bcmwl63al-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-Wifi-Client-Intel-Netwbw02-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-Wifi-Client-Intel-Netwbw02-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-Wifi-Client-Intel-Netwew00-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-Wifi-Client-Intel-Netwew00-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-Wifi-Client-Intel-Netwew01-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-Wifi-Client-Intel-Netwew01-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-Wifi-Client-Intel-Netwlv64-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-Wifi-Client-Intel-Netwlv64-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-Wifi-Client-Intel-Netwns64-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-Wifi-Client-Intel-Netwns64-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-Wifi-Client-Intel-Netwsw00-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-Wifi-Client-Intel-Netwsw00-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-Wifi-Client-Intel-Netwtw02-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-Wifi-Client-Intel-Netwtw02-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-Wifi-Client-Intel-Netwtw04-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-Wifi-Client-Intel-Netwtw04-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-Wifi-Client-Intel-Netwtw06-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-Wifi-Client-Intel-Netwtw06-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-Wifi-Client-Intel-Netwtw08-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-Wifi-Client-Intel-Netwtw08-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-Wifi-Client-Intel-Netwtw10-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-Wifi-Client-Intel-Netwtw10-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-Wifi-Client-Marvel-Mrvlpcie8897-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-Wifi-Client-Marvel-Mrvlpcie8897-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-Wifi-Client-Qualcomm-Athw8x-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-Wifi-Client-Qualcomm-Athw8x-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-Wifi-Client-Qualcomm-Athwnx-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-Wifi-Client-Qualcomm-Athwnx-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-Wifi-Client-Qualcomm-Qcamain10x64-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-Wifi-Client-Qualcomm-Qcamain10x64-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-Wifi-Client-Ralink-Netr28x-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-Wifi-Client-Ralink-Netr28x-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-Wifi-Client-Realtek-Rtl8192se-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-Wifi-Client-Realtek-Rtl8192se-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-Wifi-Client-Realtek-Rtwlane-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-Wifi-Client-Realtek-Rtwlane-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-Wifi-Client-Realtek-Rtwlane01-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-Wifi-Client-Realtek-Rtwlane01-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-Wifi-Client-Realtek-Rtwlane13-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-Wifi-Client-Realtek-Rtwlane13-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-WMIC-FoD-Package~31bf3856ad364e35~amd64~en-US~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-WMIC-FoD-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-WMIC-FoD-Package~31bf3856ad364e35~wow64~en-US~10.0.26100.1
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 01/04/2024 08:03 ?
+
+Package Identity : Microsoft-Windows-WMIC-FoD-Package~31bf3856ad364e35~wow64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-WMIC-FoD-Package~31bf3856ad364e35~wow64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : OpenSSH-Client-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : OpenSSH-Client-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Package_for_DotNetRollup_481~31bf3856ad364e35~amd64~~10.0.9347.1
+State : Installed
+Release Type : Update
+Install Time : 13/09/2026 06:20 ?
+
+Package Identity : Package_for_KB5121794~31bf3856ad364e35~amd64~~26100.8966.1.0
+State : Installed
+Release Type : Update
+Install Time : 13/09/2026 06:19 ?
+
+Package Identity : Package_for_RollupFix~31bf3856ad364e35~amd64~~26100.1742.1.10
+State : Staged
+Release Type : Security Update
+Install Time : 
+
+Package Identity : Package_for_RollupFix~31bf3856ad364e35~amd64~~26100.9457.1.0
+State : Installed
+Release Type : Security Update
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Package_for_ServicingStack_9441~31bf3856ad364e35~amd64~~26100.9441.1.11
+State : Installed
+Release Type : Security Update
+Install Time : 13/09/2026 06:26 ?
+
+The operation completed successfully.
+
+[2026-10-20 16:56:02.335] CMD> C:\WINDOWS\System32\Dism.exe /English /Image:D:\WimMount\Mount\Image6 /Cleanup-Image /CheckHealth
+[2026-10-20 16:56:02.335] 
+Deployment Image Servicing and Management tool
+Version: 10.0.26100.9549
+
+Image Version: 10.0.26300.9457
+
+No component store corruption detected.
+The operation completed successfully.
+
+[2026-10-20 16:58:33.441] CMD> C:\WINDOWS\System32\Dism.exe /English /Image:D:\WimMount\Mount\Image6 /Cleanup-Image /AnalyzeComponentStore
+[2026-10-20 16:58:33.446] 
+Deployment Image Servicing and Management tool
+Version: 10.0.26100.9549
+
+Image Version: 10.0.26300.9457
+
+[                           0.7%                           ] 
+[=                          2.1%                           ] 
+[==                         3.7%                           ] 
+[==                         4.1%                           ] 
+[==                         4.6%                           ] 
+[===                        5.3%                           ] 
+[===                        6.4%                           ] 
+[====                       7.0%                           ] 
+[====                       8.2%                           ] 
+[=====                      9.5%                           ] 
+[=====                      10.1%                          ] 
+[======                     11.8%                          ] 
+[=======                    12.9%                          ] 
+[========                   14.3%                          ] 
+[========                   14.9%                          ] 
+[=========                  16.4%                          ] 
+[==========                 17.7%                          ] 
+[===========                19.0%                          ] 
+[===========                19.0%                          ] 
+[===========                19.0%                          ] 
+[===========                19.0%                          ] 
+[===========                19.0%                          ] 
+[===========                19.0%                          ] 
+[===========                19.0%                          ] 
+[===========                19.0%                          ] 
+[===========                19.0%                          ] 
+[===========                19.0%                          ] 
+[===========                19.0%                          ] 
+[===========                19.0%                          ] 
+[===========                19.3%                          ] 
+[===========                19.3%                          ] 
+[===========                19.7%                          ] 
+[===========                19.8%                          ] 
+[===========                19.8%                          ] 
+[===========                19.8%                          ] 
+[===========                20.1%                          ] 
+[===========                20.1%                          ] 
+[===========                20.1%                          ] 
+[===========                20.1%                          ] 
+[===========                20.1%                          ] 
+[===========                20.2%                          ] 
+[============               21.2%                          ] 
+[============               22.1%                          ] 
+[=============              23.0%                          ] 
+[=============              24.0%                          ] 
+[==============             25.1%                          ] 
+[==============             25.8%                          ] 
+[===============            27.5%                          ] 
+[================           28.6%                          ] 
+[=================          29.6%                          ] 
+[=================          30.7%                          ] 
+[==================         31.4%                          ] 
+[==================         31.6%                          ] 
+[==================         31.9%                          ] 
+[===================        32.9%                          ] 
+[===================        34.2%                          ] 
+[====================       34.7%                          ] 
+[====================       36.0%                          ] 
+[=====================      36.7%                          ] 
+[=====================      37.6%                          ] 
+[======================     39.3%                          ] 
+[=======================    40.5%                          ] 
+[========================   41.5%                          ] 
+[========================   42.6%                          ] 
+[========================   42.9%                          ] 
+[=========================  43.2%                          ] 
+[=========================  44.2%                          ] 
+[========================== 45.4%                          ] 
+[========================== 46.2%                          ] 
+[===========================46.8%                          ] 
+[===========================47.1%                          ] 
+[===========================47.2%                          ] 
+[===========================48.0%                          ] 
+[===========================49.3%                          ] 
+[===========================51.0%                          ] 
+[===========================52.3%                          ] 
+[===========================53.0%                          ] 
+[===========================53.6%                          ] 
+[===========================54.0%                          ] 
+[===========================54.5%                          ] 
+[===========================54.9%                          ] 
+[===========================56.1%                          ] 
+[===========================56.1%                          ] 
+[===========================56.1%                          ] 
+[===========================56.1%                          ] 
+[===========================56.1%                          ] 
+[===========================56.1%                          ] 
+[===========================57.2%=                         ] 
+[===========================57.6%=                         ] 
+[===========================57.9%=                         ] 
+[===========================58.7%==                        ] 
+[===========================60.0%==                        ] 
+[===========================75.5%===========               ] 
+[===========================78.4%=============             ] 
+[===========================90.2%====================      ] 
+[===========================98.0%========================  ] 
+[===========================98.0%========================  ] 
+[===========================98.0%========================  ] 
+[===========================98.0%========================  ] 
+[===========================98.0%========================  ] 
+[==========================100.0%==========================] 
+
+Component Store (WinSxS) information:
+
+Windows Explorer Reported Size of Component Store : 11.59 GB
+
+Actual Size of Component Store : 11.49 GB
+
+    Shared with Windows : 8.02 GB
+    Backups and Disabled Features : 3.46 GB
+    Cache and Temporary Data :  0 bytes
+
+Date of Last Cleanup : 2026-09-13 21:36:36
+
+Number of Reclaimable Packages : 2
+Component Store Cleanup Recommended : Yes
+
+The operation completed successfully.
+
+[2026-10-20 16:58:33.544] CMD> C:\WINDOWS\System32\expand.exe -F:* D:\WimMount\Updates\windows11.0-kb5127648-x64_2b88d2d308adc938fcd4d2876a68ee0b2a3c4c09.msu D:\WimMount\Updates\_expanded\windows11.0-kb5127648-x64_2b88d2d308adc938fcd4d2876a68ee0b2a3c4c09
+[2026-10-20 16:58:33.559] Microsoft (R) File Expansion Utility
+Copyright (c) Microsoft Corporation. All rights reserved.
+
+Can't open input file: d:\wimmount\updates\windows11.0-kb5127648-x64_2b88d2d308adc938fcd4d2876a68ee0b2a3c4c09.msu.
+
+
+[2026-10-20 17:00:03.642] CMD> C:\WINDOWS\System32\wusa.exe D:\WimMount\Updates\windows11.0-kb5127648-x64_2b88d2d308adc938fcd4d2876a68ee0b2a3c4c09.msu /extract:D:\WimMount\Updates\_expanded\windows11.0-kb5127648-x64_2b88d2d308adc938fcd4d2876a68ee0b2a3c4c09
+[2026-10-20 17:00:03.646] 
+[2026-10-20 17:00:03.654] Could not extract a payload .cab from D:\WimMount\Updates\windows11.0-kb5127648-x64_2b88d2d308adc938fcd4d2876a68ee0b2a3c4c09.msu
+[2026-10-20 17:00:07.782] CMD> C:\WINDOWS\System32\Dism.exe /English /Image:D:\WimMount\Mount\Image6 /Add-Package /PackagePath:D:\WimMount\Updates\windows11.0-kb5127648-x64_2b88d2d308adc938fcd4d2876a68ee0b2a3c4c09.msu /NoRestart
+[2026-10-20 17:00:07.787] 
+Deployment Image Servicing and Management tool
+Version: 10.0.26100.9549
+
+Image Version: 10.0.26300.9457
+
+Processing 1 of 1 - D:\WimMount\Updates\windows11.0-kb5127648-x64_2b88d2d308adc938fcd4d2876a68ee0b2a3c4c09.msu: An error occurred while expanding the .msu package into the temporary folder, D:\WimMount\Mount\Image6\Windows\Temp\5026F3CF-1E50-4728-9BB6-F20F16DA4015.
+ Error: 0x8007000d
+
+Error: 13
+
+The data is invalid.
+
+The DISM log file can be found at C:\WINDOWS\Logs\DISM\dism.log
+
+[2026-10-20 17:00:07.808] KB5127648: Unclassified (0x0000000D) - NOT forced, recorded per policy
+[2026-10-20 17:00:07.811] Index 6 has errors; discarding mount without committing.
+[2026-10-20 17:05:11.449] CMD> C:\WINDOWS\System32\Dism.exe /English /Unmount-Image /MountDir:D:\WimMount\Mount\Image6 /Discard
+[2026-10-20 17:05:11.465] 
+Deployment Image Servicing and Management tool
+Version: 10.0.26100.9549
+
+Unmounting image
+[=                          2.0%                           ] 
+[=                          3.0%                           ] 
+[==                         4.0%                           ] 
+[==                         5.0%                           ] 
+[===                        6.0%                           ] 
+[====                       7.0%                           ] 
+[====                       8.0%                           ] 
+[=====                      9.0%                           ] 
+[=====                      10.0%                          ] 
+[======                     11.0%                          ] 
+[======                     12.0%                          ] 
+[=======                    13.0%                          ] 
+[========                   14.0%                          ] 
+[========                   15.0%                          ] 
+[=========                  16.0%                          ] 
+[=========                  17.0%                          ] 
+[==========                 18.0%                          ] 
+[===========                19.0%                          ] 
+[===========                20.0%                          ] 
+[============               21.0%                          ] 
+[============               22.0%                          ] 
+[=============              23.0%                          ] 
+[=============              24.0%                          ] 
+[==============             25.0%                          ] 
+[===============            26.0%                          ] 
+[===============            27.0%                          ] 
+[================           28.0%                          ] 
+[================           29.0%                          ] 
+[=================          30.0%                          ] 
+[=================          31.0%                          ] 
+[==================         32.0%                          ] 
+[===================        33.0%                          ] 
+[===================        34.0%                          ] 
+[====================       35.0%                          ] 
+[====================       36.0%                          ] 
+[=====================      37.0%                          ] 
+[======================     38.0%                          ] 
+[======================     39.0%                          ] 
+[=======================    40.0%                          ] 
+[=======================    41.0%                          ] 
+[========================   42.0%                          ] 
+[========================   43.0%                          ] 
+[=========================  44.0%                          ] 
+[========================== 45.0%                          ] 
+[========================== 46.0%                          ] 
+[===========================47.0%                          ] 
+[===========================48.0%                          ] 
+[===========================49.0%                          ] 
+[===========================50.0%                          ] 
+[===========================51.0%                          ] 
+[===========================52.0%                          ] 
+[===========================53.0%                          ] 
+[===========================54.0%                          ] 
+[===========================55.0%                          ] 
+[===========================56.0%                          ] 
+[===========================57.0%=                         ] 
+[===========================58.0%=                         ] 
+[===========================59.0%==                        ] 
+[===========================60.0%==                        ] 
+[===========================61.0%===                       ] 
+[===========================62.0%===                       ] 
+[===========================63.0%====                      ] 
+[===========================64.0%=====                     ] 
+[===========================65.0%=====                     ] 
+[===========================66.0%======                    ] 
+[===========================67.0%======                    ] 
+[===========================68.0%=======                   ] 
+[===========================69.0%========                  ] 
+[===========================70.0%========                  ] 
+[===========================71.0%=========                 ] 
+[===========================72.0%=========                 ] 
+[===========================73.0%==========                ] 
+[===========================74.0%==========                ] 
+[===========================75.0%===========               ] 
+[===========================76.0%============              ] 
+[===========================77.0%============              ] 
+[===========================78.0%=============             ] 
+[===========================79.0%=============             ] 
+[===========================80.0%==============            ] 
+[===========================81.0%==============            ] 
+[===========================82.0%===============           ] 
+[===========================83.0%================          ] 
+[===========================84.0%================          ] 
+[===========================85.0%=================         ] 
+[===========================86.0%=================         ] 
+[===========================87.0%==================        ] 
+[===========================88.0%===================       ] 
+[===========================89.0%===================       ] 
+[===========================90.0%====================      ] 
+[===========================91.0%====================      ] 
+[===========================92.0%=====================     ] 
+[===========================93.0%=====================     ] 
+[===========================94.0%======================    ] 
+[===========================95.0%=======================   ] 
+[===========================96.0%=======================   ] 
+[===========================97.0%========================  ] 
+[===========================98.0%========================  ] 
+[===========================99.0%========================= ] 
+[==========================100.0%==========================] 
+The operation completed successfully.
+
+[2026-10-20 17:05:11.560] CMD> C:\WINDOWS\System32\Dism.exe /English /Get-MountedImageInfo
+[2026-10-20 17:05:11.563] 
+Deployment Image Servicing and Management tool
+Version: 10.0.26100.9549
+
+Mounted images:
+
+
+No mounted images found.
+
+The operation completed successfully.
+
+[2026-10-20 17:05:11.568] Verified: D:\WimMount\Mount\Image6 is not present in mounted-image list.
+[2026-10-20 17:05:11.671] CMD> C:\WINDOWS\System32\Dism.exe /English /Get-WimInfo /WimFile:D:\WimMount\ExtractedISO\sources\install.wim
+[2026-10-20 17:05:11.673] 
+Deployment Image Servicing and Management tool
+Version: 10.0.26100.9549
+
+Details for image : D:\WimMount\ExtractedISO\sources\install.wim
+
+Index : 1
+Name : Windows 11 Home
+Description : Windows 11 Home
+Size : 25,730,139,683 bytes
+
+Index : 2
+Name : Windows 11 Home N
+Description : Windows 11 Home N
+Size : 25,002,017,930 bytes
+
+Index : 3
+Name : Windows 11 Home Single Language
+Description : Windows 11 Home Single Language
+Size : 25,726,661,488 bytes
+
+Index : 4
+Name : Windows 11 Education
+Description : Windows 11 Education
+Size : 26,767,384,556 bytes
+
+Index : 5
+Name : Windows 11 Education N
+Description : Windows 11 Education N
+Size : 26,016,541,654 bytes
+
+Index : 6
+Name : Windows 11 Pro
+Description : Windows 11 Pro
+Size : 26,770,709,765 bytes
+
+Index : 7
+Name : Windows 11 Pro N
+Description : Windows 11 Pro N
+Size : 26,037,976,877 bytes
+
+Index : 8
+Name : Windows 11 Pro Education
+Description : Windows 11 Pro Education
+Size : 26,767,435,194 bytes
+
+Index : 9
+Name : Windows 11 Pro Education N
+Description : Windows 11 Pro Education N
+Size : 26,016,567,423 bytes
+
+Index : 10
+Name : Windows 11 Pro for Workstations
+Description : Windows 11 Pro for Workstations
+Size : 26,767,485,832 bytes
+
+Index : 11
+Name : Windows 11 Pro N for Workstations
+Description : Windows 11 Pro N for Workstations
+Size : 26,016,593,192 bytes
+
+The operation completed successfully.
+
+[2026-10-20 17:05:11.787] CMD> C:\WINDOWS\System32\Dism.exe /English /Get-ImageInfo /ImageFile:D:\WimMount\ExtractedISO\sources\install.wim /Index:1
+[2026-10-20 17:05:11.794] 
+Deployment Image Servicing and Management tool
+Version: 10.0.26100.9549
+
+Details for image : D:\WimMount\ExtractedISO\sources\install.wim
+
+Index : 1
+Name : Windows 11 Home
+Description : Windows 11 Home
+Size : 25,730,139,683 bytes
+WIM Bootable : No
+Architecture : x64
+Hal : <undefined>
+Version : 10.0.26300
+ServicePack Build : 9457
+ServicePack Level : 0
+Edition : Core
+Installation : Client
+ProductType : WinNT
+ProductSuite : Terminal Server
+System Root : WINDOWS
+Directories : 34424
+Files : 151120
+Created : 13/09/2026 - 09:44:28 ?
+Modified : 13/09/2026 - 10:21:20 ?
+Languages :
+	en-US (Default)
+The operation completed successfully.
+
+[2026-10-20 17:05:11.897] CMD> C:\WINDOWS\System32\Dism.exe /English /Get-WimInfo /WimFile:D:\WimMount\ExtractedISO\sources\install.wim
+[2026-10-20 17:05:11.897] 
+Deployment Image Servicing and Management tool
+Version: 10.0.26100.9549
+
+Details for image : D:\WimMount\ExtractedISO\sources\install.wim
+
+Index : 1
+Name : Windows 11 Home
+Description : Windows 11 Home
+Size : 25,730,139,683 bytes
+
+Index : 2
+Name : Windows 11 Home N
+Description : Windows 11 Home N
+Size : 25,002,017,930 bytes
+
+Index : 3
+Name : Windows 11 Home Single Language
+Description : Windows 11 Home Single Language
+Size : 25,726,661,488 bytes
+
+Index : 4
+Name : Windows 11 Education
+Description : Windows 11 Education
+Size : 26,767,384,556 bytes
+
+Index : 5
+Name : Windows 11 Education N
+Description : Windows 11 Education N
+Size : 26,016,541,654 bytes
+
+Index : 6
+Name : Windows 11 Pro
+Description : Windows 11 Pro
+Size : 26,770,709,765 bytes
+
+Index : 7
+Name : Windows 11 Pro N
+Description : Windows 11 Pro N
+Size : 26,037,976,877 bytes
+
+Index : 8
+Name : Windows 11 Pro Education
+Description : Windows 11 Pro Education
+Size : 26,767,435,194 bytes
+
+Index : 9
+Name : Windows 11 Pro Education N
+Description : Windows 11 Pro Education N
+Size : 26,016,567,423 bytes
+
+Index : 10
+Name : Windows 11 Pro for Workstations
+Description : Windows 11 Pro for Workstations
+Size : 26,767,485,832 bytes
+
+Index : 11
+Name : Windows 11 Pro N for Workstations
+Description : Windows 11 Pro N for Workstations
+Size : 26,016,593,192 bytes
+
+The operation completed successfully.
+
+[2026-10-20 17:05:11.994] CMD> C:\WINDOWS\System32\Dism.exe /English /Get-ImageInfo /ImageFile:D:\WimMount\ExtractedISO\sources\install.wim /Index:1
+[2026-10-20 17:05:11.996] 
+Deployment Image Servicing and Management tool
+Version: 10.0.26100.9549
+
+Details for image : D:\WimMount\ExtractedISO\sources\install.wim
+
+Index : 1
+Name : Windows 11 Home
+Description : Windows 11 Home
+Size : 25,730,139,683 bytes
+WIM Bootable : No
+Architecture : x64
+Hal : <undefined>
+Version : 10.0.26300
+ServicePack Build : 9457
+ServicePack Level : 0
+Edition : Core
+Installation : Client
+ProductType : WinNT
+ProductSuite : Terminal Server
+System Root : WINDOWS
+Directories : 34424
+Files : 151120
+Created : 13/09/2026 - 09:44:28 ?
+Modified : 13/09/2026 - 10:21:20 ?
+Languages :
+	en-US (Default)
+The operation completed successfully.
+

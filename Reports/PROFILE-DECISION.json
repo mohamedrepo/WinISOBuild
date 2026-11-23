@@ -1,0 +1,20 @@
+{
+    "generated_utc":  "2026-10-23T04:39:04.0691929Z",
+    "profile":  "Safe",
+    "allow_removal":  false,
+    "removals_requested":  [
+
+                           ],
+    "removals_authorized":  [
+
+                            ],
+    "removals_blocked":  [
+
+                         ],
+    "removal_applied":  [
+
+                        ],
+    "notes":  [
+                  "SAFE profile: updates only, no component removal, minimal OOBE (Phase 5)."
+              ]
+}

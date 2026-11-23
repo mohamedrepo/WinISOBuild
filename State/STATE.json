@@ -1,0 +1,63 @@
+{
+    "phase":  7,
+    "status":  "failed",
+    "completed_steps":  [
+                            "Phase 1 (Environment audit): Succeeded",
+                            "Phase 2 (ISO inspection): Succeeded",
+                            "Phase 3 (Update discovery): Succeeded",
+                            "Phase 4 (Image servicing): Failed",
+                            "Phase 4 (Image servicing): Succeeded",
+                            "Phase 5 (OOBE / unattend): Succeeded",
+                            "Phase 6 (Customization profile): Succeeded",
+                            "Phase 7 (Boot media rebuild): Succeeded",
+                            "Phase 8 (Validation): Failed"
+                        ],
+    "failed_steps":  [
+                         "Phase 4: No .msu/.cab package file found under Updates\\ for KB5127649. Download it manually (the toolchain never downloads) or remove it from the manifest.",
+                         "Phase 4: No .msu/.cab package file found under Updates\\ for KB5126666. Download it manually (the toolchain never downloads) or remove it from the manifest.",
+                         "Phase 4: No .msu/.cab package file found under Updates\\ for KB5127650. Download it manually (the toolchain never downloads) or remove it from the manifest.",
+                         "Phase 4: No .msu/.cab package file found under Updates\\ for KB5127654. Download it manually (the toolchain never downloads) or remove it from the manifest.",
+                         "Phase 4: No .msu/.cab package file found under Updates\\ for KB5127651. Download it manually (the toolchain never downloads) or remove it from the manifest.",
+                         "Phase 4: No .msu/.cab package file found under Updates\\ for KB5127363. Download it manually (the toolchain never downloads) or remove it from the manifest.",
+                         "Phase 4: No .msu/.cab package file found under Updates\\ for KB5127690. Download it manually (the toolchain never downloads) or remove it from the manifest.",
+                         "Phase 4: Post-servicing WIM verification failed.",
+                         "Phase 8: ISO attach (read-only): no drive letter assigned"
+                     ],
+    "artifacts":  {
+                      "Phase4":  [
+                                     "D:\\WimMount\\Reports\\SERVICING-RESULTS.json",
+                                     "D:\\WimMount\\Reports\\SERVICING-RESULTS.txt"
+                                 ],
+                      "Phase5":  [
+                                     "D:\\WimMount\\Output\\unattend.xml",
+                                     "D:\\WimMount\\ExtractedISO\\autounattend.xml"
+                                 ],
+                      "Phase6":  [
+                                     "D:\\WimMount\\Reports\\PROFILE-DECISION.json",
+                                     "D:\\WimMount\\Reports\\PROFILE-DECISION.txt"
+                                 ],
+                      "Phase7":  [
+                                     "D:\\WimMount\\Output\\Win11_Pro_x64_26300.9457_Updated_20261023.iso",
+                                     "D:\\WimMount\\Output\\Win11_Pro_x64_26300.9457_Updated_20261023-FAT32-split.iso",
+                                     "D:\\WimMount\\Reports\\MEDIA-BUILD-REPORT.json",
+                                     "D:\\WimMount\\Reports\\MEDIA-BUILD-REPORT.txt"
+                                 ],
+                      "Phase8":  [
+                                     "D:\\WimMount\\Output\\ISO-SHA256.txt",
+                                     "D:\\WimMount\\Reports\\FINAL-VALIDATION-REPORT.html",
+                                     "D:\\WimMount\\Reports\\FINAL-VALIDATION-REPORT.txt"
+                                 ]
+                  },
+    "errors":  [
+                   "No .msu/.cab package file found under Updates\\ for KB5127649. Download it manually (the toolchain never downloads) or remove it from the manifest.",
+                   "No .msu/.cab package file found under Updates\\ for KB5126666. Download it manually (the toolchain never downloads) or remove it from the manifest.",
+                   "No .msu/.cab package file found under Updates\\ for KB5127650. Download it manually (the toolchain never downloads) or remove it from the manifest.",
+                   "No .msu/.cab package file found under Updates\\ for KB5127654. Download it manually (the toolchain never downloads) or remove it from the manifest.",
+                   "No .msu/.cab package file found under Updates\\ for KB5127651. Download it manually (the toolchain never downloads) or remove it from the manifest.",
+                   "No .msu/.cab package file found under Updates\\ for KB5127363. Download it manually (the toolchain never downloads) or remove it from the manifest.",
+                   "No .msu/.cab package file found under Updates\\ for KB5127690. Download it manually (the toolchain never downloads) or remove it from the manifest.",
+                   "Post-servicing WIM verification failed.",
+                   "ISO attach (read-only): no drive letter assigned"
+               ],
+    "next_action":  "A phase failed. Review Logs\\ and State\\STATE.json, fix the cause, then re-run Invoke-WinISOService.ps1 (it resumes automatically)."
+}

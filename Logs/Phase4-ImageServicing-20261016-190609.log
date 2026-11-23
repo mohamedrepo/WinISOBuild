@@ -1,0 +1,219 @@
+[2026-10-16 19:06:09.517] === Phase4-ImageServicing started ===
+[2026-10-16 19:06:21.529] Copied E:\sources\install.wim -> D:\WimMount\ExtractedISO\sources\install.wim
+[2026-10-16 19:06:22.445] Servicing target: D:\WimMount\ExtractedISO\sources\install.wim
+[2026-10-16 19:06:32.290] Pristine backup: D:\WimMount\Backup\install.wim.pre-servicing
+[2026-10-16 19:06:32.575] CMD> C:\WINDOWS\System32\Dism.exe /English /Get-WimInfo /WimFile:D:\WimMount\ExtractedISO\sources\install.wim
+[2026-10-16 19:06:32.575] 
+Deployment Image Servicing and Management tool
+Version: 10.0.26100.9549
+
+Details for image : D:\WimMount\ExtractedISO\sources\install.wim
+
+Index : 1
+Name : Windows 11 Home
+Description : Windows 11 Home
+Size : 25,730,139,683 bytes
+
+Index : 2
+Name : Windows 11 Home N
+Description : Windows 11 Home N
+Size : 25,002,017,930 bytes
+
+Index : 3
+Name : Windows 11 Home Single Language
+Description : Windows 11 Home Single Language
+Size : 25,726,661,488 bytes
+
+Index : 4
+Name : Windows 11 Education
+Description : Windows 11 Education
+Size : 26,767,384,556 bytes
+
+Index : 5
+Name : Windows 11 Education N
+Description : Windows 11 Education N
+Size : 26,016,541,654 bytes
+
+Index : 6
+Name : Windows 11 Pro
+Description : Windows 11 Pro
+Size : 26,770,709,765 bytes
+
+Index : 7
+Name : Windows 11 Pro N
+Description : Windows 11 Pro N
+Size : 26,037,976,877 bytes
+
+Index : 8
+Name : Windows 11 Pro Education
+Description : Windows 11 Pro Education
+Size : 26,767,435,194 bytes
+
+Index : 9
+Name : Windows 11 Pro Education N
+Description : Windows 11 Pro Education N
+Size : 26,016,567,423 bytes
+
+Index : 10
+Name : Windows 11 Pro for Workstations
+Description : Windows 11 Pro for Workstations
+Size : 26,767,485,832 bytes
+
+Index : 11
+Name : Windows 11 Pro N for Workstations
+Description : Windows 11 Pro N for Workstations
+Size : 26,016,593,192 bytes
+
+The operation completed successfully.
+
+[2026-10-16 19:06:32.734] CMD> C:\WINDOWS\System32\Dism.exe /English /Get-ImageInfo /ImageFile:D:\WimMount\ExtractedISO\sources\install.wim /Index:1
+[2026-10-16 19:06:32.734] 
+Deployment Image Servicing and Management tool
+Version: 10.0.26100.9549
+
+Details for image : D:\WimMount\ExtractedISO\sources\install.wim
+
+Index : 1
+Name : Windows 11 Home
+Description : Windows 11 Home
+Size : 25,730,139,683 bytes
+WIM Bootable : No
+Architecture : x64
+Hal : <undefined>
+Version : 10.0.26300
+ServicePack Build : 9457
+ServicePack Level : 0
+Edition : Core
+Installation : Client
+ProductType : WinNT
+ProductSuite : Terminal Server
+System Root : WINDOWS
+Directories : 34424
+Files : 151120
+Created : 13/09/2026 - 09:44:28 ?
+Modified : 13/09/2026 - 10:21:20 ?
+Languages :
+	en-US (Default)
+The operation completed successfully.
+
+[2026-10-16 19:06:33.017] CMD> C:\WINDOWS\System32\Dism.exe /English /Mount-Image /ImageFile:D:\WimMount\ExtractedISO\sources\install.wim /Index:67 /MountDir:D:\WimMount\Mount\Image67
+[2026-10-16 19:06:33.017] 
+Deployment Image Servicing and Management tool
+Version: 10.0.26100.9549
+
+
+Error: 0xc1560111
+
+The specified image does not exist in the specified image container.
+Check the image container first for existing images.
+
+The DISM log file can be found at C:\WINDOWS\Logs\DISM\dism.log
+
+[2026-10-16 19:06:33.033] Mount failed for index 67: Unclassified
+[2026-10-16 19:06:33.153] CMD> C:\WINDOWS\System32\Dism.exe /English /Get-MountedImageInfo
+[2026-10-16 19:06:33.153] 
+Deployment Image Servicing and Management tool
+Version: 10.0.26100.9549
+
+Mounted images:
+
+
+No mounted images found.
+
+The operation completed successfully.
+
+[2026-10-16 19:06:33.160] Verified: D:\WimMount\Mount\Image67 is not present in mounted-image list.
+[2026-10-16 19:06:33.258] CMD> C:\WINDOWS\System32\Dism.exe /English /Get-WimInfo /WimFile:D:\WimMount\ExtractedISO\sources\install.wim
+[2026-10-16 19:06:33.258] 
+Deployment Image Servicing and Management tool
+Version: 10.0.26100.9549
+
+Details for image : D:\WimMount\ExtractedISO\sources\install.wim
+
+Index : 1
+Name : Windows 11 Home
+Description : Windows 11 Home
+Size : 25,730,139,683 bytes
+
+Index : 2
+Name : Windows 11 Home N
+Description : Windows 11 Home N
+Size : 25,002,017,930 bytes
+
+Index : 3
+Name : Windows 11 Home Single Language
+Description : Windows 11 Home Single Language
+Size : 25,726,661,488 bytes
+
+Index : 4
+Name : Windows 11 Education
+Description : Windows 11 Education
+Size : 26,767,384,556 bytes
+
+Index : 5
+Name : Windows 11 Education N
+Description : Windows 11 Education N
+Size : 26,016,541,654 bytes
+
+Index : 6
+Name : Windows 11 Pro
+Description : Windows 11 Pro
+Size : 26,770,709,765 bytes
+
+Index : 7
+Name : Windows 11 Pro N
+Description : Windows 11 Pro N
+Size : 26,037,976,877 bytes
+
+Index : 8
+Name : Windows 11 Pro Education
+Description : Windows 11 Pro Education
+Size : 26,767,435,194 bytes
+
+Index : 9
+Name : Windows 11 Pro Education N
+Description : Windows 11 Pro Education N
+Size : 26,016,567,423 bytes
+
+Index : 10
+Name : Windows 11 Pro for Workstations
+Description : Windows 11 Pro for Workstations
+Size : 26,767,485,832 bytes
+
+Index : 11
+Name : Windows 11 Pro N for Workstations
+Description : Windows 11 Pro N for Workstations
+Size : 26,016,593,192 bytes
+
+The operation completed successfully.
+
+[2026-10-16 19:06:33.384] CMD> C:\WINDOWS\System32\Dism.exe /English /Get-ImageInfo /ImageFile:D:\WimMount\ExtractedISO\sources\install.wim /Index:1
+[2026-10-16 19:06:33.384] 
+Deployment Image Servicing and Management tool
+Version: 10.0.26100.9549
+
+Details for image : D:\WimMount\ExtractedISO\sources\install.wim
+
+Index : 1
+Name : Windows 11 Home
+Description : Windows 11 Home
+Size : 25,730,139,683 bytes
+WIM Bootable : No
+Architecture : x64
+Hal : <undefined>
+Version : 10.0.26300
+ServicePack Build : 9457
+ServicePack Level : 0
+Edition : Core
+Installation : Client
+ProductType : WinNT
+ProductSuite : Terminal Server
+System Root : WINDOWS
+Directories : 34424
+Files : 151120
+Created : 13/09/2026 - 09:44:28 ?
+Modified : 13/09/2026 - 10:21:20 ?
+Languages :
+	en-US (Default)
+The operation completed successfully.
+

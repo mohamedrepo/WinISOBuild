@@ -1,0 +1,5 @@
+[2026-10-20 06:10:55.023] === Phase1-EnvironmentAudit started ===
+[2026-10-20 06:10:55.041] Workspace: D:\WimMount
+[2026-10-20 06:10:56.986] WARNING: not elevated; proceeding because -AllowUnoelevated was specified (read-only audit only).
+[2026-10-20 06:10:57.087] Workspace drive D: free: 134.05 GB (configured minimum 25 GB)
+[2026-10-20 06:10:57.105] Phase 1 finished with status: Succeeded

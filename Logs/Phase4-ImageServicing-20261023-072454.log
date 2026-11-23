@@ -1,0 +1,2304 @@
+[2026-10-23 07:24:54.697] === Phase4-ImageServicing started ===
+[2026-10-23 07:24:57.092] Reusing existing copy D:\WimMount\ExtractedISO\sources\install.wim (idempotent)
+[2026-10-23 07:24:57.187] Servicing target: D:\WimMount\ExtractedISO\sources\install.wim
+[2026-10-23 07:24:57.506] CMD> C:\WINDOWS\System32\Dism.exe /English /Get-WimInfo /WimFile:D:\WimMount\ExtractedISO\sources\install.wim
+[2026-10-23 07:24:57.508] 
+Deployment Image Servicing and Management tool
+Version: 10.0.26100.9549
+
+Details for image : D:\WimMount\ExtractedISO\sources\install.wim
+
+Index : 1
+Name : Windows 11 Home
+Description : Windows 11 Home
+Size : 25,730,139,683 bytes
+
+Index : 2
+Name : Windows 11 Home N
+Description : Windows 11 Home N
+Size : 25,002,017,930 bytes
+
+Index : 3
+Name : Windows 11 Home Single Language
+Description : Windows 11 Home Single Language
+Size : 25,726,661,488 bytes
+
+Index : 4
+Name : Windows 11 Education
+Description : Windows 11 Education
+Size : 26,767,384,556 bytes
+
+Index : 5
+Name : Windows 11 Education N
+Description : Windows 11 Education N
+Size : 26,016,541,654 bytes
+
+Index : 6
+Name : Windows 11 Pro
+Description : Windows 11 Pro
+Size : 26,770,709,765 bytes
+
+Index : 7
+Name : Windows 11 Pro N
+Description : Windows 11 Pro N
+Size : 26,037,976,877 bytes
+
+Index : 8
+Name : Windows 11 Pro Education
+Description : Windows 11 Pro Education
+Size : 26,767,435,194 bytes
+
+Index : 9
+Name : Windows 11 Pro Education N
+Description : Windows 11 Pro Education N
+Size : 26,016,567,423 bytes
+
+Index : 10
+Name : Windows 11 Pro for Workstations
+Description : Windows 11 Pro for Workstations
+Size : 26,767,485,832 bytes
+
+Index : 11
+Name : Windows 11 Pro N for Workstations
+Description : Windows 11 Pro N for Workstations
+Size : 26,016,593,192 bytes
+
+The operation completed successfully.
+
+[2026-10-23 07:24:57.685] CMD> C:\WINDOWS\System32\Dism.exe /English /Get-ImageInfo /ImageFile:D:\WimMount\ExtractedISO\sources\install.wim /Index:1
+[2026-10-23 07:24:57.686] 
+Deployment Image Servicing and Management tool
+Version: 10.0.26100.9549
+
+Details for image : D:\WimMount\ExtractedISO\sources\install.wim
+
+Index : 1
+Name : Windows 11 Home
+Description : Windows 11 Home
+Size : 25,730,139,683 bytes
+WIM Bootable : No
+Architecture : x64
+Hal : <undefined>
+Version : 10.0.26300
+ServicePack Build : 9457
+ServicePack Level : 0
+Edition : Core
+Installation : Client
+ProductType : WinNT
+ProductSuite : Terminal Server
+System Root : WINDOWS
+Directories : 34424
+Files : 151120
+Created : 13/09/2026 - 09:44:28 ?
+Modified : 13/09/2026 - 10:21:20 ?
+Languages :
+	en-US (Default)
+The operation completed successfully.
+
+[2026-10-23 07:27:01.188] CMD> C:\WINDOWS\System32\Dism.exe /English /Mount-Image /ImageFile:D:\WimMount\ExtractedISO\sources\install.wim /Index:6 /MountDir:D:\WimMount\Mount\Image6
+[2026-10-23 07:27:01.202] 
+Deployment Image Servicing and Management tool
+Version: 10.0.26100.9549
+
+Mounting image
+[                           1.0%                           ] 
+[=                          2.0%                           ] 
+[=                          3.0%                           ] 
+[==                         4.0%                           ] 
+[==                         5.0%                           ] 
+[===                        6.0%                           ] 
+[====                       7.0%                           ] 
+[====                       8.0%                           ] 
+[=====                      9.0%                           ] 
+[=====                      10.0%                          ] 
+[======                     11.0%                          ] 
+[======                     12.0%                          ] 
+[=======                    13.0%                          ] 
+[========                   14.0%                          ] 
+[========                   15.0%                          ] 
+[=========                  16.0%                          ] 
+[=========                  17.0%                          ] 
+[==========                 18.0%                          ] 
+[===========                19.0%                          ] 
+[===========                20.0%                          ] 
+[============               21.0%                          ] 
+[============               22.0%                          ] 
+[=============              23.0%                          ] 
+[=============              24.0%                          ] 
+[==============             25.0%                          ] 
+[===============            26.0%                          ] 
+[===============            27.0%                          ] 
+[================           28.0%                          ] 
+[================           29.0%                          ] 
+[=================          30.0%                          ] 
+[=================          31.0%                          ] 
+[==================         32.0%                          ] 
+[===================        33.0%                          ] 
+[===================        34.0%                          ] 
+[====================       35.0%                          ] 
+[====================       36.0%                          ] 
+[=====================      37.0%                          ] 
+[======================     38.0%                          ] 
+[======================     39.0%                          ] 
+[=======================    40.0%                          ] 
+[=======================    41.0%                          ] 
+[========================   42.0%                          ] 
+[========================   43.0%                          ] 
+[=========================  44.0%                          ] 
+[========================== 45.0%                          ] 
+[========================== 46.0%                          ] 
+[===========================47.0%                          ] 
+[===========================48.0%                          ] 
+[===========================49.0%                          ] 
+[===========================50.0%                          ] 
+[===========================52.0%                          ] 
+[===========================53.0%                          ] 
+[===========================54.0%                          ] 
+[===========================55.0%                          ] 
+[===========================56.0%                          ] 
+[===========================57.0%=                         ] 
+[===========================58.0%=                         ] 
+[===========================59.0%==                        ] 
+[===========================60.0%==                        ] 
+[===========================61.0%===                       ] 
+[===========================62.0%===                       ] 
+[===========================63.0%====                      ] 
+[===========================64.0%=====                     ] 
+[===========================65.0%=====                     ] 
+[===========================66.0%======                    ] 
+[===========================67.0%======                    ] 
+[===========================68.0%=======                   ] 
+[===========================69.0%========                  ] 
+[===========================70.0%========                  ] 
+[===========================71.0%=========                 ] 
+[===========================72.0%=========                 ] 
+[===========================73.0%==========                ] 
+[===========================74.0%==========                ] 
+[===========================75.0%===========               ] 
+[===========================77.0%============              ] 
+[===========================78.0%=============             ] 
+[===========================79.0%=============             ] 
+[===========================80.0%==============            ] 
+[===========================81.0%==============            ] 
+[===========================82.0%===============           ] 
+[===========================83.0%================          ] 
+[===========================84.0%================          ] 
+[===========================85.0%=================         ] 
+[===========================86.0%=================         ] 
+[===========================87.0%==================        ] 
+[===========================88.0%===================       ] 
+[===========================89.0%===================       ] 
+[===========================90.0%====================      ] 
+[===========================91.0%====================      ] 
+[===========================92.0%=====================     ] 
+[===========================93.0%=====================     ] 
+[===========================94.0%======================    ] 
+[===========================95.0%=======================   ] 
+[===========================96.0%=======================   ] 
+[===========================97.0%========================  ] 
+[===========================98.0%========================  ] 
+[===========================99.0%========================= ] 
+[==========================100.0%==========================] 
+The operation completed successfully.
+
+[2026-10-23 07:27:01.206] Mounted index 6 at D:\WimMount\Mount\Image6
+[2026-10-23 07:27:13.210] CMD> C:\WINDOWS\System32\Dism.exe /English /Image:D:\WimMount\Mount\Image6 /Get-Packages
+[2026-10-23 07:27:13.213] 
+Deployment Image Servicing and Management tool
+Version: 10.0.26100.9549
+
+Image Version: 10.0.26300.9457
+
+Packages listing:
+
+Package Identity : Microsoft-OneCore-ApplicationModel-Sync-Desktop-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-OneCore-ApplicationModel-Sync-Desktop-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-OneCore-DirectX-Database-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-OneCore-DirectX-Database-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-Client-LanguagePack-Package~31bf3856ad364e35~amd64~en-US~10.0.26100.1742
+State : Staged
+Release Type : Language Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-Client-LanguagePack-Package~31bf3856ad364e35~amd64~en-US~10.0.26100.9457
+State : Installed
+Release Type : Language Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-Ethernet-Client-Intel-E1i68x64-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-Ethernet-Client-Intel-E1i68x64-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-Ethernet-Client-Intel-E2f68-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-Ethernet-Client-Intel-E2f68-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-Ethernet-Client-Realtek-Rtcx21x64-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-Ethernet-Client-Realtek-Rtcx21x64-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-Ethernet-Client-Vmware-Vmxnet3-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-Ethernet-Client-Vmware-Vmxnet3-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-FodMetadata-Package~31bf3856ad364e35~amd64~~10.0.26100.1
+State : Installed
+Release Type : Feature Pack
+Install Time : 01/04/2024 08:01 ?
+
+Package Identity : Microsoft-Windows-FodMetadataServicing-Desktop-CompDB-Package~31bf3856ad364e35~amd64~~10.0.26100.1
+State : Installed
+Release Type : Feature Pack
+Install Time : 01/04/2024 08:01 ?
+
+Package Identity : Microsoft-Windows-FodMetadataServicing-Desktop-Metadata-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : Feature Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-FodMetadataServicing-Desktop-Metadata-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : Feature Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-Foundation-Package~31bf3856ad364e35~amd64~~10.0.26100.1
+State : Installed
+Release Type : Foundation
+Install Time : 01/04/2024 07:29 ?
+
+Package Identity : Microsoft-Windows-Hello-Face-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-Hello-Face-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-InternetExplorer-Optional-Package~31bf3856ad364e35~amd64~en-US~11.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-InternetExplorer-Optional-Package~31bf3856ad364e35~amd64~en-US~11.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-InternetExplorer-Optional-Package~31bf3856ad364e35~amd64~~11.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-InternetExplorer-Optional-Package~31bf3856ad364e35~amd64~~11.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-Kernel-LA57-FoD-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-Kernel-LA57-FoD-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-LanguageFeatures-Basic-en-us-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-LanguageFeatures-Basic-en-us-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-LanguageFeatures-Handwriting-en-us-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-LanguageFeatures-Handwriting-en-us-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-LanguageFeatures-OCR-en-us-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-LanguageFeatures-OCR-en-us-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-LanguageFeatures-Speech-en-us-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-LanguageFeatures-Speech-en-us-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-LanguageFeatures-TextToSpeech-en-us-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-LanguageFeatures-TextToSpeech-en-us-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-Licenses-Professional-Package~31bf3856ad364e35~amd64~en-US~10.0.26100.1742
+State : Staged
+Release Type : Language Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-Licenses-Professional-Package~31bf3856ad364e35~amd64~en-US~10.0.26100.8117
+State : Installed
+Release Type : Language Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-Licenses-Professional-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : Feature Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-Licenses-Professional-Package~31bf3856ad364e35~amd64~~10.0.26100.8037
+State : Installed
+Release Type : Feature Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-MediaPlayer-Package~31bf3856ad364e35~amd64~en-US~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-MediaPlayer-Package~31bf3856ad364e35~amd64~en-US~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-MediaPlayer-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-MediaPlayer-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-MediaPlayer-Package~31bf3856ad364e35~wow64~en-US~10.0.26100.1
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 01/04/2024 08:03 ?
+
+Package Identity : Microsoft-Windows-MediaPlayer-Package~31bf3856ad364e35~wow64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-MediaPlayer-Package~31bf3856ad364e35~wow64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-Notepad-System-FoD-Package~31bf3856ad364e35~amd64~en-US~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-Notepad-System-FoD-Package~31bf3856ad364e35~amd64~en-US~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-Notepad-System-FoD-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-Notepad-System-FoD-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-Notepad-System-FoD-Package~31bf3856ad364e35~wow64~en-US~10.0.26100.1
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 01/04/2024 08:04 ?
+
+Package Identity : Microsoft-Windows-Notepad-System-FoD-Package~31bf3856ad364e35~wow64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-Notepad-System-FoD-Package~31bf3856ad364e35~wow64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-PowerShell-ISE-FOD-Package~31bf3856ad364e35~amd64~en-US~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-PowerShell-ISE-FOD-Package~31bf3856ad364e35~amd64~en-US~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-PowerShell-ISE-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-PowerShell-ISE-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-PowerShell-ISE-FOD-Package~31bf3856ad364e35~wow64~en-US~10.0.26100.1
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 01/04/2024 08:03 ?
+
+Package Identity : Microsoft-Windows-PowerShell-ISE-FOD-Package~31bf3856ad364e35~wow64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-PowerShell-ISE-FOD-Package~31bf3856ad364e35~wow64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-Printing-PMCPPC-FoD-Package~31bf3856ad364e35~amd64~en-US~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-Printing-PMCPPC-FoD-Package~31bf3856ad364e35~amd64~en-US~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-Printing-PMCPPC-FoD-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-Printing-PMCPPC-FoD-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-SenseClient-FoD-Package~31bf3856ad364e35~amd64~en-US~10.0.26100.1
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 01/04/2024 08:04 ?
+
+Package Identity : Microsoft-Windows-SenseClient-FoD-Package~31bf3856ad364e35~amd64~en-US~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-SenseClient-FoD-Package~31bf3856ad364e35~amd64~~10.0.26100.1
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 01/04/2024 08:04 ?
+
+Package Identity : Microsoft-Windows-SenseClient-FoD-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-StepsRecorder-Package~31bf3856ad364e35~amd64~en-US~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-StepsRecorder-Package~31bf3856ad364e35~amd64~en-US~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-StepsRecorder-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-StepsRecorder-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-StepsRecorder-Package~31bf3856ad364e35~wow64~en-US~10.0.26100.1
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 01/04/2024 08:03 ?
+
+Package Identity : Microsoft-Windows-StepsRecorder-Package~31bf3856ad364e35~wow64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-StepsRecorder-Package~31bf3856ad364e35~wow64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-TabletPCMath-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-TabletPCMath-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-VBSCRIPT-FoD-Package~31bf3856ad364e35~amd64~en-US~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-VBSCRIPT-FoD-Package~31bf3856ad364e35~amd64~en-US~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-VBSCRIPT-FoD-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-VBSCRIPT-FoD-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-VBSCRIPT-FoD-Package~31bf3856ad364e35~wow64~en-US~10.0.26100.1
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 01/04/2024 08:03 ?
+
+Package Identity : Microsoft-Windows-VBSCRIPT-FoD-Package~31bf3856ad364e35~wow64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-VBSCRIPT-FoD-Package~31bf3856ad364e35~wow64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-Wallpaper-Content-Extended-FoD-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-Wallpaper-Content-Extended-FoD-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-Wifi-Client-Broadcom-Bcmpciedhd63-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-Wifi-Client-Broadcom-Bcmpciedhd63-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-Wifi-Client-Broadcom-Bcmwl63a-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-Wifi-Client-Broadcom-Bcmwl63a-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-Wifi-Client-Broadcom-Bcmwl63al-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-Wifi-Client-Broadcom-Bcmwl63al-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-Wifi-Client-Intel-Netwbw02-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-Wifi-Client-Intel-Netwbw02-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-Wifi-Client-Intel-Netwew00-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-Wifi-Client-Intel-Netwew00-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-Wifi-Client-Intel-Netwew01-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-Wifi-Client-Intel-Netwew01-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-Wifi-Client-Intel-Netwlv64-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-Wifi-Client-Intel-Netwlv64-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-Wifi-Client-Intel-Netwns64-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-Wifi-Client-Intel-Netwns64-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-Wifi-Client-Intel-Netwsw00-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-Wifi-Client-Intel-Netwsw00-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-Wifi-Client-Intel-Netwtw02-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-Wifi-Client-Intel-Netwtw02-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-Wifi-Client-Intel-Netwtw04-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-Wifi-Client-Intel-Netwtw04-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-Wifi-Client-Intel-Netwtw06-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-Wifi-Client-Intel-Netwtw06-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-Wifi-Client-Intel-Netwtw08-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-Wifi-Client-Intel-Netwtw08-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-Wifi-Client-Intel-Netwtw10-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-Wifi-Client-Intel-Netwtw10-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-Wifi-Client-Marvel-Mrvlpcie8897-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-Wifi-Client-Marvel-Mrvlpcie8897-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-Wifi-Client-Qualcomm-Athw8x-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-Wifi-Client-Qualcomm-Athw8x-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-Wifi-Client-Qualcomm-Athwnx-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-Wifi-Client-Qualcomm-Athwnx-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-Wifi-Client-Qualcomm-Qcamain10x64-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-Wifi-Client-Qualcomm-Qcamain10x64-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-Wifi-Client-Ralink-Netr28x-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-Wifi-Client-Ralink-Netr28x-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-Wifi-Client-Realtek-Rtl8192se-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-Wifi-Client-Realtek-Rtl8192se-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-Wifi-Client-Realtek-Rtwlane-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-Wifi-Client-Realtek-Rtwlane-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-Wifi-Client-Realtek-Rtwlane01-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-Wifi-Client-Realtek-Rtwlane01-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-Wifi-Client-Realtek-Rtwlane13-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-Wifi-Client-Realtek-Rtwlane13-FOD-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Microsoft-Windows-WMIC-FoD-Package~31bf3856ad364e35~amd64~en-US~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-WMIC-FoD-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-WMIC-FoD-Package~31bf3856ad364e35~wow64~en-US~10.0.26100.1
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 01/04/2024 08:03 ?
+
+Package Identity : Microsoft-Windows-WMIC-FoD-Package~31bf3856ad364e35~wow64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : Microsoft-Windows-WMIC-FoD-Package~31bf3856ad364e35~wow64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : OpenSSH-Client-Package~31bf3856ad364e35~amd64~~10.0.26100.1742
+State : Staged
+Release Type : OnDemand Pack
+Install Time : 
+
+Package Identity : OpenSSH-Client-Package~31bf3856ad364e35~amd64~~10.0.26100.9457
+State : Installed
+Release Type : OnDemand Pack
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Package_for_DotNetRollup_481~31bf3856ad364e35~amd64~~10.0.9347.1
+State : Installed
+Release Type : Update
+Install Time : 13/09/2026 06:20 ?
+
+Package Identity : Package_for_KB5121794~31bf3856ad364e35~amd64~~26100.8966.1.0
+State : Installed
+Release Type : Update
+Install Time : 13/09/2026 06:19 ?
+
+Package Identity : Package_for_RollupFix~31bf3856ad364e35~amd64~~26100.1742.1.10
+State : Staged
+Release Type : Security Update
+Install Time : 
+
+Package Identity : Package_for_RollupFix~31bf3856ad364e35~amd64~~26100.9457.1.0
+State : Installed
+Release Type : Security Update
+Install Time : 13/09/2026 06:32 ?
+
+Package Identity : Package_for_ServicingStack_9441~31bf3856ad364e35~amd64~~26100.9441.1.11
+State : Installed
+Release Type : Security Update
+Install Time : 13/09/2026 06:26 ?
+
+The operation completed successfully.
+
+[2026-10-23 07:27:17.800] CMD> C:\WINDOWS\System32\Dism.exe /English /Image:D:\WimMount\Mount\Image6 /Cleanup-Image /CheckHealth
+[2026-10-23 07:27:17.804] 
+Deployment Image Servicing and Management tool
+Version: 10.0.26100.9549
+
+Image Version: 10.0.26300.9457
+
+No component store corruption detected.
+The operation completed successfully.
+
+[2026-10-23 07:29:44.876] CMD> C:\WINDOWS\System32\Dism.exe /English /Image:D:\WimMount\Mount\Image6 /Cleanup-Image /AnalyzeComponentStore
+[2026-10-23 07:29:44.881] 
+Deployment Image Servicing and Management tool
+Version: 10.0.26100.9549
+
+Image Version: 10.0.26300.9457
+
+[=                          2.1%                           ] 
+[=                          3.2%                           ] 
+[==                         4.0%                           ] 
+[==                         5.1%                           ] 
+[===                        5.9%                           ] 
+[====                       7.1%                           ] 
+[====                       8.5%                           ] 
+[=====                      9.7%                           ] 
+[======                     11.0%                          ] 
+[=======                    12.1%                          ] 
+[========                   14.2%                          ] 
+[========                   14.9%                          ] 
+[=========                  15.8%                          ] 
+[=========                  17.2%                          ] 
+[===========                19.0%                          ] 
+[===========                19.0%                          ] 
+[===========                19.0%                          ] 
+[===========                19.0%                          ] 
+[===========                19.0%                          ] 
+[===========                19.0%                          ] 
+[===========                19.0%                          ] 
+[===========                19.0%                          ] 
+[===========                19.0%                          ] 
+[===========                19.0%                          ] 
+[===========                19.0%                          ] 
+[===========                19.0%                          ] 
+[===========                19.0%                          ] 
+[===========                19.0%                          ] 
+[===========                19.0%                          ] 
+[===========                19.3%                          ] 
+[===========                19.3%                          ] 
+[===========                19.8%                          ] 
+[===========                19.8%                          ] 
+[===========                20.1%                          ] 
+[===========                20.1%                          ] 
+[===========                20.1%                          ] 
+[===========                20.1%                          ] 
+[===========                20.1%                          ] 
+[============               22.1%                          ] 
+[=============              23.5%                          ] 
+[==============             24.8%                          ] 
+[==============             25.6%                          ] 
+[===============            27.3%                          ] 
+[================           28.1%                          ] 
+[================           29.1%                          ] 
+[=================          29.6%                          ] 
+[==================         31.1%                          ] 
+[==================         31.6%                          ] 
+[==================         32.3%                          ] 
+[===================        32.8%                          ] 
+[===================        33.3%                          ] 
+[===================        34.1%                          ] 
+[====================       34.5%                          ] 
+[====================       35.9%                          ] 
+[=====================      36.9%                          ] 
+[=====================      37.6%                          ] 
+[======================     39.3%                          ] 
+[=======================    40.1%                          ] 
+[=======================    40.5%                          ] 
+[========================   42.4%                          ] 
+[========================   42.8%                          ] 
+[=========================  43.8%                          ] 
+[========================== 45.4%                          ] 
+[========================== 46.1%                          ] 
+[===========================46.7%                          ] 
+[===========================47.1%                          ] 
+[===========================47.3%                          ] 
+[===========================47.9%                          ] 
+[===========================49.3%                          ] 
+[===========================50.2%                          ] 
+[===========================51.1%                          ] 
+[===========================52.5%                          ] 
+[===========================53.7%                          ] 
+[===========================54.4%                          ] 
+[===========================55.4%                          ] 
+[===========================56.1%                          ] 
+[===========================56.1%                          ] 
+[===========================56.1%                          ] 
+[===========================56.1%                          ] 
+[===========================56.4%                          ] 
+[===========================57.6%=                         ] 
+[===========================57.6%=                         ] 
+[===========================57.9%=                         ] 
+[===========================58.7%==                        ] 
+[===========================60.0%==                        ] 
+[===========================75.5%===========               ] 
+[===========================75.5%===========               ] 
+[===========================90.2%====================      ] 
+[===========================90.2%====================      ] 
+[===========================98.0%========================  ] 
+[===========================98.0%========================  ] 
+[===========================98.0%========================  ] 
+[===========================98.0%========================  ] 
+[==========================100.0%==========================] 
+
+Component Store (WinSxS) information:
+
+Windows Explorer Reported Size of Component Store : 11.59 GB
+
+Actual Size of Component Store : 11.49 GB
+
+    Shared with Windows : 8.02 GB
+    Backups and Disabled Features : 3.46 GB
+    Cache and Temporary Data :  0 bytes
+
+Date of Last Cleanup : 2026-09-13 21:36:36
+
+Number of Reclaimable Packages : 2
+Component Store Cleanup Recommended : Yes
+
+The operation completed successfully.
+
+[2026-10-23 07:29:44.943] CMD> C:\WINDOWS\System32\expand.exe -F:* D:\WimMount\Updates\windows11.0-kb5127648-x64_2b88d2d308adc938fcd4d2876a68ee0b2a3c4c09.msu D:\WimMount\Updates\_expanded\windows11.0-kb5127648-x64_2b88d2d308adc938fcd4d2876a68ee0b2a3c4c09
+[2026-10-23 07:29:44.948] Microsoft (R) File Expansion Utility
+Copyright (c) Microsoft Corporation. All rights reserved.
+
+Can't open input file: d:\wimmount\updates\windows11.0-kb5127648-x64_2b88d2d308adc938fcd4d2876a68ee0b2a3c4c09.msu.
+
+
+[2026-10-23 07:31:14.988] CMD> C:\WINDOWS\System32\wusa.exe D:\WimMount\Updates\windows11.0-kb5127648-x64_2b88d2d308adc938fcd4d2876a68ee0b2a3c4c09.msu /extract:D:\WimMount\Updates\_expanded\windows11.0-kb5127648-x64_2b88d2d308adc938fcd4d2876a68ee0b2a3c4c09
+[2026-10-23 07:31:14.998] 
+[2026-10-23 07:31:15.009] Could not extract a payload .cab from D:\WimMount\Updates\windows11.0-kb5127648-x64_2b88d2d308adc938fcd4d2876a68ee0b2a3c4c09.msu
+[2026-10-23 07:31:41.002] CMD> C:\WINDOWS\System32\Dism.exe /English /Image:D:\WimMount\Mount\Image6 /Add-Package /PackagePath:D:\WimMount\Updates\windows11.0-kb5127648-x64_2b88d2d308adc938fcd4d2876a68ee0b2a3c4c09.msu /NoRestart
+[2026-10-23 07:31:41.068] 
+Deployment Image Servicing and Management tool
+Version: 10.0.26100.9549
+
+Image Version: 10.0.26300.9457
+
+Processing 1 of 1 - D:\WimMount\Updates\windows11.0-kb5127648-x64_2b88d2d308adc938fcd4d2876a68ee0b2a3c4c09.msu: An error occurred while expanding the .msu package into the temporary folder, D:\WimMount\Mount\Image6\Windows\Temp\7B88B5FA-88E3-4589-B065-F11A8B290A70.
+ Error: 0x80070241
+
+Error: 577
+
+Windows cannot verify the digital signature for this file. A recent hardware or software change might have installed a file that is signed incorrectly or damaged, or that might be malicious software from an unknown source.
+
+The DISM log file can be found at C:\WINDOWS\Logs\DISM\dism.log
+
+[2026-10-23 07:31:41.090] KB5127648: Unclassified (0x00000241) - NOT forced, recorded per policy
+[2026-10-23 07:31:44.781] CMD> C:\WINDOWS\System32\Dism.exe /English /Image:D:\WimMount\Mount\Image6 /Get-Drivers
+[2026-10-23 07:31:44.785] 
+Deployment Image Servicing and Management tool
+Version: 10.0.26100.9549
+
+Image Version: 10.0.26300.9457
+
+Obtaining list of 3rd party drivers from the driver store...
+
+Driver packages listing:
+
+(No drivers found in the image matching the criteria)
+
+The operation completed successfully.
+
+[2026-10-23 07:34:54.135] CMD> C:\WINDOWS\System32\Dism.exe /English /Image:D:\WimMount\Mount\Image6 /Add-Driver /Driver:D:\WimMount\Drivers /Recurse
+[2026-10-23 07:34:54.136] 
+Deployment Image Servicing and Management tool
+Version: 10.0.26100.9549
+
+Image Version: 10.0.26300.9457
+
+Searching for driver packages to install...
+Found 95 driver package(s) to install.
+Installing 1 of 95 - D:\WimMount\Drivers\aphidfiltrsp.inf_amd64_154c37f7247e32d8\ApHidFiltrSP.inf: The driver package was successfully installed.
+Installing 2 of 95 - D:\WimMount\Drivers\apvhid.inf_amd64_d627bad8cca857f1\ApVHid.inf: The driver package was successfully installed.
+Installing 3 of 95 - D:\WimMount\Drivers\bcmnfcser.inf_amd64_7b0c991910eedac7\bcmnfcser.inf: The driver package was successfully installed.
+Installing 4 of 95 - D:\WimMount\Drivers\bcmnfcusb.inf_amd64_e81fc3d87745ae87\bcmnfcusb.inf: The driver package was successfully installed.
+Installing 5 of 95 - D:\WimMount\Drivers\bertreader.inf_amd64_ab4c359d9925ebd5\bertreader.inf: The driver package was successfully installed.
+Installing 6 of 95 - D:\WimMount\Drivers\cannonlake-hsystem.inf_amd64_22f53879fd35d50f\CannonLake-HSystem.inf: The driver package was successfully installed.
+Installing 7 of 95 - D:\WimMount\Drivers\cannonlake-hsystemthermal.inf_amd64_0df2612d09b904c3\CannonLake-HSystemThermal.inf: The driver package was successfully installed.
+Installing 8 of 95 - D:\WimMount\Drivers\coffeelakesystem.inf_amd64_e332dbefa69fd95b\CoffeelakeSystem.inf: The driver package was successfully installed.
+Installing 9 of 95 - D:\WimMount\Drivers\cui_dch.inf_amd64_0e0cef3aab259dd1\cui_dch.inf: The driver package was successfully installed.
+Installing 10 of 95 - D:\WimMount\Drivers\cvusbdrv.inf_amd64_74dee19df6753e40\cvusbdrv.inf: The driver package was successfully installed.
+Installing 11 of 95 - D:\WimMount\Drivers\dal.inf_amd64_8a3f88e34f6b8385\DAL.inf: The driver package was successfully installed.
+Installing 12 of 95 - D:\WimMount\Drivers\dellaudioextwaves.inf_amd64_ccde5dd118826216\DellAudioExtWaves.inf: The driver package was successfully installed.
+Installing 13 of 95 - D:\WimMount\Drivers\dellinstrumentation.inf_amd64_b559b6b296055b4b\dellinstrumentation.inf: The driver package was successfully installed.
+Installing 14 of 95 - D:\WimMount\Drivers\dellmdm.inf_amd64_76d2d66d2f34f5ef\dellmdm.inf: The driver package was successfully installed.
+Installing 15 of 95 - D:\WimMount\Drivers\dellser.inf_amd64_874858b0ac405b46\dellser.inf: The driver package was successfully installed.
+Installing 16 of 95 - D:\WimMount\Drivers\dptf_acpi.inf_amd64_3e57360bec7af08c\dptf_acpi.inf: The driver package was successfully installed.
+Installing 17 of 95 - D:\WimMount\Drivers\dptf_cpu.inf_amd64_c2c5b0e17a28a48f\dptf_cpu.inf: The driver package was successfully installed.
+Installing 18 of 95 - D:\WimMount\Drivers\e1d.inf_amd64_51f5d5b8bd1664b4\e1d.inf: The driver package was successfully installed.
+Installing 19 of 95 - D:\WimMount\Drivers\e1d_ext.inf_amd64_53bd5c3c8be4cc0b\e1d_ext.inf: The driver package was successfully installed.
+Installing 20 of 95 - D:\WimMount\Drivers\e1dn.inf_amd64_c2862558bc95981c\e1dn.inf: The driver package was successfully installed.
+Installing 21 of 95 - D:\WimMount\Drivers\firmware.inf_amd64_3e752636b52b1418\firmware.inf: The driver package was successfully installed.
+Installing 22 of 95 - D:\WimMount\Drivers\hdbusext.inf_amd64_4ecffd828720a8e7\hdbusext.inf: The driver package was successfully installed.
+Installing 23 of 95 - D:\WimMount\Drivers\hdx_dellbcext_waves_ma8mv5.inf_amd64_b2fa228cd6518a82\HDX_DellBCExt_WAVES_MA8MV5.inf: The driver package was successfully installed.
+Installing 24 of 95 - D:\WimMount\Drivers\hdxdellbc2018.inf_amd64_91f53158916a54d0\HDXDELLBC2018.inf: The driver package was successfully installed.
+Installing 25 of 95 - D:\WimMount\Drivers\heci.inf_amd64_868307ee28d2b169\heci.inf: The driver package was successfully installed.
+Installing 26 of 95 - D:\WimMount\Drivers\hideventfilter.inf_amd64_fe647780965d118d\HidEventFilter.inf: The driver package was successfully installed.
+Installing 27 of 95 - D:\WimMount\Drivers\ialpss2_gpio2_cnl.inf_amd64_d920c2a844f26eba\iaLPSS2_GPIO2_CNL.inf: The driver package was successfully installed.
+Installing 28 of 95 - D:\WimMount\Drivers\ialpss2_i2c_cnl.inf_amd64_666eecf21665eb26\iaLPSS2_I2C_CNL.inf: The driver package was successfully installed.
+Installing 29 of 95 - D:\WimMount\Drivers\ibtpci.inf_amd64_bac4bf5ef33ff5a9\ibtpci.inf: The driver package was successfully installed.
+Installing 30 of 95 - D:\WimMount\Drivers\ibtusb.inf_amd64_03cdbfba6e46eeb7\ibtusb.inf: The driver package was successfully installed.
+Installing 31 of 95 - D:\WimMount\Drivers\ibtusb.inf_amd64_066635c10f2d559a\ibtusb.inf: The driver package was successfully installed.
+Installing 32 of 95 - D:\WimMount\Drivers\ibtusb.inf_amd64_0826f21afef73e47\ibtusb.inf: The driver package was successfully installed.
+Installing 33 of 95 - D:\WimMount\Drivers\ibtusb.inf_amd64_652b655d24498c09\ibtusb.inf: The driver package was successfully installed.
+Installing 34 of 95 - D:\WimMount\Drivers\ibtusb.inf_amd64_6cfb464b3aab623e\ibtusb.inf: The driver package was successfully installed.
+Installing 35 of 95 - D:\WimMount\Drivers\ibtusb.inf_amd64_a7740377bf8d03a3\ibtusb.inf: The driver package was successfully installed.
+Installing 36 of 95 - D:\WimMount\Drivers\ibtusb.inf_amd64_add9bf55a7dfec60\ibtusb.inf: The driver package was successfully installed.
+Installing 37 of 95 - D:\WimMount\Drivers\ibtusb.inf_amd64_b74929be480862e9\ibtusb.inf: The driver package was successfully installed.
+Installing 38 of 95 - D:\WimMount\Drivers\ibtusb.inf_amd64_ba901c339cd1d0c2\ibtusb.inf: The driver package was successfully installed.
+Installing 39 of 95 - D:\WimMount\Drivers\ibtusb.inf_amd64_dc6672cc95ca261f\ibtusb.inf: The driver package was successfully installed.
+Installing 40 of 95 - D:\WimMount\Drivers\iclsclient.inf_amd64_5fc2aa9407432355\iclsClient.inf: The driver package was successfully installed.
+Installing 41 of 95 - D:\WimMount\Drivers\idmwfp.inf_amd64_be5722ccff6c2371\idmwfp.inf: The driver package was successfully installed.
+Installing 42 of 95 - D:\WimMount\Drivers\igcc_dch.inf_amd64_bcf814bde8c7d262\igcc_dch.inf: The driver package was successfully installed.
+Installing 43 of 95 - D:\WimMount\Drivers\iigd_dch.inf_amd64_6d5820df0105f0e9\iigd_dch.inf: The driver package was successfully installed.
+Installing 44 of 95 - D:\WimMount\Drivers\iigd_ext.inf_amd64_054eb6661c2ddec0\iigd_ext.inf: The driver package was successfully installed.
+Installing 45 of 95 - D:\WimMount\Drivers\iigd_ext.inf_amd64_238146ba236e8bdc\iigd_ext.inf: The driver package was successfully installed.
+Installing 46 of 95 - D:\WimMount\Drivers\iigd_ext.inf_amd64_405aac8d991f79e2\iigd_ext.inf: The driver package was successfully installed.
+Installing 47 of 95 - D:\WimMount\Drivers\iigd_ext.inf_amd64_6ac17bb69ef7ac60\iigd_ext.inf: The driver package was successfully installed.
+Installing 48 of 95 - D:\WimMount\Drivers\iigd_ext.inf_amd64_c10d9f294708e5e1\iigd_ext.inf: The driver package was successfully installed.
+Installing 49 of 95 - D:\WimMount\Drivers\iigd_ext.inf_amd64_c717fcd279184e66\iigd_ext.inf: The driver package was successfully installed.
+Installing 50 of 95 - D:\WimMount\Drivers\iigd_ext.inf_amd64_dab475ab1e7c4098\iigd_ext.inf: The driver package was successfully installed.
+Installing 51 of 95 - D:\WimMount\Drivers\iigd_ext.inf_amd64_e33ad1d4b0e48dce\iigd_ext.inf: The driver package was successfully installed.
+Installing 52 of 95 - D:\WimMount\Drivers\intcdaud.inf_amd64_14fc346f005b7296\intcdaud.inf: The driver package was successfully installed.
+Installing 53 of 95 - D:\WimMount\Drivers\intcdaud.inf_amd64_2bc3bdfb89548e1f\intcdaud.inf: The driver package was successfully installed.
+Installing 54 of 95 - D:\WimMount\Drivers\intcdaud.inf_amd64_beb9dfa469f30efb\intcdaud.inf: The driver package was successfully installed.
+Installing 55 of 95 - D:\WimMount\Drivers\intcdaud.inf_amd64_e91fd5f4ce5fb012\intcdaud.inf: The driver package was successfully installed.
+Installing 56 of 95 - D:\WimMount\Drivers\lms.inf_amd64_fe54acee029560a2\LMS.inf: The driver package was successfully installed.
+Installing 57 of 95 - D:\WimMount\Drivers\mbfwdriver.inf_amd64_646a95614cf30b47\MBFWDriver.inf: The driver package was successfully installed.
+Installing 58 of 95 - D:\WimMount\Drivers\mesrl.inf_amd64_53cb7906c14a9864\mesrl.inf: The driver package was successfully installed.
+Installing 59 of 95 - D:\WimMount\Drivers\mewmiprov.inf_amd64_d7a222f6ce13d429\MEWMIProv.inf: The driver package was successfully installed.
+Installing 60 of 95 - D:\WimMount\Drivers\mshdadac.inf_amd64_7d6834e88d078490\mshdadac.inf: The driver package was successfully installed.
+Installing 61 of 95 - D:\WimMount\Drivers\netwtw08.inf_amd64_82b659d71a72b25f\Netwtw08.INF: The driver package was successfully installed.
+Installing 62 of 95 - D:\WimMount\Drivers\netwtw08.inf_amd64_db1a75487683e237\Netwtw08.INF: The driver package was successfully installed.
+Installing 63 of 95 - D:\WimMount\Drivers\netwtw6e.inf_amd64_25f0650d769624eb\Netwtw6e.INF: The driver package was successfully installed.
+Installing 64 of 95 - D:\WimMount\Drivers\nvdmwi.inf_amd64_41c4f7daae76f371\nvdmwi.inf: The driver package was successfully installed.
+Installing 65 of 95 - D:\WimMount\Drivers\nvhda.inf_amd64_9074816b745183b4\nvhda.inf: The driver package was successfully installed.
+Installing 66 of 95 - D:\WimMount\Drivers\nvpcf.inf_amd64_23ddb719f84da09b\nvpcf.inf: The driver package was successfully installed.
+Installing 67 of 95 - D:\WimMount\Drivers\nvppc.inf_amd64_0fb3e9fb3fdb0d20\nvppc.inf: The driver package was successfully installed.
+Installing 68 of 95 - D:\WimMount\Drivers\nvvad.inf_amd64_c978d3721185da67\nvvad.inf: The driver package was successfully installed.
+Installing 69 of 95 - D:\WimMount\Drivers\oemextension.inf_amd64_3442e25d10d8491a\OemExtension.inf: The driver package was successfully installed.
+Installing 70 of 95 - D:\WimMount\Drivers\prnms006.inf_amd64_c3bdcb6fc975b614\prnms006.inf: The driver package was successfully installed.
+Installing 71 of 95 - D:\WimMount\Drivers\prnms009.inf_amd64_8cdc889b3f73e3da\prnms009.Inf: The driver package was successfully installed.
+Installing 72 of 95 - D:\WimMount\Drivers\qcgnss.inf_amd64_2315ecca89d67bd7\qcgnss.inf: The driver package was successfully installed.
+Installing 73 of 95 - D:\WimMount\Drivers\qmuxmdm.inf_amd64_723b231c69656243\QmuxMdm.inf: The driver package was successfully installed.
+Installing 74 of 95 - D:\WimMount\Drivers\realtekapo.inf_amd64_8bf1b228ef87c9e3\RealtekAPO.inf: The driver package was successfully installed.
+Installing 75 of 95 - D:\WimMount\Drivers\realtekasio.inf_amd64_d8d14eba3c3bec87\RealtekASIO.inf: The driver package was successfully installed.
+Installing 76 of 95 - D:\WimMount\Drivers\realtekservice.inf_amd64_c607c18cb15933d8\RealtekService.inf: The driver package was successfully installed.
+Installing 77 of 95 - D:\WimMount\Drivers\rtscrext.inf_amd64_bfa3890db360e8ff\RtsCrExt.inf: The driver package was successfully installed.
+Installing 78 of 95 - D:\WimMount\Drivers\rtscrextprmup.inf_amd64_20fc5e9cf3919aa9\RtsCrExtPrMup.inf: The driver package was successfully installed.
+Installing 79 of 95 - D:\WimMount\Drivers\rtsperdlnqs.inf_amd64_17665aaceda2edea\RtsPerDLnQS.inf: The driver package was successfully installed.
+Installing 80 of 95 - D:\WimMount\Drivers\skylakesystem.inf_amd64_08fa7b2b687c2cdf\SkylakeSystem.inf: The driver package was successfully installed.
+Installing 81 of 95 - D:\WimMount\Drivers\skylakesystemgmm.inf_amd64_6bb566673a722c38\SkylakeSystemGMM.inf: The driver package was successfully installed.
+Installing 82 of 95 - D:\WimMount\Drivers\sollmsextension.inf_amd64_5c9ba817e90598a8\SOLLMSExtension.inf: The driver package was successfully installed.
+Installing 83 of 95 - D:\WimMount\Drivers\st_accel.inf_amd64_4511edbdbe91339c\ST_Accel.inf: The driver package was successfully installed.
+Installing 84 of 95 - D:\WimMount\Drivers\st_accel.inf_amd64_b3e5224b242bab26\ST_Accel.inf: The driver package was successfully installed.
+Installing 85 of 95 - D:\WimMount\Drivers\tbthostcontroller.inf_amd64_863f04bae6c18c72\TbtHostController.inf: The driver package was successfully installed.
+Installing 86 of 95 - D:\WimMount\Drivers\tbthostcontrollerextension.inf_amd64_25b6cef7abca6747\TbtHostControllerExtension.inf: The driver package was successfully installed.
+Installing 87 of 95 - D:\WimMount\Drivers\tbthostcontrollerhsacomponent.inf_amd64_b4e0ff0dd99c3d2d\tbthostcontrollerhsacomponent.inf: The driver package was successfully installed.
+Installing 88 of 95 - D:\WimMount\Drivers\tbthostcontrollertoastcomponent.inf_amd64_aec41883a483b0cf\tbthostcontrollertoastcomponent.inf: The driver package was successfully installed.
+Installing 89 of 95 - D:\WimMount\Drivers\tbtp2pndisdrv.inf_amd64_d41de24a6f8d0f85\tbtp2pndisdrv.inf: The driver package was successfully installed.
+Installing 90 of 95 - D:\WimMount\Drivers\teefer.inf_amd64_8abd63b688a285ca\teefer.inf: The driver package was successfully installed.
+Installing 91 of 95 - D:\WimMount\Drivers\ushwbfdrv.inf_amd64_f102d2e110344e5a\ushwbfdrv.inf: The driver package was successfully installed.
+Installing 92 of 95 - D:\WimMount\Drivers\voiceclarityep_audio_component.inf_amd64_d5f0f6f169848993\voiceclarityep_audio_component.inf: The driver package was successfully installed.
+Installing 93 of 95 - D:\WimMount\Drivers\wavesapo8de.inf_amd64_b4d0b189ff2aba03\WavesAPO8De.inf: The driver package was successfully installed.
+Installing 94 of 95 - D:\WimMount\Drivers\wiman.inf_amd64_1d81bc4f31bf65c7\WiMan.inf: The driver package was successfully installed.
+Installing 95 of 95 - D:\WimMount\Drivers\wiman_wlan_extension.inf_amd64_9b80378253ec43a5\wiman_wlan_extension.inf: The driver package was successfully installed.
+The operation completed successfully.
+
+[2026-10-23 07:35:26.916] CMD> C:\WINDOWS\System32\Dism.exe /English /Image:D:\WimMount\Mount\Image6 /Get-Drivers
+[2026-10-23 07:35:26.921] 
+Deployment Image Servicing and Management tool
+Version: 10.0.26100.9549
+
+Image Version: 10.0.26300.9457
+
+Obtaining list of 3rd party drivers from the driver store...
+
+Driver packages listing:
+
+Published Name : oem0.inf
+Original File Name : aphidfiltrsp.inf
+Inbox : No
+Class Name : HIDClass
+Provider Name : Alps
+Date : 17/12/2018
+Version : 10.3201.101.307
+
+Published Name : oem1.inf
+Original File Name : apvhid.inf
+Inbox : No
+Class Name : HIDClass
+Provider Name : AlpsAlpine
+Date : 22/01/2019
+Version : 10.0.0.126
+
+Published Name : oem10.inf
+Original File Name : dal.inf
+Inbox : No
+Class Name : SoftwareComponent
+Provider Name : Intel
+Date : 31/03/2024
+Version : 1.46.2024.221
+
+Published Name : oem11.inf
+Original File Name : dellaudioextwaves.inf
+Inbox : No
+Class Name : Extension
+Provider Name : Dell
+Date : 25/05/2021
+Version : 1.5.2.526
+
+Published Name : oem12.inf
+Original File Name : dellinstrumentation.inf
+Inbox : No
+Class Name : DellInstrumentation
+Provider Name : Dell Technologies
+Date : 05/09/2025
+Version : 2.9.2.0
+
+Published Name : oem13.inf
+Original File Name : dellmdm.inf
+Inbox : No
+Class Name : Modem
+Provider Name : DELL
+Date : 23/09/2020
+Version : 1.0.2.5
+
+Published Name : oem14.inf
+Original File Name : dellser.inf
+Inbox : No
+Class Name : Ports
+Provider Name : DELL
+Date : 23/09/2020
+Version : 1.0.2.5
+
+Published Name : oem15.inf
+Original File Name : dptf_acpi.inf
+Inbox : No
+Class Name : System
+Provider Name : Intel
+Date : 11/04/2022
+Version : 8.7.10802.26924
+
+Published Name : oem16.inf
+Original File Name : dptf_cpu.inf
+Inbox : No
+Class Name : System
+Provider Name : Intel
+Date : 11/04/2022
+Version : 8.7.10802.26924
+
+Published Name : oem17.inf
+Original File Name : e1d.inf
+Inbox : No
+Class Name : Net
+Provider Name : Intel
+Date : 29/10/2025
+Version : 12.19.2.66
+
+Published Name : oem18.inf
+Original File Name : e1d_ext.inf
+Inbox : No
+Class Name : Extension
+Provider Name : OEM
+Date : 29/01/2026
+Version : 1.0.0.5
+
+Published Name : oem19.inf
+Original File Name : e1dn.inf
+Inbox : No
+Class Name : Net
+Provider Name : Intel
+Date : 05/02/2026
+Version : 20.0.3.28
+
+Published Name : oem2.inf
+Original File Name : bcmnfcser.inf
+Inbox : No
+Class Name : Proximity
+Provider Name : Broadcom
+Date : 08/09/2025
+Version : 5.15.15.3
+
+Published Name : oem20.inf
+Original File Name : firmware.inf
+Inbox : No
+Class Name : Firmware
+Provider Name : Dell, Inc.
+Date : 10/12/2025
+Version : 0.1.45.1
+
+Published Name : oem21.inf
+Original File Name : hdbusext.inf
+Inbox : No
+Class Name : Extension
+Provider Name : Intel Corporation
+Date : 28/08/2025
+Version : 31.0.101.2137
+
+Published Name : oem22.inf
+Original File Name : hdx_dellbcext_waves_ma8mv5.inf
+Inbox : No
+Class Name : Extension
+Provider Name : Realtek Semiconductor Corp.
+Date : 24/08/2021
+Version : 6.0.9228.1
+
+Published Name : oem23.inf
+Original File Name : hdxdellbc2018.inf
+Inbox : No
+Class Name : MEDIA
+Provider Name : Realtek Semiconductor Corp.
+Date : 24/08/2021
+Version : 6.0.9228.1
+
+Published Name : oem24.inf
+Original File Name : heci.inf
+Inbox : No
+Class Name : System
+Provider Name : Intel
+Date : 28/09/2025
+Version : 2540.8.7.0
+
+Published Name : oem25.inf
+Original File Name : hideventfilter.inf
+Inbox : No
+Class Name : HIDClass
+Provider Name : Intel(R) Corporation
+Date : 19/11/2025
+Version : 2.2.2.18
+
+Published Name : oem26.inf
+Original File Name : ialpss2_gpio2_cnl.inf
+Inbox : No
+Class Name : System
+Provider Name : Intel Corporation
+Date : 12/05/2020
+Version : 30.100.2020.7
+
+Published Name : oem27.inf
+Original File Name : ialpss2_i2c_cnl.inf
+Inbox : No
+Class Name : System
+Provider Name : Intel Corporation
+Date : 12/05/2020
+Version : 30.100.2020.7
+
+Published Name : oem28.inf
+Original File Name : ibtpci.inf
+Inbox : No
+Class Name : Bluetooth
+Provider Name : Intel Corporation
+Date : 10/11/2025
+Version : 24.10.0.4
+
+Published Name : oem29.inf
+Original File Name : ibtusb.inf
+Inbox : No
+Class Name : Bluetooth
+Provider Name : Intel Corporation
+Date : 10/11/2025
+Version : 24.10.0.4
+
+Published Name : oem3.inf
+Original File Name : bcmnfcusb.inf
+Inbox : No
+Class Name : System
+Provider Name : Broadcom
+Date : 08/09/2025
+Version : 5.15.15.3
+
+Published Name : oem30.inf
+Original File Name : ibtusb.inf
+Inbox : No
+Class Name : Bluetooth
+Provider Name : Intel Corporation
+Date : 20/07/2025
+Version : 23.160.0.9
+
+Published Name : oem31.inf
+Original File Name : ibtusb.inf
+Inbox : No
+Class Name : Bluetooth
+Provider Name : Intel Corporation
+Date : 10/11/2025
+Version : 24.10.0.4
+
+Published Name : oem32.inf
+Original File Name : ibtusb.inf
+Inbox : No
+Class Name : Bluetooth
+Provider Name : Intel Corporation
+Date : 10/11/2025
+Version : 24.10.0.4
+
+Published Name : oem33.inf
+Original File Name : ibtusb.inf
+Inbox : No
+Class Name : Bluetooth
+Provider Name : Intel Corporation
+Date : 10/11/2025
+Version : 24.10.0.4
+
+Published Name : oem34.inf
+Original File Name : ibtusb.inf
+Inbox : No
+Class Name : Bluetooth
+Provider Name : Intel Corporation
+Date : 10/11/2025
+Version : 24.10.0.4
+
+Published Name : oem35.inf
+Original File Name : ibtusb.inf
+Inbox : No
+Class Name : Bluetooth
+Provider Name : Intel Corporation
+Date : 10/11/2025
+Version : 24.10.0.4
+
+Published Name : oem36.inf
+Original File Name : ibtusb.inf
+Inbox : No
+Class Name : Bluetooth
+Provider Name : Intel Corporation
+Date : 10/11/2025
+Version : 24.10.0.4
+
+Published Name : oem37.inf
+Original File Name : ibtusb.inf
+Inbox : No
+Class Name : Bluetooth
+Provider Name : Intel Corporation
+Date : 10/11/2025
+Version : 24.10.0.4
+
+Published Name : oem38.inf
+Original File Name : ibtusb.inf
+Inbox : No
+Class Name : Bluetooth
+Provider Name : Intel Corporation
+Date : 10/11/2025
+Version : 24.10.0.4
+
+Published Name : oem39.inf
+Original File Name : iclsclient.inf
+Inbox : No
+Class Name : SoftwareComponent
+Provider Name : Intel
+Date : 03/10/2025
+Version : 1.79.88.0
+
+Published Name : oem4.inf
+Original File Name : bertreader.inf
+Inbox : No
+Class Name : BERTREADER
+Provider Name : Intel Corporation
+Date : 10/04/2026
+Version : 2.37.23.58
+
+Published Name : oem40.inf
+Original File Name : idmwfp.inf
+Inbox : No
+Class Name : NetService
+Provider Name : Tonec FZE
+Date : 13/06/2026
+Version : 6.43.1.91
+
+Published Name : oem41.inf
+Original File Name : igcc_dch.inf
+Inbox : No
+Class Name : SoftwareComponent
+Provider Name : Intel Corporation
+Date : 28/08/2025
+Version : 31.0.101.2137
+
+Published Name : oem42.inf
+Original File Name : iigd_dch.inf
+Inbox : No
+Class Name : Display
+Provider Name : Intel Corporation
+Date : 28/08/2025
+Version : 31.0.101.2137
+
+Published Name : oem43.inf
+Original File Name : iigd_ext.inf
+Inbox : No
+Class Name : Extension
+Provider Name : Intel Corporation
+Date : 09/01/2020
+Version : 26.20.100.7755
+
+Published Name : oem44.inf
+Original File Name : iigd_ext.inf
+Inbox : No
+Class Name : Extension
+Provider Name : Intel Corporation
+Date : 13/11/2023
+Version : 31.0.101.2127
+
+Published Name : oem45.inf
+Original File Name : iigd_ext.inf
+Inbox : No
+Class Name : Extension
+Provider Name : Intel Corporation
+Date : 23/12/2020
+Version : 27.20.100.9126
+
+Published Name : oem46.inf
+Original File Name : iigd_ext.inf
+Inbox : No
+Class Name : Extension
+Provider Name : Intel Corporation
+Date : 20/01/2022
+Version : 30.0.101.1338
+
+Published Name : oem47.inf
+Original File Name : iigd_ext.inf
+Inbox : No
+Class Name : Extension
+Provider Name : Intel Corporation
+Date : 09/04/2019
+Version : 25.20.100.6793
+
+Published Name : oem48.inf
+Original File Name : iigd_ext.inf
+Inbox : No
+Class Name : Extension
+Provider Name : Intel Corporation
+Date : 19/05/2020
+Version : 27.20.100.8280
+
+Published Name : oem49.inf
+Original File Name : iigd_ext.inf
+Inbox : No
+Class Name : Extension
+Provider Name : Intel Corporation
+Date : 06/03/2025
+Version : 31.0.101.2135
+
+Published Name : oem5.inf
+Original File Name : cannonlake-hsystem.inf
+Inbox : No
+Class Name : System
+Provider Name : INTEL
+Date : 18/07/1968
+Version : 10.1.16.8
+
+Published Name : oem50.inf
+Original File Name : iigd_ext.inf
+Inbox : No
+Class Name : Extension
+Provider Name : Intel Corporation
+Date : 28/08/2025
+Version : 31.0.101.2137
+
+Published Name : oem51.inf
+Original File Name : intcdaud.inf
+Inbox : No
+Class Name : MEDIA
+Provider Name : Intel(R) Corporation
+Date : 29/04/2024
+Version : 10.27.0.14
+
+Published Name : oem52.inf
+Original File Name : intcdaud.inf
+Inbox : No
+Class Name : MEDIA
+Provider Name : Intel(R) Corporation
+Date : 18/05/2023
+Version : 11.2.0.12
+
+Published Name : oem53.inf
+Original File Name : intcdaud.inf
+Inbox : No
+Class Name : MEDIA
+Provider Name : Intel(R) Corporation
+Date : 29/04/2024
+Version : 11.1.0.23
+
+Published Name : oem54.inf
+Original File Name : intcdaud.inf
+Inbox : No
+Class Name : MEDIA
+Provider Name : Intel(R) Corporation
+Date : 29/04/2024
+Version : 10.26.0.14
+
+Published Name : oem55.inf
+Original File Name : lms.inf
+Inbox : No
+Class Name : SoftwareComponent
+Provider Name : Intel
+Date : 14/09/2025
+Version : 2538.8.9.0
+
+Published Name : oem56.inf
+Original File Name : mbfwdriver.inf
+Inbox : No
+Class Name : Firmware
+Provider Name : Dell
+Date : 12/05/2021
+Version : 1.0.2.5
+
+Published Name : oem57.inf
+Original File Name : mesrl.inf
+Inbox : No
+Class Name : Ports
+Provider Name : Intel
+Date : 14/04/2025
+Version : 2516.8.0.0
+
+Published Name : oem58.inf
+Original File Name : mewmiprov.inf
+Inbox : No
+Class Name : SoftwareComponent
+Provider Name : Intel
+Date : 27/05/2025
+Version : 2522.8.2.0
+
+Published Name : oem59.inf
+Original File Name : mshdadac.inf
+Inbox : No
+Class Name : MEDIA
+Provider Name : Intel Corporation
+Date : 28/08/2025
+Version : 31.0.101.2137
+
+Published Name : oem6.inf
+Original File Name : cannonlake-hsystemthermal.inf
+Inbox : No
+Class Name : System
+Provider Name : INTEL
+Date : 18/07/1968
+Version : 10.1.16.8
+
+Published Name : oem60.inf
+Original File Name : netwtw08.inf
+Inbox : No
+Class Name : net
+Provider Name : Intel
+Date : 21/07/2025
+Version : 23.160.0.4
+
+Published Name : oem61.inf
+Original File Name : netwtw08.inf
+Inbox : No
+Class Name : net
+Provider Name : Intel
+Date : 12/02/2026
+Version : 24.20.2.1
+
+Published Name : oem62.inf
+Original File Name : netwtw6e.inf
+Inbox : No
+Class Name : net
+Provider Name : Intel
+Date : 12/02/2026
+Version : 24.20.2.1
+
+Published Name : oem63.inf
+Original File Name : nvdmwi.inf
+Inbox : No
+Class Name : Display
+Provider Name : NVIDIA
+Date : 16/09/2026
+Version : 32.0.15.9716
+
+Published Name : oem64.inf
+Original File Name : nvhda.inf
+Inbox : No
+Class Name : MEDIA
+Provider Name : NVIDIA Corporation
+Date : 01/12/2025
+Version : 1.4.5.7
+
+Published Name : oem65.inf
+Original File Name : nvpcf.inf
+Inbox : No
+Class Name : SoftwareDevice
+Provider Name : NVIDIA
+Date : 04/08/2025
+Version : 32.0.15.8079
+
+Published Name : oem66.inf
+Original File Name : nvppc.inf
+Inbox : No
+Class Name : USB
+Provider Name : NVIDIA
+Date : 21/08/2025
+Version : 1.52.831.832
+
+Published Name : oem67.inf
+Original File Name : nvvad.inf
+Inbox : No
+Class Name : MEDIA
+Provider Name : NVIDIA
+Date : 04/08/2026
+Version : 4.92.0.0
+
+Published Name : oem68.inf
+Original File Name : oemextension.inf
+Inbox : No
+Class Name : Extension
+Provider Name : Intel
+Date : 21/01/2019
+Version : 1904.12.0.1208
+
+Published Name : oem69.inf
+Original File Name : prnms006.inf
+Inbox : No
+Class Name : Printer
+Provider Name : Microsoft
+Date : 29/11/2016
+Version : 16.0.7629.4000
+
+Published Name : oem7.inf
+Original File Name : coffeelakesystem.inf
+Inbox : No
+Class Name : System
+Provider Name : INTEL
+Date : 18/07/1968
+Version : 10.1.14.8
+
+Published Name : oem70.inf
+Original File Name : prnms009.inf
+Inbox : No
+Class Name : Printer
+Provider Name : Microsoft
+Date : 21/06/2006
+Version : 10.0.26100.4484
+
+Published Name : oem71.inf
+Original File Name : qcgnss.inf
+Inbox : No
+Class Name : SYSTEM
+Provider Name : Dell
+Date : 04/03/2021
+Version : 1.0.2.6
+
+Published Name : oem72.inf
+Original File Name : qmuxmdm.inf
+Inbox : No
+Class Name : SYSTEM
+Provider Name : Dell
+Date : 04/03/2021
+Version : 1.0.2.6
+
+Published Name : oem73.inf
+Original File Name : realtekapo.inf
+Inbox : No
+Class Name : SoftwareComponent
+Provider Name : Realtek
+Date : 24/08/2021
+Version : 11.0.6000.954
+
+Published Name : oem74.inf
+Original File Name : realtekasio.inf
+Inbox : No
+Class Name : SoftwareComponent
+Provider Name : Realtek
+Date : 24/03/2021
+Version : 1.0.0.8
+
+Published Name : oem75.inf
+Original File Name : realtekservice.inf
+Inbox : No
+Class Name : SoftwareComponent
+Provider Name : Realtek
+Date : 24/10/2023
+Version : 1.0.660.0
+
+Published Name : oem76.inf
+Original File Name : rtscrext.inf
+Inbox : No
+Class Name : Extension
+Provider Name : Realtek Semiconductor Corp.
+Date : 12/09/2018
+Version : 10.0.17134.1
+
+Published Name : oem77.inf
+Original File Name : rtscrextprmup.inf
+Inbox : No
+Class Name : Extension
+Provider Name : Realtek Semiconductor Corp.
+Date : 02/02/2026
+Version : 10.0.26200.1
+
+Published Name : oem78.inf
+Original File Name : rtsperdlnqs.inf
+Inbox : No
+Class Name : MTD
+Provider Name : Realtek Semiconductor Corp.
+Date : 27/12/2025
+Version : 10.0.26200.21387
+
+Published Name : oem79.inf
+Original File Name : skylakesystem.inf
+Inbox : No
+Class Name : System
+Provider Name : INTEL
+Date : 18/07/1968
+Version : 10.1.7.4
+
+Published Name : oem8.inf
+Original File Name : cui_dch.inf
+Inbox : No
+Class Name : SoftwareComponent
+Provider Name : Intel Corporation
+Date : 28/08/2025
+Version : 31.0.101.2137
+
+Published Name : oem80.inf
+Original File Name : skylakesystemgmm.inf
+Inbox : No
+Class Name : System
+Provider Name : INTEL
+Date : 18/07/1968
+Version : 10.1.7.4
+
+Published Name : oem81.inf
+Original File Name : sollmsextension.inf
+Inbox : No
+Class Name : Extension
+Provider Name : Intel
+Date : 14/04/2025
+Version : 2516.8.0.0
+
+Published Name : oem82.inf
+Original File Name : st_accel.inf
+Inbox : No
+Class Name : System
+Provider Name : STMicroelectronics
+Date : 02/08/2021
+Version : 2.2.7.5
+
+Published Name : oem83.inf
+Original File Name : st_accel.inf
+Inbox : No
+Class Name : System
+Provider Name : STMicroelectronics
+Date : 14/02/2020
+Version : 2.2.7.2
+
+Published Name : oem84.inf
+Original File Name : tbthostcontroller.inf
+Inbox : No
+Class Name : System
+Provider Name : Intel(R) Corporation
+Date : 27/07/2023
+Version : 1.41.1379.0
+
+Published Name : oem85.inf
+Original File Name : tbthostcontrollerextension.inf
+Inbox : No
+Class Name : Extension
+Provider Name : Intel(R) Corporation
+Date : 27/07/2023
+Version : 1.41.1379.0
+
+Published Name : oem86.inf
+Original File Name : tbthostcontrollerhsacomponent.inf
+Inbox : No
+Class Name : SoftwareComponent
+Provider Name : Intel(R) Corporation
+Date : 27/07/2023
+Version : 1.41.1379.0
+
+Published Name : oem87.inf
+Original File Name : tbthostcontrollertoastcomponent.inf
+Inbox : No
+Class Name : SoftwareComponent
+Provider Name : Intel(R) Corporation
+Date : 27/07/2023
+Version : 1.41.1379.0
+
+Published Name : oem88.inf
+Original File Name : tbtp2pndisdrv.inf
+Inbox : No
+Class Name : Net
+Provider Name : Intel(R) Corporation
+Date : 27/07/2023
+Version : 1.41.1379.0
+
+Published Name : oem89.inf
+Original File Name : teefer.inf
+Inbox : No
+Class Name : NetService
+Provider Name : Symantec
+Date : 26/08/2024
+Version : 14.3.12012.10000
+
+Published Name : oem9.inf
+Original File Name : cvusbdrv.inf
+Inbox : No
+Class Name : CVAULT
+Provider Name : Dell
+Date : 15/10/2025
+Version : 5.15.19.20
+
+Published Name : oem90.inf
+Original File Name : ushwbfdrv.inf
+Inbox : No
+Class Name : Biometric
+Provider Name : Broadcom Corporation
+Date : 08/09/2025
+Version : 5.15.15.8
+
+Published Name : oem91.inf
+Original File Name : voiceclarityep_audio_component.inf
+Inbox : No
+Class Name : AudioProcessingObject
+Provider Name : Microsoft Corporation
+Date : 16/06/2026
+Version : 1.0.4.7057
+
+Published Name : oem92.inf
+Original File Name : wavesapo8de.inf
+Inbox : No
+Class Name : SoftwareComponent
+Provider Name : Waves
+Date : 27/01/2021
+Version : 5.2.0.1078
+
+Published Name : oem93.inf
+Original File Name : wiman.inf
+Inbox : No
+Class Name : SoftwareComponent
+Provider Name : Intel
+Date : 20/10/2025
+Version : 2543.98.178.0
+
+Published Name : oem94.inf
+Original File Name : wiman_wlan_extension.inf
+Inbox : No
+Class Name : Extension
+Provider Name : Intel
+Date : 20/10/2025
+Version : 2543.98.178.0
+
+The operation completed successfully.
+
+[2026-10-23 07:35:26.943] Index 6 has errors; discarding mount without committing.
+[2026-10-23 07:39:03.310] CMD> C:\WINDOWS\System32\Dism.exe /English /Unmount-Image /MountDir:D:\WimMount\Mount\Image6 /Discard
+[2026-10-23 07:39:03.318] 
+Deployment Image Servicing and Management tool
+Version: 10.0.26100.9549
+
+Unmounting image
+[=                          2.0%                           ] 
+[=                          3.0%                           ] 
+[==                         4.0%                           ] 
+[==                         5.0%                           ] 
+[===                        6.0%                           ] 
+[====                       7.0%                           ] 
+[====                       8.0%                           ] 
+[=====                      9.0%                           ] 
+[=====                      10.0%                          ] 
+[======                     11.0%                          ] 
+[======                     12.0%                          ] 
+[=======                    13.0%                          ] 
+[========                   14.0%                          ] 
+[========                   15.0%                          ] 
+[=========                  16.0%                          ] 
+[=========                  17.0%                          ] 
+[==========                 18.0%                          ] 
+[===========                19.0%                          ] 
+[===========                20.0%                          ] 
+[============               21.0%                          ] 
+[============               22.0%                          ] 
+[=============              23.0%                          ] 
+[=============              24.0%                          ] 
+[==============             25.0%                          ] 
+[===============            26.0%                          ] 
+[===============            27.0%                          ] 
+[================           28.0%                          ] 
+[================           29.0%                          ] 
+[=================          30.0%                          ] 
+[=================          31.0%                          ] 
+[==================         32.0%                          ] 
+[===================        33.0%                          ] 
+[===================        34.0%                          ] 
+[====================       35.0%                          ] 
+[====================       36.0%                          ] 
+[=====================      37.0%                          ] 
+[======================     38.0%                          ] 
+[======================     39.0%                          ] 
+[=======================    40.0%                          ] 
+[=======================    41.0%                          ] 
+[========================   42.0%                          ] 
+[========================   43.0%                          ] 
+[=========================  44.0%                          ] 
+[========================== 45.0%                          ] 
+[========================== 46.0%                          ] 
+[===========================47.0%                          ] 
+[===========================48.0%                          ] 
+[===========================49.0%                          ] 
+[===========================50.0%                          ] 
+[===========================51.0%                          ] 
+[===========================52.0%                          ] 
+[===========================53.0%                          ] 
+[===========================54.0%                          ] 
+[===========================55.0%                          ] 
+[===========================56.0%                          ] 
+[===========================57.0%=                         ] 
+[===========================58.0%=                         ] 
+[===========================59.0%==                        ] 
+[===========================60.0%==                        ] 
+[===========================61.0%===                       ] 
+[===========================62.0%===                       ] 
+[===========================63.0%====                      ] 
+[===========================64.0%=====                     ] 
+[===========================65.0%=====                     ] 
+[===========================66.0%======                    ] 
+[===========================67.0%======                    ] 
+[===========================68.0%=======                   ] 
+[===========================69.0%========                  ] 
+[===========================70.0%========                  ] 
+[===========================71.0%=========                 ] 
+[===========================72.0%=========                 ] 
+[===========================73.0%==========                ] 
+[===========================74.0%==========                ] 
+[===========================75.0%===========               ] 
+[===========================76.0%============              ] 
+[===========================77.0%============              ] 
+[===========================78.0%=============             ] 
+[===========================79.0%=============             ] 
+[===========================80.0%==============            ] 
+[===========================81.0%==============            ] 
+[===========================82.0%===============           ] 
+[===========================83.0%================          ] 
+[===========================84.0%================          ] 
+[===========================85.0%=================         ] 
+[===========================86.0%=================         ] 
+[===========================87.0%==================        ] 
+[===========================88.0%===================       ] 
+[===========================89.0%===================       ] 
+[===========================90.0%====================      ] 
+[===========================91.0%====================      ] 
+[===========================92.0%=====================     ] 
+[===========================93.0%=====================     ] 
+[===========================94.0%======================    ] 
+[===========================95.0%=======================   ] 
+[===========================96.0%=======================   ] 
+[===========================97.0%========================  ] 
+[===========================98.0%========================  ] 
+[===========================99.0%========================= ] 
+[==========================100.0%==========================] 
+The operation completed successfully.
+
+[2026-10-23 07:39:03.423] CMD> C:\WINDOWS\System32\Dism.exe /English /Get-MountedImageInfo
+[2026-10-23 07:39:03.431] 
+Deployment Image Servicing and Management tool
+Version: 10.0.26100.9549
+
+Mounted images:
+
+
+No mounted images found.
+
+The operation completed successfully.
+
+[2026-10-23 07:39:03.438] Verified: D:\WimMount\Mount\Image6 is not present in mounted-image list.
+[2026-10-23 07:39:03.548] CMD> C:\WINDOWS\System32\Dism.exe /English /Get-WimInfo /WimFile:D:\WimMount\ExtractedISO\sources\install.wim
+[2026-10-23 07:39:03.550] 
+Deployment Image Servicing and Management tool
+Version: 10.0.26100.9549
+
+Details for image : D:\WimMount\ExtractedISO\sources\install.wim
+
+Index : 1
+Name : Windows 11 Home
+Description : Windows 11 Home
+Size : 25,730,139,683 bytes
+
+Index : 2
+Name : Windows 11 Home N
+Description : Windows 11 Home N
+Size : 25,002,017,930 bytes
+
+Index : 3
+Name : Windows 11 Home Single Language
+Description : Windows 11 Home Single Language
+Size : 25,726,661,488 bytes
+
+Index : 4
+Name : Windows 11 Education
+Description : Windows 11 Education
+Size : 26,767,384,556 bytes
+
+Index : 5
+Name : Windows 11 Education N
+Description : Windows 11 Education N
+Size : 26,016,541,654 bytes
+
+Index : 6
+Name : Windows 11 Pro
+Description : Windows 11 Pro
+Size : 26,770,709,765 bytes
+
+Index : 7
+Name : Windows 11 Pro N
+Description : Windows 11 Pro N
+Size : 26,037,976,877 bytes
+
+Index : 8
+Name : Windows 11 Pro Education
+Description : Windows 11 Pro Education
+Size : 26,767,435,194 bytes
+
+Index : 9
+Name : Windows 11 Pro Education N
+Description : Windows 11 Pro Education N
+Size : 26,016,567,423 bytes
+
+Index : 10
+Name : Windows 11 Pro for Workstations
+Description : Windows 11 Pro for Workstations
+Size : 26,767,485,832 bytes
+
+Index : 11
+Name : Windows 11 Pro N for Workstations
+Description : Windows 11 Pro N for Workstations
+Size : 26,016,593,192 bytes
+
+The operation completed successfully.
+
+[2026-10-23 07:39:03.650] CMD> C:\WINDOWS\System32\Dism.exe /English /Get-ImageInfo /ImageFile:D:\WimMount\ExtractedISO\sources\install.wim /Index:1
+[2026-10-23 07:39:03.651] 
+Deployment Image Servicing and Management tool
+Version: 10.0.26100.9549
+
+Details for image : D:\WimMount\ExtractedISO\sources\install.wim
+
+Index : 1
+Name : Windows 11 Home
+Description : Windows 11 Home
+Size : 25,730,139,683 bytes
+WIM Bootable : No
+Architecture : x64
+Hal : <undefined>
+Version : 10.0.26300
+ServicePack Build : 9457
+ServicePack Level : 0
+Edition : Core
+Installation : Client
+ProductType : WinNT
+ProductSuite : Terminal Server
+System Root : WINDOWS
+Directories : 34424
+Files : 151120
+Created : 13/09/2026 - 09:44:28 ?
+Modified : 13/09/2026 - 10:21:20 ?
+Languages :
+	en-US (Default)
+The operation completed successfully.
+
+[2026-10-23 07:39:03.777] CMD> C:\WINDOWS\System32\Dism.exe /English /Get-WimInfo /WimFile:D:\WimMount\ExtractedISO\sources\install.wim
+[2026-10-23 07:39:03.779] 
+Deployment Image Servicing and Management tool
+Version: 10.0.26100.9549
+
+Details for image : D:\WimMount\ExtractedISO\sources\install.wim
+
+Index : 1
+Name : Windows 11 Home
+Description : Windows 11 Home
+Size : 25,730,139,683 bytes
+
+Index : 2
+Name : Windows 11 Home N
+Description : Windows 11 Home N
+Size : 25,002,017,930 bytes
+
+Index : 3
+Name : Windows 11 Home Single Language
+Description : Windows 11 Home Single Language
+Size : 25,726,661,488 bytes
+
+Index : 4
+Name : Windows 11 Education
+Description : Windows 11 Education
+Size : 26,767,384,556 bytes
+
+Index : 5
+Name : Windows 11 Education N
+Description : Windows 11 Education N
+Size : 26,016,541,654 bytes
+
+Index : 6
+Name : Windows 11 Pro
+Description : Windows 11 Pro
+Size : 26,770,709,765 bytes
+
+Index : 7
+Name : Windows 11 Pro N
+Description : Windows 11 Pro N
+Size : 26,037,976,877 bytes
+
+Index : 8
+Name : Windows 11 Pro Education
+Description : Windows 11 Pro Education
+Size : 26,767,435,194 bytes
+
+Index : 9
+Name : Windows 11 Pro Education N
+Description : Windows 11 Pro Education N
+Size : 26,016,567,423 bytes
+
+Index : 10
+Name : Windows 11 Pro for Workstations
+Description : Windows 11 Pro for Workstations
+Size : 26,767,485,832 bytes
+
+Index : 11
+Name : Windows 11 Pro N for Workstations
+Description : Windows 11 Pro N for Workstations
+Size : 26,016,593,192 bytes
+
+The operation completed successfully.
+
+[2026-10-23 07:39:03.863] CMD> C:\WINDOWS\System32\Dism.exe /English /Get-ImageInfo /ImageFile:D:\WimMount\ExtractedISO\sources\install.wim /Index:1
+[2026-10-23 07:39:03.865] 
+Deployment Image Servicing and Management tool
+Version: 10.0.26100.9549
+
+Details for image : D:\WimMount\ExtractedISO\sources\install.wim
+
+Index : 1
+Name : Windows 11 Home
+Description : Windows 11 Home
+Size : 25,730,139,683 bytes
+WIM Bootable : No
+Architecture : x64
+Hal : <undefined>
+Version : 10.0.26300
+ServicePack Build : 9457
+ServicePack Level : 0
+Edition : Core
+Installation : Client
+ProductType : WinNT
+ProductSuite : Terminal Server
+System Root : WINDOWS
+Directories : 34424
+Files : 151120
+Created : 13/09/2026 - 09:44:28 ?
+Modified : 13/09/2026 - 10:21:20 ?
+Languages :
+	en-US (Default)
+The operation completed successfully.
+

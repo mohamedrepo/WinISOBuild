@@ -1,10 +1,10 @@
 WINDOWS ISO SERVICING TOOLCHAIN - ENVIRONMENT AUDIT
-Generated (UTC): 2026-09-18T15:51:00.0711069Z
+Generated (UTC): 2026-10-23T04:02:21.6673748Z
 
 [HOST]
-  Host name        : MYLAB
-  User             : MYLAB\niphd
-  OS               : Microsoft Windows 11 Pro (10.0.26200, build 26200.9457)
+  Host name        : DESKTOP-ABPNVBL
+  User             : DESKTOP-ABPNVBL\niphd
+  OS               : Microsoft Windows 11 Pro (10.0.26300, build 26300.9711)
   OS architecture  : 64-bit
 
 [PRIVILEGE]
@@ -20,9 +20,9 @@ Generated (UTC): 2026-09-18T15:51:00.0711069Z
   Total RAM        : 31.76 GB
 
 [FIXED DISKS]
-  C:  size=199.17 GB  free=78.14 GB  volume=
-  D:  size=276.73 GB  free=39.4 GB  volume=
-  Workspace drive  : D:  free=39.4 GB
+  C:  size=199.13 GB  free=20.38 GB  volume=
+  D:  size=274.72 GB  free=137.85 GB  volume=
+  Workspace drive  : D:  free=137.85 GB
   Configured min   : 25 GB (fail-fast gate)
   Recommended      : 25 GB
   Advisory         : Free space meets the 25 GB servicing recommendation.
@@ -39,12 +39,12 @@ Generated (UTC): 2026-09-18T15:51:00.0711069Z
   WinPE add-on     : NOT FOUND
 
 [POWERSHELL]
-  Version          : 5.1.26100.9444 (Desktop)
+  Version          : 5.1.26100.9711 (Desktop)
   CLR              : 4.0.30319.42000
   pwsh 7           : NOT FOUND
 
 [.NET]
-  .NET Framework   : v4: unknown (release=533509) | v3.5: enabled
+  .NET Framework   : v4: unknown (release=534296) | v3.5: absent
   dotnet CLI       : present
 
 [7-ZIP]
@@ -65,7 +65,7 @@ Generated (UTC): 2026-09-18T15:51:00.0711069Z
   State         : PRESENT
 
 [SOURCE ISO DETECTION]
-  FOUND: D:\WimMount\ISO\Win11_25H2_English_x64_v2.iso
+  FOUND: D:\Windows11_Client_x64_en-us_26300_9457.iso
 
 [GATE RESULTS]
   PASS: elevated and workspace drive free space above the configured minimum.

@@ -6,8 +6,8 @@ ISO/
 Updates/
 Output/
 Source/
-Logs/
 Drivers/
+WimMountUpdates/
 *.iso
 *.wim
 *.esd

@@ -1,0 +1,14 @@
+{
+    "generated_utc":  "2026-10-23T04:39:47.4065621Z",
+    "oscdimg_path":  "C:\\Program Files (x86)\\Windows Kits\\10\\Assessment and Deployment Kit\\Deployment Tools\\x86\\OSCDIMG\\oscdimg.exe",
+    "label":  "WIN_26300_x64",
+    "udf_iso":  "D:\\WimMount\\Output\\Win11_Pro_x64_26300.9457_Updated_20261023.iso",
+    "install_wim_bytes":  8155984950,
+    "split_required":  true,
+    "split_files":  [
+                        "install.swm",
+                        "install2.swm",
+                        "install3.swm"
+                    ],
+    "fat32_iso":  "D:\\WimMount\\Output\\Win11_Pro_x64_26300.9457_Updated_20261023-FAT32-split.iso"
+}

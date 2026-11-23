@@ -1,0 +1,30 @@
+﻿**********************
+Windows PowerShell transcript start
+Start time: 20260918183904
+Username: MYLAB\niphd
+RunAs User: MYLAB\niphd
+Configuration Name: 
+Machine: MYLAB (Microsoft Windows NT 10.0.26200.0)
+Host Application: C:\WINDOWS\System32\WindowsPowerShell\v1.0\powershell.exe -NoProfile -NonInteractive -Command & 'D:\WimMount\Scripts\Invoke-WinISOService.ps1' -TargetPhase 2 -SkipPhase 1 -SourceIso 'D:\WimMount\ISO\Win11_25H2_English_x64_v2.iso' -SkipHash
+Process ID: 16600
+PSVersion: 5.1.26100.9444
+PSEdition: Desktop
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1.26100.9444
+BuildVersion: 10.0.26100.9444
+CLRVersion: 4.0.30319.42000
+WSManStackVersion: 3.0
+PSRemotingProtocolVersion: 2.3
+SerializationVersion: 1.1.0.1
+**********************
+Transcript started, output file is D:\WimMount\Logs\orchestrator-20260918-183903.transcript.txt
+Phase 1 (Environment audit): skipped by -SkipPhase.
+Phase 2 (ISO inspection): running...
+PS>TerminatingError(): "The property 'Version' cannot be found on this object. Verify that the property exists."
+  -> FAILED: The property 'Version' cannot be found on this object. Verify that the property exists.
+
+State phase: 0; status: failed
+Next action: A phase failed. Review Logs\ and State\STATE.json, fix the cause, then re-run Invoke-WinISOService.ps1 (it resumes automatically).
+**********************
+Windows PowerShell transcript end
+End time: 20260918183910
+**********************

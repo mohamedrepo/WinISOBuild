@@ -1,0 +1,25 @@
+﻿**********************
+Windows PowerShell transcript start
+Start time: 20260917030702
+Username: MYLAB\niphd
+RunAs User: MYLAB\niphd
+Configuration Name: 
+Machine: MYLAB (Microsoft Windows NT 10.0.26200.0)
+Host Application: C:\WINDOWS\System32\WindowsPowerShell\v1.0\powershell.exe -NoProfile -NonInteractive -Command & 'D:\WimMount\Scripts\Invoke-WinISOService.ps1' -TargetPhase 2 -SourceIso 'D:\WimMount\ISO\Win11_25H2_English_x64_v2.iso' -SkipHash
+Process ID: 23612
+PSVersion: 5.1.26100.9444
+PSEdition: Desktop
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1.26100.9444
+BuildVersion: 10.0.26100.9444
+CLRVersion: 4.0.30319.42000
+WSManStackVersion: 3.0
+PSRemotingProtocolVersion: 2.3
+SerializationVersion: 1.1.0.1
+**********************
+Transcript started, output file is D:\WimMount\Logs\orchestrator-20260917-030702.transcript.txt
+Phase 1 (ISO inspection): running...
+PS>TerminatingError(Invoke-WinISOInspectSource): "A parameter cannot be found that matches parameter name 'AllowUnoelevated'."
+**********************
+Windows PowerShell transcript end
+End time: 20260917030702
+**********************

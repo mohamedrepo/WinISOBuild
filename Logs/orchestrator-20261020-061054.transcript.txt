@@ -1,0 +1,30 @@
+﻿**********************
+Windows PowerShell transcript start
+Start time: 20261020061054
+Username: DESKTOP-ABPNVBL\niphd
+RunAs User: DESKTOP-ABPNVBL\niphd
+Configuration Name: 
+Machine: DESKTOP-ABPNVBL (Microsoft Windows NT 10.0.26300.0)
+Host Application: C:\WINDOWS\System32\WindowsPowerShell\v1.0\powershell.exe -NoProfile -ExecutionPolicy Bypass -File D:\WimMount\Scripts\Invoke-WinISOService.ps1 -Workspace D:\WimMount -TargetPhase 1 -Force -AllowUnoelevated
+Process ID: 15128
+PSVersion: 5.1.26100.9711
+PSEdition: Desktop
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1.26100.9711
+BuildVersion: 10.0.26100.9711
+CLRVersion: 4.0.30319.42000
+WSManStackVersion: 3.0
+PSRemotingProtocolVersion: 2.3
+SerializationVersion: 1.1.0.1
+**********************
+Transcript started, output file is D:\WimMount\Logs\orchestrator-20261020-061054.transcript.txt
+Phase 1 (Environment audit): running...
+PS>TerminatingError(Get-ItemProperty): "The running command stopped because the preference variable "ErrorActionPreference" or common parameter is set to Stop: Cannot find path 'HKLM:\SOFTWARE\Microsoft\NET Framework Setup\NDP\v3.5' because it does not exist."
+PS>TerminatingError(Get-ItemProperty): "The running command stopped because the preference variable "ErrorActionPreference" or common parameter is set to Stop: Cannot find path 'HKLM:\SOFTWARE\7-Zip' because it does not exist."
+  -> Succeeded: Environment audit succeeded. Workspace D:\WimMount; 134.05 GB free on D:; elevated=False; source ISO found=False.
+
+State phase: 1; status: complete
+Next action: All phases through 1 completed. Review artifacts in Output\ and Reports\.
+**********************
+Windows PowerShell transcript end
+End time: 20261020061057
+**********************

@@ -1,0 +1,36 @@
+﻿**********************
+Windows PowerShell transcript start
+Start time: 20261023070221
+Username: DESKTOP-ABPNVBL\niphd
+RunAs User: DESKTOP-ABPNVBL\niphd
+Configuration Name: 
+Machine: DESKTOP-ABPNVBL (Microsoft Windows NT 10.0.26300.0)
+Host Application: C:\WINDOWS\System32\WindowsPowerShell\v1.0\powershell.exe -NoProfile -ExecutionPolicy Bypass -Command cd D:\WimMount; & .\Scripts\Invoke-WinISOService.ps1 -SourceIso 'D:\Windows11_Client_x64_en-us_26300_9457.iso' -Drivers 'D:\WimMount\Drivers' -ImageIndexes 6 -TargetPhase 10 -Force -Profile Standard
+Process ID: 21780
+PSVersion: 5.1.26100.9711
+PSEdition: Desktop
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1.26100.9711
+BuildVersion: 10.0.26100.9711
+CLRVersion: 4.0.30319.42000
+WSManStackVersion: 3.0
+PSRemotingProtocolVersion: 2.3
+SerializationVersion: 1.1.0.1
+**********************
+Transcript started, output file is D:\WimMount\Logs\orchestrator-20261023-070221.transcript.txt
+Phase 1 (Environment audit): running...
+PS>TerminatingError(Get-ItemProperty): "The running command stopped because the preference variable "ErrorActionPreference" or common parameter is set to Stop: Cannot find path 'HKLM:\SOFTWARE\Microsoft\NET Framework Setup\NDP\v3.5' because it does not exist."
+PS>TerminatingError(Get-ItemProperty): "The running command stopped because the preference variable "ErrorActionPreference" or common parameter is set to Stop: Cannot find path 'HKLM:\SOFTWARE\7-Zip' because it does not exist."
+  -> Succeeded: Environment audit succeeded. Workspace D:\WimMount; 137.85 GB free on D:; elevated=True; source ISO found=True.
+Phase 2 (ISO inspection): running...
+  -> Succeeded: Inventory produced: 11 image index(es), build 26300, x64, .
+Phase 3 (Update discovery): running...
+  -> Succeeded: Update manifest produced: 11 candidates (7 required, 1 recommended).
+Phase 4 (Image servicing): running...
+  -> FAILED: No .msu/.cab package file found under Updates\ for KB5127649. Download it manually (the toolchain never downloads) or remove it from the manifest. | No .msu/.cab package file found under Updates\ for KB5126666. Download it manually (the toolchain never downloads) or remove it from the manifest. | No .msu/.cab package file found under Updates\ for KB5127650. Download it manually (the toolchain never downloads) or remove it from the manifest. | No .msu/.cab package file found under Updates\ for KB5127654. Download it manually (the toolchain never downloads) or remove it from the manifest. | No .msu/.cab package file found under Updates\ for KB5127651. Download it manually (the toolchain never downloads) or remove it from the manifest. | No .msu/.cab package file found under Updates\ for KB5127363. Download it manually (the toolchain never downloads) or remove it from the manifest. | No .msu/.cab package file found under Updates\ for KB5127690. Download it manually (the toolchain never downloads) or remove it from the manifest. | Post-servicing WIM verification failed.
+
+State phase: 3; status: failed
+Next action: A phase failed. Review Logs\ and State\STATE.json, fix the cause, then re-run Invoke-WinISOService.ps1 (it resumes automatically).
+**********************
+Windows PowerShell transcript end
+End time: 20261023071540
+**********************

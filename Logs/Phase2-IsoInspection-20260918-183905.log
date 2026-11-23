@@ -1,0 +1,67 @@
+[2026-09-18 18:39:05.148] === Phase2-IsoInspection started ===
+[2026-09-18 18:39:05.202] Source: D:\WimMount\ISO\Win11_25H2_English_x64_v2.iso
+[2026-09-18 18:39:10.404] CMD> C:\WINDOWS\System32\Dism.exe /English /Get-WimInfo /WimFile:F:\sources\install.wim
+[2026-09-18 18:39:10.413] 
+Deployment Image Servicing and Management tool
+Version: 10.0.26100.8972
+
+Details for image : F:\sources\install.wim
+
+Index : 1
+Name : Windows 11 Home
+Description : Windows 11 Home
+Size : 23,831,001,491 bytes
+
+Index : 2
+Name : Windows 11 Home N
+Description : Windows 11 Home N
+Size : 23,199,846,364 bytes
+
+Index : 3
+Name : Windows 11 Home Single Language
+Description : Windows 11 Home Single Language
+Size : 23,827,797,728 bytes
+
+Index : 4
+Name : Windows 11 Education
+Description : Windows 11 Education
+Size : 24,857,318,874 bytes
+
+Index : 5
+Name : Windows 11 Education N
+Description : Windows 11 Education N
+Size : 24,212,002,647 bytes
+
+Index : 6
+Name : Windows 11 Pro
+Description : Windows 11 Pro
+Size : 24,860,631,795 bytes
+
+Index : 7
+Name : Windows 11 Pro N
+Description : Windows 11 Pro N
+Size : 24,233,167,534 bytes
+
+Index : 8
+Name : Windows 11 Pro Education
+Description : Windows 11 Pro Education
+Size : 24,857,369,512 bytes
+
+Index : 9
+Name : Windows 11 Pro Education N
+Description : Windows 11 Pro Education N
+Size : 24,212,028,416 bytes
+
+Index : 10
+Name : Windows 11 Pro for Workstations
+Description : Windows 11 Pro for Workstations
+Size : 24,857,420,150 bytes
+
+Index : 11
+Name : Windows 11 Pro N for Workstations
+Description : Windows 11 Pro N for Workstations
+Size : 24,212,054,185 bytes
+
+The operation completed successfully.
+
+[2026-09-18 18:39:10.549] EXCEPTION: The property 'Version' cannot be found on this object. Verify that the property exists.

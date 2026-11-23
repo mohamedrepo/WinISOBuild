@@ -1,0 +1,46 @@
+﻿**********************
+Windows PowerShell transcript start
+Start time: 20261020165307
+Username: DESKTOP-ABPNVBL\niphd
+RunAs User: DESKTOP-ABPNVBL\niphd
+Configuration Name: 
+Machine: DESKTOP-ABPNVBL (Microsoft Windows NT 10.0.26300.0)
+Host Application: C:\WINDOWS\System32\WindowsPowerShell\v1.0\powershell.exe -NoProfile -ExecutionPolicy Bypass -File D:\WimMount\Scripts\Invoke-WinISOService.ps1 -Workspace D:\WimMount -SourceIso D:\Windows11_Client_x64_en-us_26300_9457.iso -TargetPhase 8 -Profile Safe -ImageIndexes 6 -OutputIsoName Win11_Updated_26300.9457.iso
+Process ID: 34096
+PSVersion: 5.1.26100.9711
+PSEdition: Desktop
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1.26100.9711
+BuildVersion: 10.0.26100.9711
+CLRVersion: 4.0.30319.42000
+WSManStackVersion: 3.0
+PSRemotingProtocolVersion: 2.3
+SerializationVersion: 1.1.0.1
+**********************
+Transcript started, output file is D:\WimMount\Logs\orchestrator-20261020-165307.transcript.txt
+Phase 1 (Environment audit): already completed (state.phase=1); skipping. Use -Force to re-run.
+Phase 2 (ISO inspection): running...
+  -> Succeeded: Inventory produced: 11 image index(es), build 26300, x64, .
+Phase 3 (Update discovery): running...
+  -> Succeeded: Update manifest produced: 12 candidates (7 required, 1 recommended).
+Phase 4 (Image servicing): running...
+  -> Succeeded: Servicing succeeded for index(es) 6; WIM verified after commit.
+Phase 5 (OOBE / unattend): running...
+  -> Succeeded: unattend.xml generated at D:\WimMount\Output\unattend.xml
+Phase 6 (Customization profile): running...
+  -> Succeeded: Profile Safe applied as a decision manifest; removals authorized=0, blocked=0.
+Phase 7 (Boot media rebuild): running...
+  -> FAILED: oscdimg failed (exit 1): 
+OSCDIMG 2.56 CD-ROM and DVD-ROM Premastering Utility
+Copyright (C) Microsoft, 1993-2012. All rights reserved.
+Licensed only for producing Microsoft authorized content.
+
+
+ERROR: Could not open boot sector file ""D:\WimMount\ExtractedISO\boot\etfsboot.com""
+Error 123: The filename, directory name, or volume label syntax is incorrect.
+
+State phase: 6; status: failed
+Next action: A phase failed. Review Logs\ and State\STATE.json, fix the cause, then re-run Invoke-WinISOService.ps1 (it resumes automatically).
+**********************
+Windows PowerShell transcript end
+End time: 20261020170512
+**********************

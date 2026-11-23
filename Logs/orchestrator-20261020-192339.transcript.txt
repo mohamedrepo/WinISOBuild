@@ -1,0 +1,30 @@
+﻿**********************
+Windows PowerShell transcript start
+Start time: 20261020192339
+Username: DESKTOP-ABPNVBL\niphd
+RunAs User: DESKTOP-ABPNVBL\niphd
+Configuration Name: 
+Machine: DESKTOP-ABPNVBL (Microsoft Windows NT 10.0.26300.0)
+Host Application: C:\WINDOWS\System32\WindowsPowerShell\v1.0\powershell.exe -NoProfile -ExecutionPolicy Bypass -Command cd D:\WimMount; & .\Scripts\Invoke-WinISOService.ps1 -SourceIso 'D:\Windows11_Client_x64_en-us_26300_9457.iso' -Drivers 'D:\WimMount\Drivers' -ImageIndexes 6 -TargetPhase 10 -Force -Profile Standard
+Process ID: 2136
+PSVersion: 5.1.26100.9711
+PSEdition: Desktop
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1.26100.9711
+BuildVersion: 10.0.26100.9711
+CLRVersion: 4.0.30319.42000
+WSManStackVersion: 3.0
+PSRemotingProtocolVersion: 2.3
+SerializationVersion: 1.1.0.1
+**********************
+Transcript started, output file is D:\WimMount\Logs\orchestrator-20261020-192339.transcript.txt
+Phase 1 (Environment audit): running...
+PS>TerminatingError(Get-ItemProperty): "The running command stopped because the preference variable "ErrorActionPreference" or common parameter is set to Stop: Cannot find path 'HKLM:\SOFTWARE\Microsoft\NET Framework Setup\NDP\v3.5' because it does not exist."
+PS>TerminatingError(Get-ItemProperty): "The running command stopped because the preference variable "ErrorActionPreference" or common parameter is set to Stop: Cannot find path 'HKLM:\SOFTWARE\7-Zip' because it does not exist."
+  -> FAILED: Not elevated. Run from an elevated PowerShell session (Administrator). All servicing phases require elevation.
+
+State phase: 7; status: failed
+Next action: A phase failed. Review Logs\ and State\STATE.json, fix the cause, then re-run Invoke-WinISOService.ps1 (it resumes automatically).
+**********************
+Windows PowerShell transcript end
+End time: 20261020192342
+**********************

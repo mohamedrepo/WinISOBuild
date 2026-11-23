@@ -1,0 +1,11 @@
+﻿[16:16:28] Build-WinISOUpdated starting. log=D:\WimMount\Logs\build-20261020-161628.log
+[16:16:28] Source ISO : D:\Windows11_Client_x64_en-us_26300_9457.iso
+[16:16:28] Index      : 6
+[16:16:28] Workspace  : D:\WimMount
+[16:16:28] oscdimg    : C:\Program Files (x86)\Windows Kits\10\Assessment and Deployment Kit\Deployment Tools\amd64\OSCDIMG\oscdimg.exe
+[16:16:29] Free space : 129.8 GB on D:
+[16:16:29] Elevated   : False
+[16:16:29] DRY RUN - no image was mounted or modified.
+[16:16:29] Would export index 6 from D:\Windows11_Client_x64_en-us_26300_9457.iso
+[16:16:29] Would apply 0 package(s) and 0 driver(s)
+[16:16:29] Would write ISO to D:\WimMount\Output

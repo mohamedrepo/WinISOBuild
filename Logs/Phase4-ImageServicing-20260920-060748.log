@@ -1,0 +1,125 @@
+[2026-09-20 06:07:48.780] === Phase4-ImageServicing started ===
+[2026-09-20 06:08:04.076] Copied H:\sources\install.wim -> D:\WimMount\ExtractedISO\sources\install.wim
+[2026-09-20 06:08:07.584] Servicing target: D:\WimMount\ExtractedISO\sources\install.wim
+[2026-09-20 06:08:20.180] Pristine backup: D:\WimMount\Backup\install.wim.pre-servicing
+[2026-09-20 06:08:20.604] CMD> C:\WINDOWS\System32\Dism.exe /English /Get-WimInfo /WimFile:D:\WimMount\ExtractedISO\sources\install.wim
+[2026-09-20 06:08:20.605] 
+Deployment Image Servicing and Management tool
+Version: 10.0.26100.8972
+
+Details for image : D:\WimMount\ExtractedISO\sources\install.wim
+
+Index : 1
+Name : Windows 11 Home
+Description : Windows 11 Home
+Size : 23,831,001,491 bytes
+
+Index : 2
+Name : Windows 11 Home N
+Description : Windows 11 Home N
+Size : 23,199,846,364 bytes
+
+Index : 3
+Name : Windows 11 Home Single Language
+Description : Windows 11 Home Single Language
+Size : 23,827,797,728 bytes
+
+Index : 4
+Name : Windows 11 Education
+Description : Windows 11 Education
+Size : 24,857,318,874 bytes
+
+Index : 5
+Name : Windows 11 Education N
+Description : Windows 11 Education N
+Size : 24,212,002,647 bytes
+
+Index : 6
+Name : Windows 11 Pro
+Description : Windows 11 Pro
+Size : 24,860,631,795 bytes
+
+Index : 7
+Name : Windows 11 Pro N
+Description : Windows 11 Pro N
+Size : 24,233,167,534 bytes
+
+Index : 8
+Name : Windows 11 Pro Education
+Description : Windows 11 Pro Education
+Size : 24,857,369,512 bytes
+
+Index : 9
+Name : Windows 11 Pro Education N
+Description : Windows 11 Pro Education N
+Size : 24,212,028,416 bytes
+
+Index : 10
+Name : Windows 11 Pro for Workstations
+Description : Windows 11 Pro for Workstations
+Size : 24,857,420,150 bytes
+
+Index : 11
+Name : Windows 11 Pro N for Workstations
+Description : Windows 11 Pro N for Workstations
+Size : 24,212,054,185 bytes
+
+The operation completed successfully.
+
+[2026-09-20 06:08:20.872] CMD> C:\WINDOWS\System32\Dism.exe /English /Get-ImageInfo /ImageFile:D:\WimMount\ExtractedISO\sources\install.wim /Index:1
+[2026-09-20 06:08:20.880] 
+Deployment Image Servicing and Management tool
+Version: 10.0.26100.8972
+
+Details for image : D:\WimMount\ExtractedISO\sources\install.wim
+
+Index : 1
+Name : Windows 11 Home
+Description : Windows 11 Home
+Size : 23,831,001,491 bytes
+WIM Bootable : No
+Architecture : x64
+Hal : <undefined>
+Version : 10.0.26200
+ServicePack Build : 8037
+ServicePack Level : 0
+Edition : Core
+Installation : Client
+ProductType : WinNT
+ProductSuite : Terminal Server
+System Root : WINDOWS
+Directories : 32397
+Files : 141983
+Created : 07/03/2026 - 03:07:08 ?
+Modified : 07/03/2026 - 03:39:56 ?
+Languages :
+	en-US (Default)
+The operation completed successfully.
+
+[2026-09-20 06:08:21.111] CMD> C:\WINDOWS\System32\Dism.exe /English /Mount-Image /ImageFile:D:\WimMount\ExtractedISO\sources\install.wim /Index:1 /MountDir:D:\WimMount\Mount\Image1
+[2026-09-20 06:08:21.111] 
+Deployment Image Servicing and Management tool
+Version: 10.0.26100.8972
+
+
+Error: 0xc1510111
+
+You do not have permissions to mount and modify this image.
+Verify that you have Read/Write permissions or mount the image using the /ReadOnly option. Note that you cannot commit changes to an image with read-only permissions.
+
+The DISM log file can be found at C:\WINDOWS\Logs\DISM\dism.log
+
+[2026-09-20 06:08:21.333] CMD> C:\WINDOWS\System32\Dism.exe /English /Get-MountedImageInfo
+[2026-09-20 06:08:21.335] 
+Deployment Image Servicing and Management tool
+Version: 10.0.26100.8972
+
+Mounted images:
+
+
+No mounted images found.
+
+The operation completed successfully.
+
+[2026-09-20 06:08:21.340] Verified: D:\WimMount\Mount\Image1 is not present in mounted-image list.
+[2026-09-20 06:08:21.342] EXCEPTION: Cannot convert value "-1051655919" to type "System.UInt32". Error: "Value was either too large or too small for a UInt32."
