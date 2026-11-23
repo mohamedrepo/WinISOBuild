@@ -1,0 +1,8 @@
+    # Quote only arguments that contain whitespace. An argument that already
+    # carries quotes (oscdimg -bootdata:2#p0,e,b<path>) must pass through
+    # untouched: re-wrapping it produced ""D:\...etfsboot.com"" and oscdimg
+    # failed with "Could not open boot sector file".
+    $argString = ($ArgumentList | ForEach-Object {
+        $a = [string]$_
+        if ($a -match '\s') { '"' + ($a -replace '"', '\"') + '"' } else { $a }
+    }) -join ' '
