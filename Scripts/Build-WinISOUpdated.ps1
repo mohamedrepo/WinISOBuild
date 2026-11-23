@@ -361,7 +361,7 @@ try {
     Write-Stage ('STAGE 2/9 copying media to ' + $media)
     Write-BuildStatus -Stage 'copy-media' -Percent 12
     $rc = Start-Process -FilePath (Join-Path $env:SystemRoot 'System32\robocopy.exe') `
-        -ArgumentList @(('"' + $root + '"'), ('"' + $media + '"'), '/E', '/NFL', '/NDL', '/NJH', '/NJS', '/R:2', '/W:2', '/MT:8') `
+        -ArgumentList @($root, $media, '/E', '/NFL', '/NDL', '/NJH', '/NJS', '/R:2', '/W:2', '/MT:8') `
         -Wait -PassThru -NoNewWindow
     if ($rc.ExitCode -ge 8) { throw ('robocopy failed copying the ISO media (exit ' + $rc.ExitCode + ')') }
     Write-Stage ('  media copied (robocopy exit ' + $rc.ExitCode + ')')
@@ -527,8 +527,10 @@ try {
     Write-Stage ('  output: ' + $outIso)
 
     $bootData = ('-bootdata:2#p0,e,b' + $etfs + '#pEF,e,b' + $efisys)
+    # Start-Process quotes arguments that contain spaces itself; pre-quoting
+    # them here produced ""D:\..."" and oscdimg could not open its inputs.
     $osc = Start-Process -FilePath $Oscdimg `
-        -ArgumentList @('-m', '-o', '-u2', '-udfver102', $bootData, ('"' + $media + '"'), ('"' + $outIso + '"')) `
+        -ArgumentList @('-m', '-o', '-u2', '-udfver102', $bootData, $media, $outIso) `
         -Wait -PassThru -NoNewWindow
     Write-Stage ('  oscdimg exit ' + $osc.ExitCode)
     if ($osc.ExitCode -ne 0 -or -not (Test-Path -LiteralPath $outIso)) { throw ('oscdimg failed (exit ' + $osc.ExitCode + ')') }
