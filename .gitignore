@@ -1,13 +1,22 @@
-# Build artefacts / large binaries (never commit)
-Backup/
-ExtractedISO/
-Mount/
-ISO/
-Updates/
-Output/
-Source/
-Drivers/
-WimMountUpdates/
+# Build artefacts / large binaries (never commit) — folders are tracked, contents are not
+Drivers/*
+!Drivers/.gitkeep
+Updates/*
+!Updates/.gitkeep
+Backup/*
+!Backup/.gitkeep
+ExtractedISO/*
+!ExtractedISO/.gitkeep
+ISO/*
+!ISO/.gitkeep
+Mount/*
+!Mount/.gitkeep
+Output/*
+!Output/.gitkeep
+Source/*
+!Source/.gitkeep
+WimMountUpdates/*
+!WimMountUpdates/.gitkeep
 *.iso
 *.wim
 *.esd
