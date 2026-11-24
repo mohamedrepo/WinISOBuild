@@ -19,7 +19,18 @@ $ErrorActionPreference = 'Stop'
 $script:Dism = "$env:SystemRoot\System32\Dism.exe"
 $script:Oscdimg = 'C:\Program Files (x86)\Windows Kits\10\Assessment and Deployment Kit\Deployment Tools\amd64\OSCDIMG\oscdimg.exe'
 
+$modulePath = Join-Path $PSScriptRoot 'WinISOIntegrity.psm1'
+if (-not (Test-Path -LiteralPath $modulePath)) { throw ('Required module not found: ' + $modulePath) }
+Import-Module -Name $modulePath -Force -ErrorAction Stop
+
 function Log { param([string]$m) $ts = Get-Date -Format 'HH:mm:ss'; Write-Host ("[$ts] $m") }
+
+# Element reader for DISM text, used by the health check and package probing.
+function Get-DismText {
+    param([string[]]$Arguments)
+    $out = & $script:Dism @Arguments 2>&1 | Out-String
+    return [pscustomobject]@{ Code = $LASTEXITCODE; Text = $out }
+}
 
 function Get-IsoLetter {
     param([string]$IsoPath)
@@ -58,21 +69,70 @@ if (-not $Packages -or $Packages.Count -eq 0) {
     if ($cu) { $Packages += $cu.FullName }
     if ($dn) { $Packages += $dn.FullName }
 }
+# A servicing stack update has to be applied before the cumulative update, and
+# the order the caller listed is refused rather than silently repaired, so the
+# mistake is visible instead of hidden.
+$orderProblems = @(Test-WinISOPackageOrder -Packages $Packages)
+if ($orderProblems.Count -gt 0) {
+    foreach ($p in $orderProblems) { Log ('ORDER ERROR: ' + $p) }
+    throw ('the package order is not serviceable; apply the servicing stack update first')
+}
+$Packages = @(Get-WinISOPackageOrder -Packages $Packages | ForEach-Object { $_.Package })
 Log ('packages to integrate: ' + (($Packages | ForEach-Object { Split-Path $_ -Leaf }) -join ', '))
-if ($DryRun) { Log 'DryRun: stopping before mount'; exit 0 }
+
+# Refuse a truncated or altered download before DISM is asked to apply it.
+$manifestPath = Join-Path (Split-Path -Parent ([System.IO.Path]::GetFullPath($UpdatesDir))) 'Reports\DOWNLOAD-MANIFEST.json'
+if (Test-Path -LiteralPath $manifestPath -PathType Leaf) {
+    $payload = Test-WinISOManifestPayload -ManifestPath $manifestPath -DownloadDir $UpdatesDir
+    Log ('manifest check: ' + @($payload.Ok).Count + ' of ' + $payload.Checked + ' package(s) match ' + $manifestPath)
+    foreach ($m in @($payload.Mismatched)) {
+        Log ('INTEGRITY ERROR: ' + $m.File + ' ' + $m.Reason)
+        throw ('package ' + $m.File + ' does not match the download manifest; re-download it before integrating')
+    }
+} else {
+    Log ('no download manifest at ' + $manifestPath + '; package hashes cannot be checked')
+}
+
+if ($DryRun) { Log 'DryRun: packages verified, stopping before mount'; exit 0 }
 
 # ---------- 3. mount + integrate ----------
 $mnt = Join-Path $Work 'Mount'
 if (Test-Path -LiteralPath $mnt) { [void](Remove-Item -LiteralPath $mnt -Recurse -Force -ErrorAction SilentlyContinue) }
 [void](New-Item -ItemType Directory -Path $mnt -Force)
 Log ('mounting ' + $wim + ' index 1 -> ' + $mnt)
-$null = & $script:Dism /English /Mount-Image /ImageFile:$wim /Index:1 /MountDir:$mnt 2>&1 | Out-String
+$logDir = Join-Path (Split-Path -Parent ([System.IO.Path]::GetFullPath($UpdatesDir))) 'Logs'
+if (-not (Test-Path -LiteralPath $logDir)) { [void](New-Item -ItemType Directory -Path $logDir -Force) }
+$dismLog = Join-Path $logDir ('dism-integrate-' + (Get-Date -Format 'yyyyMMdd-HHmmss') + '.log')
+$null = & $script:Dism /English /Mount-Image /ImageFile:$wim /Index:1 /MountDir:$mnt /LogPath:$dismLog 2>&1 | Out-String
 $mounted = $true
 try {
+    # Health before servicing: a damaged component store otherwise shows up as
+    # an unrelated Add-Package failure much later.
+    $health = Get-DismText -Arguments @('/English', ('/Image:' + $mnt), '/Cleanup-Image', '/CheckHealth')
+    if ($health.Code -ne 0 -or [string]$health.Text -match '(?i)corrupt|not repairable') {
+        throw ('the image component store is damaged (DISM /Cleanup-Image /CheckHealth exit ' + $health.Code + '); repair or replace the source media')
+    }
+    Log 'component store health: OK'
+
+    $level = Get-DismText -Arguments @('/English', '/Get-ImageInfo', ('/ImageFile:' + $wim), '/Index:1')
+    $mb = [regex]::Match([string]$level.Text, '(?im)^\s*Version\s+:\s*10\.0\.(\d+)')
+    $mr = [regex]::Match([string]$level.Text, '(?im)^\s*ServicePack Build\s+:\s*(\d+)')
+    $imageBuild = 0; $imageRevision = 0
+    if ($mb.Success) { $imageBuild = [int]$mb.Groups[1].Value }
+    if ($mr.Success) { $imageRevision = [int]$mr.Groups[1].Value }
+    Log ('image level before integration: ' + $imageBuild + '.' + $imageRevision)
+
     foreach ($pkg in $Packages) {
+        $info = $null
+        $pi = Get-DismText -Arguments @('/English', '/Get-PackageInfo', ('/PackagePath:' + $pkg))
+        if ($pi.Code -eq 0) { $info = ConvertFrom-WinISOPackageInfoText -Text $pi.Text }
+        if ($info -and (Test-WinISOPackageAlreadyInImage -Kind $info.Kind -PackageBuild $info.Build -PackageRevision $info.Revision -ImageBuild $imageBuild -ImageRevision $imageRevision)) {
+            Log ('SKIP ' + (Split-Path $pkg -Leaf) + ': the image is already at ' + $imageBuild + '.' + $imageRevision + ' and this package targets ' + $info.Build + '.' + $info.Revision)
+            continue
+        }
         Log ('Add-Package ' + (Split-Path $pkg -Leaf))
-        $r = & $script:Dism /English /Image:$mnt /Add-Package /PackagePath:$pkg /NoRestart 2>&1 | Out-String
-        $tail = (($r -split "`r?`n") | Where-Object { $_ -match 'Error|completed successfully|Processing' } | Select-Object -Last 3) -join ' | '
+        $r = & $script:Dism /English /Image:$mnt /Add-Package /PackagePath:$pkg /NoRestart /LogPath:$dismLog 2>&1 | Out-String
+        $tail = (($r -split "`r?`n") | Where-Object { $_ -match 'Error|completed successfully|Processing|not applicable' } | Select-Object -Last 3) -join ' | '
         Log ('  -> ' + $tail)
     }
     Log 'new level:'
@@ -93,7 +153,7 @@ if ($SkipRebuild) { Log 'SkipRebuild: done'; exit 0 }
 $gi2 = & $script:Dism /English /Get-ImageInfo /ImageFile:$wim /Index:1 2>&1 | Out-String
 $mv = [regex]::Match($gi2, '(?im)^\s*Version\s+:\s*10\.0\.(\d+)'); $b = '0'; if ($mv.Success) { $b = $mv.Groups[1].Value }
 $mr = [regex]::Match($gi2, '(?im)^\s*ServicePack Build\s+:\s*(\d+)'); $rv = '0'; if ($mr.Success) { $rv = $mr.Groups[1].Value }
-$name = 'Win11_Pro_Updated_' + $b + '.' + $rv + '.iso'
+$name = 'windows11pro' + $b + '.' + $rv + '.iso'
 
 if (-not (Test-Path -LiteralPath $OutDir)) { [void](New-Item -ItemType Directory -Path $OutDir -Force) }
 $outIso = Join-Path $OutDir $name

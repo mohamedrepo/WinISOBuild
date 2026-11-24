@@ -28,7 +28,9 @@ $files = @(
     (Join-Path $PSScriptRoot 'Invoke-WinISOIntegrate.ps1'),
     (Join-Path $PSScriptRoot 'Add-WinISODrivers.ps1'),
     (Join-Path $PSScriptRoot 'Build-WinISOUpdated.ps1'),
-    (Join-Path $PSScriptRoot 'Burn-WinISOToUsb.ps1')
+    (Join-Path $PSScriptRoot 'Burn-WinISOToUsb.ps1'),
+    (Join-Path $PSScriptRoot 'WinISOIntegrity.psm1'),
+    (Join-Path $PSScriptRoot 'Test-WinISOIntegrity.ps1')
 )
 
 $failed = $false

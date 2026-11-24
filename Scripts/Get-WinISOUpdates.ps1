@@ -42,6 +42,100 @@ $ErrorActionPreference = 'Stop'
 $script:ModulePath = Join-Path $PSScriptRoot 'WinISOService.psm1'
 $script:DownloadDialog = 'https://www.catalog.update.microsoft.com/DownloadDialog.aspx'
 $script:UserAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) WinISOBuild/1.0'
+
+# The catalog search page publishes a rounded size ("512.3 MB"). The download
+# dialog for the same update also publishes each file's base64 SHA1 ("digest")
+# and base64 SHA256, which is what a download is verified against. The rounded
+# size is kept as a secondary check because it is the only value in the results.
+function ConvertFrom-CatalogSize {
+    param([string]$Text)
+    $t = [string]$Text
+    if (-not $t) { return [long]0 }
+    $m = [regex]::Match($t, '([0-9]+(?:[.,][0-9]+)?)\s*(bytes|B|KB|MB|GB)')
+    if (-not $m.Success) { return [long]0 }
+    $value = [double](($m.Groups[1].Value) -replace ',', '.')
+    switch ($m.Groups[2].Value.ToUpperInvariant()) {
+        'BYTES' { return [long]$value }
+        'B' { return [long]$value }
+        'KB' { return [long]($value * 1KB) }
+        'MB' { return [long]($value * 1MB) }
+        'GB' { return [long]($value * 1GB) }
+    }
+    return [long]0
+}
+
+function Test-WinISOCatalogSize {
+    param([string]$Text, [long]$Bytes)
+    $catalog = ConvertFrom-CatalogSize -Text $Text
+    $ok = $true
+    $detail = ''
+    if ($catalog -gt 0 -and $Bytes -gt 0) {
+        # The catalog rounds to one decimal, so allow 2% plus a megabyte.
+        $tolerance = [math]::Max([double](1MB), ($catalog * 0.02))
+        $delta = [math]::Abs([double]$catalog - [double]$Bytes)
+        if ($delta -gt $tolerance) {
+            $ok = $false
+            $detail = ('the catalog lists ' + $Text + ' (' + $catalog + ' bytes) but the file is ' + $Bytes + ' bytes')
+        }
+    }
+    return [pscustomobject]@{ CatalogBytes = $catalog; Ok = $ok; Detail = $detail }
+}
+
+# The download dialog publishes a base64 digest per file. Converting it to the
+# hex form Get-FileHash prints is what makes the published hash comparable.
+# A digest of the wrong length for the algorithm is rejected, not compared.
+function ConvertFrom-CatalogDigest {
+    param([string]$Base64 = '', [int]$ExpectedBytes = 0)
+    $t = ([string]$Base64).Trim()
+    if (-not $t) { return '' }
+    $bytes = $null
+    try { $bytes = [Convert]::FromBase64String($t) } catch { return '' }
+    if ($null -eq $bytes) { return '' }
+    if ($ExpectedBytes -gt 0 -and $bytes.Length -ne $ExpectedBytes) { return '' }
+    return ((@($bytes) | ForEach-Object { $_.ToString('x2') }) -join '')
+}
+
+# Compares a downloaded file with the digests the catalog published for it. With
+# no published digest there is nothing to compare, so the check passes and says
+# so instead of pretending the file was verified.
+function Test-WinISOFileDigest {
+    param([string]$Path = '', [string]$ExpectedSha1 = '', [string]$ExpectedSha256 = '')
+    $wantSha1 = ([string]$ExpectedSha1).Trim().ToLowerInvariant()
+    $wantSha256 = ([string]$ExpectedSha256).Trim().ToLowerInvariant()
+    if ($wantSha1 -notmatch '^[0-9a-f]{40}$') { $wantSha1 = '' }
+    if ($wantSha256 -notmatch '^[0-9a-f]{64}$') { $wantSha256 = '' }
+    $result = [ordered]@{
+        Ok       = $true
+        Checked  = @()
+        Sha1     = ''
+        Sha256   = ''
+        Detail   = 'the catalog published no digest for this file'
+    }
+    if (-not $Path -or -not (Test-Path -LiteralPath $Path -PathType Leaf)) {
+        $result.Ok = $false
+        $result.Detail = ('file not found: ' + $Path)
+        return [pscustomobject]$result
+    }
+    $result.Sha256 = (Get-FileHash -LiteralPath $Path -Algorithm SHA256).Hash.ToLowerInvariant()
+    if ($wantSha1) { $result.Sha1 = (Get-FileHash -LiteralPath $Path -Algorithm SHA1).Hash.ToLowerInvariant() }
+    $problems = @()
+    if ($wantSha256) {
+        $result.Checked += 'SHA256'
+        if ($result.Sha256 -ne $wantSha256) { $problems += ('SHA256 is ' + $result.Sha256 + ' but the catalog published ' + $wantSha256) }
+    }
+    if ($wantSha1) {
+        $result.Checked += 'SHA1'
+        if ($result.Sha1 -ne $wantSha1) { $problems += ('SHA1 is ' + $result.Sha1 + ' but the catalog published ' + $wantSha1) }
+    }
+    if ($problems.Count -gt 0) {
+        $result.Ok = $false
+        $result.Detail = ($problems -join '; ')
+    }
+    elseif ($result.Checked.Count -gt 0) {
+        $result.Detail = ('matches the catalog ' + ($result.Checked -join ' and '))
+    }
+    return [pscustomobject]$result
+}
 $script:Dism = "$env:SystemRoot\System32\Dism.exe"
 
 # Build -> marketing version hints. Hint only.
@@ -134,13 +228,50 @@ function Select-WinISOApplicable {
     return ,$out
 }
 
-function Get-WinISODownloadUrls {
+# The dialog writes one JavaScript object per file: url, digest (base64 SHA1),
+# sha256 (base64) and fileName. Reading them together keeps each hash with the
+# file it belongs to, even when one update offers several packages.
+function ConvertFrom-WinISODownloadDialogHtml {
+    param([string]$Html = '')
+    $text = [string]$Html
+    $records = @()
+    if (-not $text) { return ,$records }
+    $pattern = "files\[(?<i>\d+)\]\.url = '(?<url>[^']+)';[\s\S]{0,300}?files\[\k<i>\]\.digest = '(?<digest>[^']*)';[\s\S]{0,300}?files\[\k<i>\]\.sha256 = '(?<sha256>[^']*)';[\s\S]{0,600}?files\[\k<i>\]\.fileName = '(?<fileName>[^']+)';"
+    foreach ($m in [regex]::Matches($text, $pattern)) {
+        $url = [System.Net.WebUtility]::HtmlDecode($m.Groups['url'].Value)
+        if ($url -notmatch '(?i)\.msu$') { continue }
+        $records += [pscustomobject]@{
+            Url      = $url
+            FileName = [System.Net.WebUtility]::HtmlDecode($m.Groups['fileName'].Value)
+            Sha1     = ConvertFrom-CatalogDigest -Base64 $m.Groups['digest'].Value -ExpectedBytes 20
+            Sha256   = ConvertFrom-CatalogDigest -Base64 $m.Groups['sha256'].Value -ExpectedBytes 32
+        }
+    }
+    if ($records.Count -eq 0) {
+        # A dialog without digest fields still names the files; the download then
+        # falls back to the rounded-size check.
+        $seen = @{}
+        foreach ($m in [regex]::Matches($text, 'https?://[^\s"'']+\.msu')) {
+            $url = $m.Value
+            if ($seen.ContainsKey($url)) { continue }
+            $seen[$url] = $true
+            $records += [pscustomobject]@{ Url = $url; FileName = ($url.Split('/'))[-1]; Sha1 = ''; Sha256 = '' }
+        }
+    }
+    return ,$records
+}
+
+function Get-WinISODownloadFiles {
     param([string]$Guid)
     $body = New-WinISODownloadDialogBody -Guid $Guid
     $resp = Invoke-WebRequest -Uri $script:DownloadDialog -Method Post -Body $body `
         -ContentType 'application/x-www-form-urlencoded' -UseBasicParsing -UserAgent $script:UserAgent -TimeoutSec 120
-    $urls = @([regex]::Matches([string]$resp.Content, 'https?://[^\s"'']+\.msu') | ForEach-Object { $_.Value } | Select-Object -Unique)
-    return ,$urls
+    return ,@(ConvertFrom-WinISODownloadDialogHtml -Html ([string]$resp.Content))
+}
+
+function Get-WinISODownloadUrls {
+    param([string]$Guid)
+    return ,@(Get-WinISODownloadFiles -Guid $Guid | ForEach-Object { [string]$_.Url })
 }
 
 function Get-WinISOIsoDriveLetter {
@@ -236,12 +367,65 @@ function Invoke-WinISOUpdateSelfTest {
     ) -Version '26H2' -Architecture 'x64' -Build 26300
     if (@($selB).Count -ne 2) { $problems += ('build filter expected 2 rows, got ' + @($selB).Count) }
 
+    # Catalog size cross-check: parse the published size and judge the file.
+    if ((ConvertFrom-CatalogSize -Text '512.3 MB') -ne [long](512.3 * 1MB)) { $problems += 'catalog size parse failed for MB' }
+    if ((ConvertFrom-CatalogSize -Text '1.5 GB') -ne [long](1.5 * 1GB)) { $problems += 'catalog size parse failed for GB' }
+    if ((ConvertFrom-CatalogSize -Text 'no size here') -ne 0) { $problems += 'catalog size parse should return 0 without a unit' }
+    $same = Test-WinISOCatalogSize -Text '10.0 MB' -Bytes ([long](10.0 * 1MB))
+    if (-not $same.Ok) { $problems += 'catalog size check rejected a matching file' }
+    $short = Test-WinISOCatalogSize -Text '10.0 MB' -Bytes ([long](4 * 1MB))
+    if ($short.Ok) { $problems += 'catalog size check accepted a file far smaller than published' }
+
+    # Catalog digest cross-check: base64 -> hex, a real file comparison, and the
+    # download-dialog parser that keeps each hash with its file.
+    if ((ConvertFrom-CatalogDigest -Base64 'qED0j4Hnn0UTESj5+CNjOln1eHk=' -ExpectedBytes 20) -ne 'a840f48f81e79f45131128f9f823633a59f57879') { $problems += 'base64 SHA1 digest conversion failed' }
+    if ((ConvertFrom-CatalogDigest -Base64 'qED0j4Hnn0UTESj5+CNjOln1eHk=' -ExpectedBytes 32) -ne '') { $problems += 'a digest of the wrong length was accepted' }
+    if ((ConvertFrom-CatalogDigest -Base64 'not base64 !!') -ne '') { $problems += 'invalid base64 digest was accepted' }
+
+    $probe = Join-Path ([System.IO.Path]::GetTempPath()) ('winiso-digest-' + [guid]::NewGuid().ToString('N') + '.bin')
+    try {
+        [System.IO.File]::WriteAllText($probe, 'catalog digest self test')
+        $probeSha1 = (Get-FileHash -LiteralPath $probe -Algorithm SHA1).Hash.ToLowerInvariant()
+        $probeSha256 = (Get-FileHash -LiteralPath $probe -Algorithm SHA256).Hash.ToLowerInvariant()
+        $known = Test-WinISOFileDigest -Path $probe -ExpectedSha1 $probeSha1 -ExpectedSha256 $probeSha256
+        if (-not $known.Ok) { $problems += ('digest check rejected a matching file: ' + $known.Detail) }
+        if (@($known.Checked) -notcontains 'SHA1' -or @($known.Checked) -notcontains 'SHA256') { $problems += 'digest check did not report both algorithms' }
+        $wrong = Test-WinISOFileDigest -Path $probe -ExpectedSha256 (('0' * 64) -join '')
+        if ($wrong.Ok) { $problems += 'digest check accepted a wrong SHA256' }
+        $none = Test-WinISOFileDigest -Path $probe
+        if (-not $none.Ok -or @($none.Checked).Count -ne 0) { $problems += 'digest check should pass without a published digest' }
+    }
+    finally { Remove-Item -LiteralPath $probe -Force -ErrorAction SilentlyContinue }
+
+    $dialog = @'
+downloadInformation[0] = new Object();
+downloadInformation[0].files = new Array();
+downloadInformation[0].files[0] = new Object();
+downloadInformation[0].files[0].url = 'https://catalog.example/files/windows11.0-kb1-x64_abc.msu';
+downloadInformation[0].files[0].digest = 'qED0j4Hnn0UTESj5+CNjOln1eHk=';
+downloadInformation[0].files[0].sha256 = 'USYH7IgD8wXw1aHcLzNSfWrDVsyRqg3BcUA8Ct7Ma8w=';
+downloadInformation[0].files[0].architectures = '';
+downloadInformation[0].files[0].languages = '';
+downloadInformation[0].files[0].longLanguages = '';
+downloadInformation[0].files[0].fileName = 'windows11.0-kb1-x64_abc.msu';
+downloadInformation[0].files[1] = new Object();
+downloadInformation[0].files[1].url = 'https://catalog.example/files/other.cab';
+downloadInformation[0].files[1].digest = '';
+downloadInformation[0].files[1].sha256 = '';
+downloadInformation[0].files[1].fileName = 'other.cab';
+'@
+    $parsed = @(ConvertFrom-WinISODownloadDialogHtml -Html $dialog)
+    if ($parsed.Count -ne 1) { $problems += ('dialog parser expected 1 .msu record, got ' + $parsed.Count) }
+    elseif ($parsed[0].FileName -ne 'windows11.0-kb1-x64_abc.msu') { $problems += 'dialog parser lost the file name' }
+    elseif ($parsed[0].Sha1 -ne 'a840f48f81e79f45131128f9f823633a59f57879') { $problems += 'dialog parser lost the SHA1 digest' }
+    elseif ([string]$parsed[0].Sha256 -notmatch '^[0-9a-f]{64}$') { $problems += 'dialog parser lost the SHA256 digest' }
+
     if ($problems.Count -gt 0) {
         Write-Host 'SELFTEST FAILED:'
         $problems | ForEach-Object { Write-Host ('  - ' + $_) }
         exit 2
     }
-    Write-Host 'SELFTEST OK: module found; build/version maps; search URL + download body; target-level parse; missed-state classification; applicability filter.'
+    Write-Host 'SELFTEST OK: module found; build/version maps; search URL + download body; target-level parse; missed-state classification; applicability filter; catalog size cross-check; catalog SHA1/SHA256 digest cross-check and download-dialog parsing.'
     exit 0
 }
 
@@ -369,20 +553,36 @@ if ($ListOnly) {
 }
 
 $manifestFiles = New-Object System.Collections.Generic.List[System.Management.Automation.PSObject]
+$hashFailures = @()
 $totalBytes = 0
 $dlIndex = 0
 foreach ($c in $toProcess) {
     $guid = [string]$c.UpdateGuid
     if (-not $guid) { Write-Host ('SKIP ' + $c.Kb + ': no catalog GUID'); continue }
     Write-Host ('Resolving download URL for ' + $c.Kb + ' ...')
-    $urls = @()
-    try { $urls = Get-WinISODownloadUrls -Guid $guid } catch { Write-Host ('  failed: ' + $_.Exception.Message); continue }
-    foreach ($u in @($urls)) {
-        $name = ($u.Split('/'))[-1]
+    $files = @()
+    try { $files = @(Get-WinISODownloadFiles -Guid $guid) } catch { Write-Host ('  failed: ' + $_.Exception.Message); continue }
+    if ($files.Count -eq 0) { Write-Host ('  the catalog dialog lists no .msu file for ' + $c.Kb) }
+    foreach ($file in $files) {
+        $u = [string]$file.Url
+        $name = [string]$file.FileName
+        if (-not $name) { $name = ($u.Split('/'))[-1] }
         $dest = Join-Path $OutDir $name
+        $catalogSha1 = [string]$file.Sha1
+        $catalogSha256 = [string]$file.Sha256
         if (Test-Path -LiteralPath $dest) {
-            Write-Host ('  exists, skipping: ' + $name)
-            $manifestFiles.Add([pscustomobject]@{ kb = [string]$c.Kb; kind = [string]$c.Kind; missed_state = [string]$c.MissedState; url = $u; file = $name; bytes = (Get-Item $dest).Length; sha256 = (Get-FileHash -LiteralPath $dest -Algorithm SHA256).Hash })
+            Write-Host ('  exists, checking: ' + $name)
+            $existingBytes = [long](Get-Item -LiteralPath $dest).Length
+            $sizeCheck = Test-WinISOCatalogSize -Text ([string]$c.Size) -Bytes $existingBytes
+            if (-not $sizeCheck.Ok) { Write-Host ('  WARNING: ' + $name + ' does not match the catalog size: ' + $sizeCheck.Detail) }
+            $hashCheck = Test-WinISOFileDigest -Path $dest -ExpectedSha1 $catalogSha1 -ExpectedSha256 $catalogSha256
+            if ($hashCheck.Ok) { Write-Host ('  ' + $hashCheck.Detail) }
+            else {
+                Write-Host ('  WARNING: ' + $name + ' failed its catalog digest: ' + $hashCheck.Detail)
+                Write-Host '  delete the file and re-run to download it again'
+                $hashFailures += $name
+            }
+            $manifestFiles.Add([pscustomobject]@{ kb = [string]$c.Kb; kind = [string]$c.Kind; missed_state = [string]$c.MissedState; url = $u; file = $name; bytes = $existingBytes; catalog_bytes = $sizeCheck.CatalogBytes; size_match = $sizeCheck.Ok; catalog_sha1 = $catalogSha1; catalog_sha256 = $catalogSha256; hash_match = [bool]$hashCheck.Ok; digest = $hashCheck.Detail; sha256 = $hashCheck.Sha256.ToUpperInvariant() })
             continue
         }
         $len = 0
@@ -406,13 +606,26 @@ foreach ($c in $toProcess) {
             Write-Host ('  download failed: ' + $_.Exception.Message)
             continue
         }
-        $sha = (Get-FileHash -LiteralPath $dest -Algorithm SHA256).Hash
-        Write-Host ('DL-DONE ' + $name + ' ' + [math]::Round($len / 1MB, 1) + 'MB')
-        $manifestFiles.Add([pscustomobject]@{ kb = [string]$c.Kb; kind = [string]$c.Kind; missed_state = [string]$c.MissedState; url = $u; file = $name; bytes = $len; sha256 = $sha })
+        $actualBytes = [long](Get-Item -LiteralPath $dest).Length
+        Write-Host ('DL-DONE ' + $name + ' ' + [math]::Round($actualBytes / 1MB, 1) + 'MB')
+        $sizeCheck = Test-WinISOCatalogSize -Text ([string]$c.Size) -Bytes $actualBytes
+        if (-not $sizeCheck.Ok) { Write-Host ('  WARNING: ' + $name + ' does not match the catalog size: ' + $sizeCheck.Detail) }
+        $hashCheck = Test-WinISOFileDigest -Path $dest -ExpectedSha1 $catalogSha1 -ExpectedSha256 $catalogSha256
+        if ($hashCheck.Ok) { Write-Host ('  ' + $hashCheck.Detail) }
+        else {
+            Write-Host ('  WARNING: ' + $name + ' failed its catalog digest: ' + $hashCheck.Detail)
+            $hashFailures += $name
+        }
+        $manifestFiles.Add([pscustomobject]@{ kb = [string]$c.Kb; kind = [string]$c.Kind; missed_state = [string]$c.MissedState; url = $u; file = $name; bytes = $actualBytes; catalog_bytes = $sizeCheck.CatalogBytes; size_match = $sizeCheck.Ok; catalog_sha1 = $catalogSha1; catalog_sha256 = $catalogSha256; hash_match = [bool]$hashCheck.Ok; digest = $hashCheck.Detail; sha256 = $hashCheck.Sha256.ToUpperInvariant() })
     }
 }
 $totalMb = [math]::Round($totalBytes / 1MB, 1)
 Write-Host ('DL-DONE-ALL ' + @($manifestFiles).Count + ' package file(s)  total ' + $totalMb + ' MB')
+if (@($hashFailures).Count -gt 0) {
+    Write-Host ('DL-VERIFY FAILED for ' + @($hashFailures).Count + ' file(s): ' + (@($hashFailures) -join ', '))
+    Write-Host 'These do not match the SHA1/SHA256 the catalog publishes; delete them and re-run.'
+}
+else { Write-Host 'DL-VERIFY OK: every file matches the digest the catalog publishes.' }
 
 $manifest = [ordered]@{
     generated_utc  = [DateTime]::UtcNow.ToString('o')
@@ -427,6 +640,8 @@ $manifest = [ordered]@{
     missed_count   = $missed.Count
     present_count  = $present.Count
     out_dir        = $OutDir
+    hash_verified  = (@($manifestFiles | Where-Object { $_.hash_match }).Count)
+    hash_failures  = @($hashFailures)
     files          = @($manifestFiles)
 }
 $reportDir = Join-Path $fullWs 'Reports'
@@ -434,5 +649,5 @@ if (-not (Test-Path -LiteralPath $reportDir)) { [void](New-Item -ItemType Direct
 $manifestPath = Join-Path $reportDir 'DOWNLOAD-MANIFEST.json'
 [System.IO.File]::WriteAllText($manifestPath, ($manifest | ConvertTo-Json -Depth 8), (New-Object System.Text.UTF8Encoding($false)))
 Write-Host ''
-Write-Host ('Downloaded/verified ' + @($manifestFiles).Count + ' package file(s).')
+Write-Host ('Downloaded/verified ' + @($manifestFiles).Count + ' package file(s), ' + (@($manifestFiles | Where-Object { $_.hash_match }).Count) + ' with a matching catalog digest.')
 Write-Host ('Manifest: ' + $manifestPath)

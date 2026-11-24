@@ -24,6 +24,13 @@
 
 Set-StrictMode -Version 1
 
+# Output ISO naming (windows11pro26300.10075.iso) lives in the integrity module
+# so every entry point names media the same way.
+$script:IntegrityModule = Join-Path $PSScriptRoot 'WinISOIntegrity.psm1'
+if (Test-Path -LiteralPath $script:IntegrityModule) {
+    Import-Module -Name $script:IntegrityModule -Force -ErrorAction SilentlyContinue
+}
+
 # ---------------------------------------------------------------------------
 # Module-scope data
 # ---------------------------------------------------------------------------
@@ -1537,7 +1544,8 @@ function Invoke-WinISOServiceImage {
         [string]$UpdateManifest = '',
         [string]$DriversPath = '',
         [int[]]$ImageIndexes = @(),
-        [switch]$RunCleanup
+        [switch]$RunCleanup,
+        [switch]$ResetBase
     )
     $r = Get-WinISOResult -Phase 4 -Name 'Image servicing'
     $log = New-WinISOLogPath -Workspace $Workspace -Tag 'Phase4-ImageServicing'
@@ -1824,10 +1832,17 @@ function Invoke-WinISOServiceImage {
                     $r.Steps.Add('Index ' + $idx + ': driver import requested, ' + $img.DriversAdded + ' driver package(s) added.')
                 }
 
-                # Component cleanup only when explicitly requested.
+                # Component cleanup only when explicitly requested. /ResetBase
+                # additionally drops every superseded component version, which
+                # shrinks the rebuilt image substantially but makes already
+                # integrated updates impossible to uninstall.
                 if ($RunCleanup) {
-                    $cl = Invoke-WinISODism -Arguments @('/English', ('/Image:' + $mountDir), '/Cleanup-Image', '/StartComponentCleanup') -TimeoutSeconds 3600 -LogPath $log
-                    $img.Cleanup = 'StartComponentCleanup ran (exit ' + $cl.ExitCode + ')'
+                    $cleanupArgs = @('/English', ('/Image:' + $mountDir), '/Cleanup-Image', '/StartComponentCleanup')
+                    if ($ResetBase) { $cleanupArgs += '/ResetBase' }
+                    $cl = Invoke-WinISODism -Arguments $cleanupArgs -TimeoutSeconds 3600 -LogPath $log
+                    $mode = 'StartComponentCleanup'
+                    if ($ResetBase) { $mode += ' /ResetBase' }
+                    $img.Cleanup = $mode + ' ran (exit ' + $cl.ExitCode + ')'
                 }
 
                 # Commit only when no hard errors occurred on this image.
@@ -1884,6 +1899,7 @@ function Invoke-WinISOServiceImage {
             drivers_requested = $driversRequested
             drivers_path   = $DriversPath
             run_cleanup    = [bool]$RunCleanup
+            reset_base     = [bool]$ResetBase
             images         = @($imageResults)
             wim_verified_after = $verified
             backup_path    = $backupPath
@@ -2411,6 +2427,7 @@ function Invoke-WinISORebuildMedia {
             # Name the ISO after the level the image has AFTER servicing, so the
             # output never looks like the unmodified source build.
             $level = ''
+            $editionName = 'Pro'
             try {
                 $wimProbe = Join-Path $mediaRoot 'sources\install.wim'
                 if (Test-Path -LiteralPath $wimProbe) {
@@ -2421,12 +2438,20 @@ function Invoke-WinISORebuildMedia {
                         if ($mb.Success) {
                             $level = $mb.Groups[1].Value
                             if ($mr.Success) { $level += '.' + $mr.Groups[1].Value }
+                            $mn = [regex]::Match($gi.Output, '(?im)^\s*Name\s*:\s*(.+)$')
+                            if ($mn.Success -and $mn.Groups[1].Value.Trim()) { $editionName = $mn.Groups[1].Value.Trim() }
                         }
                     }
                 }
             }
             catch { $level = '' }
-            if ($level) { $isoName = ('Win11_Pro_x64_' + $level + '_Updated_' + (Get-Date -Format 'yyyyMMdd') + '.iso') }
+            if ($level) {
+                $lvBuild = 0; $lvRev = 0
+                $lvParts = @($level -split '\.')
+                if ($lvParts.Count -gt 0) { [int]::TryParse($lvParts[0], [ref]$lvBuild) | Out-Null }
+                if ($lvParts.Count -gt 1) { [int]::TryParse($lvParts[1], [ref]$lvRev) | Out-Null }
+                $isoName = New-WinISOOutputName -EditionName $editionName -Build $lvBuild -Revision $lvRev -Architecture $archStr
+            }
             else { $isoName = ('WinISO-' + $buildStr + '-' + $archStr + '-' + $stamp + '.iso') }
         }
         if ($isoName -notmatch '\.iso$') { $isoName += '.iso' }

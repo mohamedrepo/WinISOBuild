@@ -20,6 +20,10 @@ $ErrorActionPreference = 'Stop'
 $script:Orchestrator = Join-Path $PSScriptRoot 'Invoke-WinISOService.ps1'
 $script:UnattendGen  = Join-Path $PSScriptRoot 'New-UnattendXml.ps1'
 $script:BurnScript   = Join-Path $PSScriptRoot 'Burn-WinISOToUsb.ps1'
+$script:IntegrityScript = Join-Path $PSScriptRoot 'Test-WinISOIntegrity.ps1'
+$script:IntegrityModule = Join-Path $PSScriptRoot 'WinISOIntegrity.psm1'
+if (Test-Path -LiteralPath $script:IntegrityModule) { Import-Module -Name $script:IntegrityModule -Force -ErrorAction SilentlyContinue }
+$script:ProfilePath  = ''
 $script:Child        = $null
 $script:LogOut       = ''
 $script:LogErr       = ''
@@ -29,6 +33,7 @@ $script:Finished     = $false
 $script:UsbBurn      = $null
 $script:DetectedBuild    = 0
 $script:DetectedRevision = 0
+$script:DetectedEdition  = ''
 $script:OutNameAuto      = $true   # output name follows the detected/new build
 $script:SuppressOutEdit  = $false  # set while the GUI writes the name itself
 
@@ -47,6 +52,7 @@ function New-WinISOOrchestratorArgs {
         [switch]$RunCleanup,
         [string]$UnattendFile = '',
         [string]$OutputIsoName = '',
+        [switch]$RunResetBase,
         [switch]$Force,
         [int[]]$SkipPhase = @()
     )
@@ -61,6 +67,7 @@ function New-WinISOOrchestratorArgs {
     if ($ImageIndexes -and $ImageIndexes.Count -gt 0) { $a += '-ImageIndexes'; $a += (($ImageIndexes | ForEach-Object { [string]$_ }) -join ',') }
     if ($UpdateManifest) { $a += '-UpdateManifest'; $a += $UpdateManifest }
     if ($RunCleanup) { $a += '-RunCleanup' }
+    if ($RunCleanup -and $RunResetBase) { $a += '-ResetBase' }
     if ($UnattendFile) { $a += '-UnattendFile'; $a += $UnattendFile }
     if ($OutputIsoName) { $a += '-OutputIsoName'; $a += $OutputIsoName }
     if ($Force) { $a += '-Force' }
@@ -102,12 +109,14 @@ function Invoke-WinISOSelfTest {
     $problems = @()
     if (-not (Test-Path -LiteralPath $script:Orchestrator)) { $problems += ('orchestrator not found: ' + $script:Orchestrator) }
     if (-not (Test-Path -LiteralPath $script:UnattendGen))  { $problems += ('unattend generator not found: ' + $script:UnattendGen) }
+    if (-not (Test-Path -LiteralPath $script:IntegrityScript)) { $problems += ('integrity checker not found: ' + $script:IntegrityScript) }
+    if (-not (Test-Path -LiteralPath (Join-Path $PSScriptRoot 'WinISOIntegrity.psm1'))) { $problems += 'verification module not found: WinISOIntegrity.psm1' }
 
     $a = New-WinISOOrchestratorArgs -Workspace 'D:\WimMount' -SourceIso 'D:\WimMount\ISO\demo.iso' `
          -TargetPhase 4 -Profile 'Safe' -Drivers 'D:\WimMount\Drivers' -ImageIndexes @(6,7) `
-         -OutputIsoName 'demo-out.iso' -RunCleanup -SkipPhase @(1,2)
+         -OutputIsoName 'demo-out.iso' -RunCleanup -RunResetBase -SkipPhase @(1,2)
     $joined = ($a -join ' ')
-    foreach ($need in @('-Workspace', '-SourceIso', '-TargetPhase', '-Profile', '-Drivers', '-ImageIndexes', '-OutputIsoName', '-RunCleanup', '-SkipPhase')) {
+    foreach ($need in @('-Workspace', '-SourceIso', '-TargetPhase', '-Profile', '-Drivers', '-ImageIndexes', '-OutputIsoName', '-RunCleanup', '-ResetBase', '-SkipPhase')) {
         if ($a -notcontains $need) { $problems += ('arg builder missing ' + $need) }
     }
     if ($joined -notmatch '-TargetPhase\s+4') { $problems += 'arg builder did not emit target phase' }
@@ -128,7 +137,7 @@ function Invoke-WinISOSelfTest {
         $problems | ForEach-Object { Write-Host ('  - ' + $_) }
         exit 2
     }
-    Write-Host 'SELFTEST OK: orchestrator found; unattend generator found; arg builders verified; phase map 1..10 consistent.'
+    Write-Host 'SELFTEST OK: orchestrator, unattend generator, integrity checker and verification module found; arg builders verified; phase map 1..10 consistent.'
     exit 0
 }
 
@@ -153,9 +162,9 @@ Add-Type -AssemblyName System.Drawing
 
 $form = New-Object System.Windows.Forms.Form
 $form.Text = 'WinISOBuild - Windows ISO Servicing Console'
-$form.Size = New-Object System.Drawing.Size(1180, 900)
+$form.Size = New-Object System.Drawing.Size(1180, 950)
 $form.StartPosition = 'CenterScreen'
-$form.MinimumSize = New-Object System.Drawing.Size(1040, 780)
+$form.MinimumSize = New-Object System.Drawing.Size(1040, 820)
 $form.Font = New-Object System.Drawing.Font('Segoe UI', 9)
 $form.AutoScroll = $false
 
@@ -193,7 +202,7 @@ $tbl.RowCount = 8
 [void]$tbl.RowStyles.Add((New-Object System.Windows.Forms.RowStyle('Absolute', 180)))  # 2. Editions + 3. Updates
 [void]$tbl.RowStyles.Add((New-Object System.Windows.Forms.RowStyle('Absolute', 112)))  # 4. Drivers + 5. Profile
 [void]$tbl.RowStyles.Add((New-Object System.Windows.Forms.RowStyle('Absolute', 108)))  # 6. OOBE
-[void]$tbl.RowStyles.Add((New-Object System.Windows.Forms.RowStyle('Absolute', 118)))  # 7. Output
+[void]$tbl.RowStyles.Add((New-Object System.Windows.Forms.RowStyle('Absolute', 165)))  # 7. Output
 [void]$tbl.RowStyles.Add((New-Object System.Windows.Forms.RowStyle('Absolute', 200)))  # ADK / USB / Actions
 [void]$tbl.RowStyles.Add((New-Object System.Windows.Forms.RowStyle('Percent', 100)))   # Log
 [void]$tbl.RowStyles.Add((New-Object System.Windows.Forms.RowStyle('Absolute', 26)))   # Status
@@ -306,7 +315,11 @@ $lblPfSafe = New-Object System.Windows.Forms.Label
 $lblPfSafe.Text = 'Safe = updates only, no removal.'; $lblPfSafe.AutoSize = $true; $lblPfSafe.Location = '14,50'
 $lblPfAggr = New-Object System.Windows.Forms.Label
 $lblPfAggr.Text = 'Aggressive removals need explicit authorization.'; $lblPfAggr.AutoSize = $true; $lblPfAggr.Location = '14,72'
-$grpPf.Controls.AddRange(@($lblPf, $cmbPf, $lblPfSafe, $lblPfAggr))
+$btnProfSave = New-Object System.Windows.Forms.Button
+$btnProfSave.Text = 'Save profile'; $btnProfSave.Size = New-Object System.Drawing.Size(100, 26); $btnProfSave.Location = '300,18'
+$btnProfLoad = New-Object System.Windows.Forms.Button
+$btnProfLoad.Text = 'Load profile'; $btnProfLoad.Size = New-Object System.Drawing.Size(100, 26); $btnProfLoad.Location = '406,18'
+$grpPf.Controls.AddRange(@($lblPf, $cmbPf, $lblPfSafe, $lblPfAggr, $btnProfSave, $btnProfLoad))
 Add-Cell $grpPf 2 1
 
 # ===== ROW 3: 6. OOBE / unattend.xml =====
@@ -332,7 +345,7 @@ Add-Cell $grpOb 3 0 2
 # ===== ROW 4: 7. Output =====
 $grpOut = New-Object System.Windows.Forms.GroupBox
 $grpOut.Text = '7. Output'; $grpOut.Dock = 'Fill'
-$grpOut.Size = New-Object System.Drawing.Size(1142, 112)
+$grpOut.Size = New-Object System.Drawing.Size(1142, 159)
 $lblOutName = New-Object System.Windows.Forms.Label; $lblOutName.Text = 'Output ISO name'; $lblOutName.AutoSize = $true; $lblOutName.Location = '14,22'
 $txtOut = New-Object System.Windows.Forms.TextBox
 $txtOut.Location = '128,19'; $txtOut.Size = New-Object System.Drawing.Size(420, 23)
@@ -345,9 +358,20 @@ $lblLastAppliedVal.Text = ''; $lblLastAppliedVal.AutoSize = $true; $lblLastAppli
 $lblLastAppliedVal.Font = New-Object System.Drawing.Font('Segoe UI', 8)
 $btnCopySummary = New-Object System.Windows.Forms.Button
 $btnCopySummary.Text = 'Copy summary'; $btnCopySummary.Size = New-Object System.Drawing.Size(110, 26); $btnCopySummary.Location = '14,72'
+$btnVerify = New-Object System.Windows.Forms.Button
+$btnVerify.Text = 'Verify ISO (MD5/SHA256)'; $btnVerify.Size = New-Object System.Drawing.Size(160, 26); $btnVerify.Location = '132,72'
+$btnHashCopy = New-Object System.Windows.Forms.Button
+$btnHashCopy.Text = 'Copy SHA256'; $btnHashCopy.Size = New-Object System.Drawing.Size(100, 26); $btnHashCopy.Location = '300,72'
 $lblLastAppliedHint = New-Object System.Windows.Forms.Label
-$lblLastAppliedHint.Text = 'From State\LatestAppliedMsu.json when present.'; $lblLastAppliedHint.AutoSize = $true; $lblLastAppliedHint.Location = '132,78'
-$grpOut.Controls.AddRange(@($lblOutName, $txtOut, $lblOutHint, $lblLastApplied, $lblLastAppliedVal, $btnCopySummary, $lblLastAppliedHint))
+$lblLastAppliedHint.Text = 'Hashes and sidecar check via Test-WinISOIntegrity.ps1.'; $lblLastAppliedHint.AutoSize = $true; $lblLastAppliedHint.Location = '408,78'
+$chkCleanup = New-Object System.Windows.Forms.CheckBox
+$chkCleanup.Text = 'Component cleanup (/StartComponentCleanup /ResetBase)'; $chkCleanup.AutoSize = $true; $chkCleanup.Location = '14,104'
+$chkAnswer = New-Object System.Windows.Forms.CheckBox
+$chkAnswer.Text = 'Copy unattend.xml to the USB as autounattend.xml'; $chkAnswer.AutoSize = $true; $chkAnswer.Location = '400,104'
+$lblHashVal = New-Object System.Windows.Forms.Label
+$lblHashVal.Text = ''; $lblHashVal.AutoSize = $true; $lblHashVal.Location = '14,132'
+$lblHashVal.Font = New-Object System.Drawing.Font('Consolas', 8)
+$grpOut.Controls.AddRange(@($lblOutName, $txtOut, $lblOutHint, $lblLastApplied, $lblLastAppliedVal, $btnCopySummary, $btnVerify, $btnHashCopy, $lblLastAppliedHint, $chkCleanup, $chkAnswer, $lblHashVal))
 Add-Cell $grpOut 4 0 2
 
 # ===== ROW 5: ADK | USB | Actions =====
@@ -364,7 +388,9 @@ $btnAdk.Text = 'Install Windows ADK Deployment Tools'; $btnAdk.Size = New-Object
 $lblAdk = New-Object System.Windows.Forms.Label
 $lblAdk.Text = 'Required for the ISO rebuild (oscdimg.exe).'; $lblAdk.AutoSize = $false
 $lblAdk.Location = '14,54'; $lblAdk.Size = New-Object System.Drawing.Size(320, 40)
-$grpAdk.Controls.AddRange(@($btnAdk, $lblAdk))
+$btnAdkWinget = New-Object System.Windows.Forms.Button
+$btnAdkWinget.Text = 'Install via winget'; $btnAdkWinget.Size = New-Object System.Drawing.Size(160, 26); $btnAdkWinget.Location = '14,96'
+$grpAdk.Controls.AddRange(@($btnAdk, $lblAdk, $btnAdkWinget))
 $actRow.Controls.Add($grpAdk, 0, 0)
 
 $grpUsb = New-Object System.Windows.Forms.GroupBox; $grpUsb.Dock = 'Fill'; $grpUsb.Text = 'USB'
@@ -489,12 +515,24 @@ function Get-MetaStringList {
     return ,$list
 }
 
-# Build an ISO name that carries the Windows build level, for example
-#   Win11_Pro_x64_26300.9711_Updated_20261020.iso
+# Edition chosen in the edition list, else the first image read from the media.
+function Get-OutputEditionName {
+    $name = ''
+    if ($lstEd -and $lstEd.CheckedItems.Count -gt 0) {
+        $m = [regex]::Match([string]$lstEd.CheckedItems[0], '^\d+\s*=\s*(.+)$')
+        if ($m.Success) { $name = $m.Groups[1].Value.Trim() }
+    }
+    if (-not $name) { $name = [string]$script:DetectedEdition }
+    if (-not $name) { $name = 'Windows 11 Pro' }
+    return $name
+}
+
+# Build the output ISO name from the Windows build level, for example
+#   windows11pro26300.10075.iso
 # With -Build/-Revision the level is taken from the image that was just
 # serviced, so the name always shows the NEW build rather than the source one.
 function New-OutputIsoName {
-    param([string]$IsoPath = '', [int]$Build = 0, [int]$Revision = 0, [string]$Stamp = '')
+    param([string]$IsoPath = '', [int]$Build = 0, [int]$Revision = 0, [string]$Edition = '')
     $b = $Build; $r = $Revision
     if ($b -le 0 -and $IsoPath) {
         $leaf = [System.IO.Path]::GetFileNameWithoutExtension($IsoPath)
@@ -502,11 +540,8 @@ function New-OutputIsoName {
         if ($m.Success) { $b = [int]$m.Groups[1].Value; $r = [int]$m.Groups[2].Value }
     }
     if ($b -le 0 -and $script:DetectedBuild -gt 0) { $b = $script:DetectedBuild; $r = $script:DetectedRevision }
-    if (-not $Stamp) { $Stamp = Get-Date -Format 'yyyyMMdd' }
-    $level = ''
-    if ($b -gt 0) { $level = [string]$b; if ($r -gt 0) { $level += '.' + [string]$r } }
-    if ($level) { return ('Win11_Pro_x64_' + $level + '_Updated_' + $Stamp + '.iso') }
-    return ('Win11_Pro_x64_Updated_' + $Stamp + '.iso')
+    if (-not $Edition) { $Edition = Get-OutputEditionName }
+    return (New-WinISOOutputName -EditionName $Edition -Build $b -Revision $r)
 }
 
 function Set-OutputIsoName {
@@ -542,17 +577,17 @@ function Get-EnrichedOutputIsoNameFromMeta {
     }
     if (-not $level) { return '' }
 
-    # Canonical form <product>_<build.rev>_Updated_<date>.iso: swap the level in
-    # place so the name shows the build AFTER servicing, not the source build.
-    $m = [regex]::Match($base, '^(?<prefix>.+?)_\d{5}(\.\d{1,6})?_Updated_(?<date>\d{8})$')
-    if ($m.Success) {
-        return ($m.Groups['prefix'].Value + '_' + $level + '_Updated_' + $m.Groups['date'].Value + '.iso')
+    # Canonical form windows11pro26300.9711.iso: swap the level in place, keeping
+    # the edition and architecture already in the name.
+    $m = [regex]::Match($base, '(?i)^windows(10|11)(?<ed>[a-z]+)(?<arch>\.arm64|\.x86)?(\d{5}(\.\d{1,6})?)?$')
+    if ($m.Success -and $build -gt 0) {
+        $family = 'Windows 11'
+        if ($m.Groups[1].Value -eq '10') { $family = 'Windows 10' }
+        $arch = 'x64'
+        if ($m.Groups['arch'].Success) { $arch = $m.Groups['arch'].Value.TrimStart('.') }
+        return (New-WinISOOutputName -EditionName ($family + ' ' + $m.Groups['ed'].Value) -Build $build -Revision $sp -Architecture $arch)
     }
-
-    # Legacy form: append the level once, never twice.
-    $bare = $base -replace '_\d{5}(\.\d{1,6})?$', ''
-    $bare = $bare -replace '[._-]+$', ''
-    return ($bare + '_' + $level + '.iso')
+    return ''
 }
 
 function Refresh-OutputFromMeta {
@@ -613,6 +648,7 @@ function Load-Editions {
     $ws = Get-Workspace
     $inv = Join-Path $ws 'Reports\ISO-INVENTORY.json'
     $lstEd.Items.Clear()
+    $script:DetectedEdition = ''
     if (-not (Test-Path -LiteralPath $inv)) { Add-Log ('[gui] inventory not found: ' + $inv + ' (run Inspect first)'); return }
     try { $j = Get-Content -LiteralPath $inv -Raw -Encoding UTF8 | ConvertFrom-Json } catch { Add-Log ('[gui] could not parse inventory: ' + $_.Exception.Message); return }
     $count = 0
@@ -621,6 +657,7 @@ function Load-Editions {
         foreach ($im in @($wf.images)) {
             [void]$lstEd.Items.Add(('{0} = {1}' -f [int]$im.index, [string]$im.name))
             $count++
+            if ($count -eq 1) { $script:DetectedEdition = [string]$im.name }
         }
     }
     Add-Log ('[gui] loaded ' + $count + ' edition(s) from inventory')
@@ -630,6 +667,7 @@ function Load-Editions {
 function Load-EditionsFromIso {
     $iso = ([string]$txtIso.Text).Trim()
     $lstEd.Items.Clear()
+    $script:DetectedEdition = ''
     if (-not $iso) { Add-Log '[gui] no source ISO selected.'; return }
     if (-not (Test-Path -LiteralPath $iso)) { Add-Log ('[gui] ISO not found: ' + $iso); return }
     Add-Log ('[gui] mounting ' + $iso + ' (read-only)')
@@ -656,7 +694,10 @@ function Load-EditionsFromIso {
             $t = $ln.Trim()
             if ($t -match '^Index\s*:\s*(\d+)') { $curIdx = [int]$Matches[1] }
             elseif ($t -match '^Name\s*:\s*(.+)$') {
-                if ($curIdx -ge 0) { [void]$lstEd.Items.Add(('{0} = {1}' -f $curIdx, $Matches[1].Trim())); $count++; $curIdx = -1 }
+                if ($curIdx -ge 0) {
+                    [void]$lstEd.Items.Add(('{0} = {1}' -f $curIdx, $Matches[1].Trim())); $count++; $curIdx = -1
+                    if ($count -eq 1) { $script:DetectedEdition = $Matches[1].Trim() }
+                }
             }
         }
         $script:DetectedBuild = 0; $script:DetectedRevision = 0
@@ -758,6 +799,7 @@ function Start-Run {
     elseif ($idx.Count -gt 1) {
         Add-Log ('[gui] multi-edition build: indexes ' + ($idx -join ', ') + ' are exported, serviced, then written to the output ISO.')
     }
+    if ($script:OutNameAuto) { Set-OutputIsoName (New-OutputIsoName -IsoPath $iso) }
     $outName = ([string]$txtOut.Text).Trim()
 
     $uaFile = ''
@@ -775,7 +817,8 @@ function Start-Run {
     if ($TargetPhase -ge 4) { $skip = @() }
 
     $args = New-WinISOOrchestratorArgs -Workspace $ws -SourceIso $iso -TargetPhase $TargetPhase -Profile ([string]$cmbPf.SelectedItem) `
-            -Drivers $drv -ImageIndexes $idx -UnattendFile $uaFile -OutputIsoName $outName -SkipPhase $skip
+            -Drivers $drv -ImageIndexes $idx -UnattendFile $uaFile -OutputIsoName $outName -SkipPhase $skip `
+            -RunCleanup:([bool]$chkCleanup.Checked) -RunResetBase:([bool]$chkCleanup.Checked)
 
     $logDir = Join-Path $env:TEMP ('winiso-gui-' + (Get-Date -Format 'yyyyMMdd-HHmmss'))
     [void](New-Item -ItemType Directory -Path $logDir -Force)
@@ -974,6 +1017,167 @@ if ($btnCopySummary) { $btnCopySummary.Add_Click({
     }})
 }
 
+# ---------------------------------------------------------------------------
+# Verification: MD5 + SHA256 of the ISO, its sidecar and the download manifest
+# ---------------------------------------------------------------------------
+function Get-IsoToVerify {
+    $iso = ([string]$txtBurnIso.Text).Trim()
+    if (-not $iso) { $iso = ([string]$txtIso.Text).Trim() }
+    if (-not $iso) {
+        $ws = Get-Workspace
+        $name = ([string]$txtOut.Text).Trim()
+        if ($ws -and $name) { $iso = Join-Path (Join-Path $ws 'Output') $name }
+    }
+    return $iso
+}
+
+function Get-ProfileFilePath {
+    $ws = Get-Workspace
+    if (-not $ws) { return '' }
+    return (Join-Path (Join-Path $ws 'State') 'BuildProfile.json')
+}
+
+if ($btnVerify) { $btnVerify.Add_Click({
+    $iso = Get-IsoToVerify
+    if (-not $iso -or -not (Test-Path -LiteralPath $iso -PathType Leaf)) {
+        [void][System.Windows.Forms.MessageBox]::Show('No ISO to verify. Choose one with the ... button in the USB group, select a source ISO, or set the output ISO name so <Workspace>\Output\<name> can be used.', 'Verify ISO', 'OK', 'Warning')
+        return
+    }
+    if (-not (Test-Path -LiteralPath $script:IntegrityScript)) {
+        [void][System.Windows.Forms.MessageBox]::Show(('Verification script not found:' + [Environment]::NewLine + $script:IntegrityScript), 'Verify ISO', 'OK', 'Error')
+        return
+    }
+    $a = @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', $script:IntegrityScript, '-IsoPath', $iso, '-CopyHash')
+    $ws = Get-Workspace
+    if ($ws) {
+        $upd = Join-Path $ws 'Updates'
+        if (Test-Path -LiteralPath $upd) { $a += @('-Updates', $upd) }
+    }
+    Add-Log ('[gui] verifying: powershell ' + ($a -join ' '))
+    $lblStatus.Text = 'Verifying ISO hashes ...'
+    $outPath = Join-Path $env:TEMP ('winiso-verify-' + (Get-Date -Format 'yyyyMMdd-HHmmss') + '.out.log')
+    $errPath = Join-Path $env:TEMP ('winiso-verify-' + (Get-Date -Format 'yyyyMMdd-HHmmss') + '.err.log')
+    $code = -1
+    try {
+        $proc = Start-Process -FilePath 'powershell.exe' -ArgumentList $a -NoNewWindow -Wait -PassThru -RedirectStandardOutput $outPath -RedirectStandardError $errPath
+        $code = $proc.ExitCode
+    }
+    catch {
+        Add-Log ('[gui] could not start the verification: ' + $_.Exception.Message)
+        [void][System.Windows.Forms.MessageBox]::Show(('Could not start the verification:' + [Environment]::NewLine + $_.Exception.Message), 'Verify ISO', 'OK', 'Error')
+        return
+    }
+    $stdout = ''
+    if (Test-Path -LiteralPath $outPath) { $stdout = [string](Get-Content -LiteralPath $outPath -Raw -Encoding UTF8 -ErrorAction SilentlyContinue) }
+    $stderr = ''
+    if (Test-Path -LiteralPath $errPath) { $stderr = [string](Get-Content -LiteralPath $errPath -Raw -Encoding UTF8 -ErrorAction SilentlyContinue) }
+    foreach ($line in @($stdout -split "`r?`n")) { if ($line) { Add-Log ('[verify] ' + $line) } }
+    if ($stderr -and $stderr.Trim()) { Add-Log ('[verify] stderr: ' + $stderr.Trim()) }
+    Remove-Item -LiteralPath $outPath, $errPath -Force -ErrorAction SilentlyContinue
+    $shaMatch = [regex]::Match($stdout, 'HASH:SHA256:([0-9a-fA-F]{64})')
+    $md5Match = [regex]::Match($stdout, 'HASH:MD5:([0-9a-fA-F]{32})')
+    $parts = @()
+    if ($shaMatch.Success) { $parts += ('SHA256 ' + $shaMatch.Groups[1].Value) }
+    if ($md5Match.Success) { $parts += ('MD5 ' + $md5Match.Groups[1].Value) }
+    $lblHashVal.Text = ($parts -join '   ')
+    $lblStatus.Text = ('Verification finished (exit ' + $code + ')')
+    $summary = 'Verification exit code ' + $code + '.'
+    if ($parts.Count -gt 0) { $summary += [Environment]::NewLine + [Environment]::NewLine + ($parts -join [Environment]::NewLine) }
+    if ($code -eq 0) { [void][System.Windows.Forms.MessageBox]::Show($summary, 'Verify ISO', 'OK', 'Information') }
+    else { [void][System.Windows.Forms.MessageBox]::Show($summary + [Environment]::NewLine + [Environment]::NewLine + 'A sidecar or manifest mismatch was reported in the log.', 'Verify ISO', 'OK', 'Warning') }
+}) }
+
+if ($btnHashCopy) { $btnHashCopy.Add_Click({
+    $text = [string]$lblHashVal.Text
+    if (-not $text) {
+        [void][System.Windows.Forms.MessageBox]::Show('No hash yet. Run "Verify ISO (MD5/SHA256)" first.', 'Copy hash', 'OK', 'Warning')
+        return
+    }
+    try {
+        [System.Windows.Forms.Clipboard]::SetText($text)
+        Add-Log '[gui] hash copied to the clipboard.'
+        $lblStatus.Text = 'Hash copied to the clipboard'
+    }
+    catch {
+        [void][System.Windows.Forms.MessageBox]::Show(('Could not reach the clipboard: ' + $_.Exception.Message), 'Copy hash', 'OK', 'Error')
+    }
+}) }
+
+# ---------------------------------------------------------------------------
+# Build profile: reproduce the current choices, or restore the last ones
+# ---------------------------------------------------------------------------
+if ($btnProfSave) { $btnProfSave.Add_Click({
+    $path = Get-ProfileFilePath
+    if (-not $path) { [void][System.Windows.Forms.MessageBox]::Show('Workspace is required.', 'Save profile', 'OK', 'Warning'); return }
+    $idx = Get-SelectedIndexes
+    $index = 0
+    if ($idx.Count -gt 0) { $index = [int]$idx[0] }
+    $values = [ordered]@{
+        workspace         = (Get-Workspace)
+        source_iso        = ([string]$txtIso.Text).Trim()
+        edition_index     = $index
+        drivers           = ([string]$txtDrv.Text).Trim()
+        output_name       = ([string]$txtOut.Text).Trim()
+        run_cleanup       = [bool]$chkCleanup.Checked
+        esd               = $false
+        scan_health       = $false
+        capabilities      = @()
+        optional_features = @()
+        remove_appx       = @()
+        file_system       = ([string]$cmbFs.SelectedItem)
+        saved_utc         = [DateTime]::UtcNow.ToString('o')
+    }
+    try {
+        $dir = Split-Path -Parent $path
+        if (-not (Test-Path -LiteralPath $dir)) { [void](New-Item -ItemType Directory -Path $dir -Force) }
+        [System.IO.File]::WriteAllText($path, ($values | ConvertTo-Json -Depth 6), (New-Object System.Text.UTF8Encoding($false)))
+        Add-Log ('[gui] build profile saved: ' + $path)
+        $lblStatus.Text = 'Build profile saved'
+    }
+    catch {
+        [void][System.Windows.Forms.MessageBox]::Show(('Could not save the profile: ' + $_.Exception.Message), 'Save profile', 'OK', 'Error')
+    }
+}) }
+
+if ($btnProfLoad) { $btnProfLoad.Add_Click({
+    $path = Get-ProfileFilePath
+    if (-not $path -or -not (Test-Path -LiteralPath $path)) {
+        [void][System.Windows.Forms.MessageBox]::Show('No saved profile yet. Set the options you want and press "Save profile".', 'Load profile', 'OK', 'Information')
+        return
+    }
+    try { $p = Get-Content -LiteralPath $path -Raw -Encoding UTF8 | ConvertFrom-Json }
+    catch { [void][System.Windows.Forms.MessageBox]::Show(('The profile is not valid JSON: ' + $_.Exception.Message), 'Load profile', 'OK', 'Error'); return }
+    $iso = [string](Get-MetaValue $p 'source_iso')
+    if ($iso) { $script:SuppressOutEdit = $true; $txtIso.Text = $iso; $script:SuppressOutEdit = $false }
+    $drivers = [string](Get-MetaValue $p 'drivers')
+    if ($drivers) { $txtDrv.Text = $drivers; $chkDrv.Checked = $true }
+    $outName = [string](Get-MetaValue $p 'output_name')
+    if ($outName) { Set-OutputIsoName $outName; $script:OutNameAuto = $false }
+    $fs = [string](Get-MetaValue $p 'file_system')
+    if ($fs) { $i = $cmbFs.Items.IndexOf($fs); if ($i -ge 0) { $cmbFs.SelectedIndex = $i } }
+    $chkCleanup.Checked = [bool](Get-MetaValue $p 'run_cleanup')
+    Add-Log ('[gui] build profile loaded: ' + $path)
+    $lblStatus.Text = 'Build profile loaded'
+}) }
+
+# ---------------------------------------------------------------------------
+# ADK install guidance: the supported route is winget, not a download page
+# ---------------------------------------------------------------------------
+if ($btnAdkWinget) { $btnAdkWinget.Add_Click({
+    $command = 'winget install --id Microsoft.WindowsADK -e --accept-source-agreements --accept-package-agreements'
+    Add-Log ('[gui] installing the Windows ADK Deployment Tools: ' + $command)
+    $lblStatus.Text = 'Installing the Windows ADK Deployment Tools ...'
+    try {
+        $p = Start-Process -FilePath 'powershell.exe' -Verb RunAs -PassThru -ErrorAction Stop `
+             -ArgumentList @('-NoProfile', '-Command', ($command + '; Write-Host ""; Read-Host "Press Enter to close"'))
+        Add-Log ('[gui] winget ADK install started (pid ' + $p.Id + '); the ADK installer needs a few minutes.')
+    }
+    catch {
+        Add-Log ('[gui] could not start winget: ' + $_.Exception.Message)
+        [void][System.Windows.Forms.MessageBox]::Show(('Automatic install could not start: ' + $_.Exception.Message + [Environment]::NewLine + [Environment]::NewLine + 'Run this in an elevated PowerShell:' + [Environment]::NewLine + $command), 'Install ADK', 'OK', 'Warning')
+    }
+}) }
+
 if ($btnAdk) { $btnAdk.Add_Click({
     $link = 'https://learn.microsoft.com/windows-hardware/get-started/adk-install'
     try {
@@ -1137,6 +1341,11 @@ if ($btnUsb) {
         $burnArgs = @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', $script:BurnScript,
                       '-IsoPath', $iso, '-DiskNumber', ([string]$diskNum), '-ProgressPath', $progPath,
                       '-FileSystem', $fileSystem)
+        if ($chkAnswer.Checked) {
+            $answer = Join-Path (Join-Path $ws 'Output') 'unattend.xml'
+            if (Test-Path -LiteralPath $answer) { $burnArgs += @('-AnswerFile', $answer) }
+            else { Add-Log ('[gui] no answer file at ' + $answer + '; burning without autounattend.xml') }
+        }
         Add-Log ('[gui] burning ' + $iso + ' to USB disk ' + $diskNum + ' as ' + $fileSystem + ' (progress: ' + $progPath + ')')
         Add-Log ('[gui] burner: powershell ' + ($burnArgs -join ' '))
         Add-Log ('[gui] burner stdout: ' + $burnOut)
@@ -1424,9 +1633,9 @@ if ($NoShow) {
     Refresh-LastAppliedMsu
     Write-Host ('GUICHECK output name: ' + [string]$txtOut.Text)
     $metaProbe = [pscustomobject]@{ build = 26300; servicePackBuild = 9711; latest_applied_msu = [pscustomobject]@{ applied_build = 26300; applied_servicePackBuild = 9711; applied_kb = @('KB5127648') } }
-    $renamed = Get-EnrichedOutputIsoNameFromMeta -Meta $metaProbe -CurrentIsoName 'Win11_Pro_x64_26300.9457_Updated_20260101.iso'
+    $renamed = Get-EnrichedOutputIsoNameFromMeta -Meta $metaProbe -CurrentIsoName 'windows11pro26300.9457.iso'
     Write-Host ('GUICHECK renamed to new build: ' + $renamed)
-    if ($renamed -notmatch '26300\.9711') { Write-Host 'GUICHECK FAILED: output name did not pick up the new build level'; exit 4 }
+    if ($renamed -ne 'windows11pro26300.9711.iso') { Write-Host 'GUICHECK FAILED: output name did not pick up the new build level'; exit 4 }
     Write-Host ('GUICHECK last-applied: ' + $lblLastAppliedVal.Text)
     $metaCheck = Join-Path (Join-Path (Get-Workspace) 'Output') 'OUTPUT-ISO-META.json'
     if (Test-Path -LiteralPath $metaCheck) {

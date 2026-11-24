@@ -33,12 +33,27 @@ param(
     [string]$ProgressPath = '',
     [ValidateSet('NTFS', 'FAT32', 'exFAT', 'Auto')][string]$FileSystem = 'NTFS',
     [string]$Label = 'WINISO',
+    [string]$AnswerFile = '',
     [switch]$Force,
     [switch]$DryRun
 )
 
 Set-StrictMode -Version 2
 $ErrorActionPreference = 'Stop'
+
+$modulePath = Join-Path $PSScriptRoot 'WinISOIntegrity.psm1'
+if (-not (Test-Path -LiteralPath $modulePath)) { throw ('Required module not found: ' + $modulePath) }
+Import-Module -Name $modulePath -Force -ErrorAction Stop
+
+# Boot files that must survive the copy for the drive to boot at all. Only the
+# ones the ISO actually carries are required, so ISOs without a UEFI loader do
+# not fail this check.
+$script:BootFiles = @(
+    'bootmgr',
+    'boot\bcd',
+    'sources\boot.wim',
+    'efi\microsoft\boot\bootmgfw.efi'
+)
 
 $script:ProgressFile = $ProgressPath
 $script:Done = [double]0
@@ -139,6 +154,19 @@ if (-not $isAdmin -and -not $DryRun) {
     Stop-Burn 'this script must run elevated (formatting a disk and writing its boot sectors requires Administrator).'
 }
 
+# An answer file copied to the root of the stick is read by Setup as
+# autounattend.xml; a structurally broken one is only discovered at install
+# time, long after the drive was erased, so validate it first.
+$answerSource = ''
+if ($AnswerFile) {
+    if (-not (Test-Path -LiteralPath $AnswerFile -PathType Leaf)) { Stop-Burn ('answer file not found: ' + $AnswerFile) }
+    $answerCheck = Test-WinUnattendDocument -Path $AnswerFile
+    if (-not $answerCheck.Ok) {
+        Stop-Burn ('the answer file is not usable: ' + (@($answerCheck.Problems) -join '; '))
+    }
+    $answerSource = (Resolve-Path -LiteralPath $AnswerFile).ProviderPath
+}
+
 $isoFull = [System.IO.Path]::GetFullPath($IsoPath)
 if (-not (Test-Path -LiteralPath $isoFull -PathType Leaf)) { Stop-Burn ('source ISO not found: ' + $isoFull) }
 $isoItem = Get-Item -LiteralPath $isoFull
@@ -208,6 +236,7 @@ try {
 
     $plan = 'disk ' + $DiskNumber + ' (' + $disk.FriendlyName + ', ' + [math]::Round($disk.Size / 1GB, 1) + ' GB) as ' + $fileSystem
     if ($needsSplit) { $plan += ', install.wim split into <4 GB parts' }
+    if ($answerSource) { $plan += ', autounattend.xml validated and copied to the root' }
     Write-BurnLine ('PHASE:plan = ' + $plan + '; media ' + [math]::Round($totalBytes / 1GB, 2) + ' GB in ' + $files.Count + ' file(s)')
 
     if ($DryRun) {
@@ -394,6 +423,31 @@ try {
         if ($swmTotal -lt ($wimSize * 0.99)) {
             Stop-Burn ('verification failed: the split image holds ' + [math]::Round($swmTotal / 1GB, 2) + ' GB of ' + [math]::Round($wimSize / 1GB, 2) + ' GB.')
         }
+    }
+
+    # A drive can hold every file and still not boot (a missing bootmgr or bcd
+    # is the classic result of a copy that silently skipped the root). Check the
+    # boot chain the ISO carried, not just the file sizes.
+    Write-BurnLine 'PHASE:verifying the boot files'
+    $bootMissing = @()
+    foreach ($rel in @($script:BootFiles)) {
+        $onIso = Join-Path $mediaRoot $rel
+        if (-not (Test-Path -LiteralPath $onIso)) { continue }
+        $onDrive = Join-Path $destRoot $rel
+        if (-not (Test-Path -LiteralPath $onDrive)) { $bootMissing += $rel }
+    }
+    if ($bootMissing.Count -gt 0) {
+        Stop-Burn ('verification failed: the drive is missing the boot file(s) ' + ($bootMissing -join ', ') + ', so it will not start Setup.')
+    }
+    Write-BurnLine 'PHASE:boot files verified (bootmgr/bcd/boot.wim/UEFI loader that the ISO carried)'
+
+    if ($answerSource) {
+        $answerTarget = Join-Path $destRoot 'autounattend.xml'
+        Copy-Item -LiteralPath $answerSource -Destination $answerTarget -Force
+        if (-not (Test-Path -LiteralPath $answerTarget)) {
+            Stop-Burn 'the answer file could not be copied to the root of the drive.'
+        }
+        Write-BurnLine ('PHASE:autounattend.xml copied to ' + $answerTarget)
     }
 
     try { Write-VolumeCache -DriveLetter $letter -ErrorAction SilentlyContinue | Out-Null } catch { }

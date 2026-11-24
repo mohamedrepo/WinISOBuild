@@ -9,9 +9,11 @@
 # they exercise argument handling, self tests, the state machine dry run and the
 # headless GUI wiring check.
 
-$script:root = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
+# The scripts live one level above this Tests folder; fall back to this folder
+# when the suite is copied next to the scripts instead. Never hard-code a drive.
+$script:root = Split-Path -Parent $PSScriptRoot
 if (-not (Test-Path -LiteralPath (Join-Path $script:root 'WinISO-GUI.ps1'))) {
-    $script:root = 'D:\WimMount\Scripts'
+    $script:root = $PSScriptRoot
 }
 $script:psExe = (Get-Process -Id $PID).Path
 if (-not $script:psExe) { $script:psExe = 'powershell.exe' }
@@ -43,7 +45,10 @@ Describe 'Scripts parse cleanly' {
         'Invoke-WinISOIntegrate.ps1',
         'Add-WinISODrivers.ps1',
         'Build-WinISOUpdated.ps1',
+        'Burn-WinISOToUsb.ps1',
         'Validate-WinISO.ps1',
+        'Test-WinISOIntegrity.ps1',
+        'WinISOIntegrity.psm1',
         'Test-WinISOGuiWiring.ps1'
     )
     foreach ($name in $scripts) {
@@ -119,11 +124,27 @@ Describe 'Entry point self tests' {
     }
 
     It 'Build-WinISOUpdated.ps1 -DryRun reports a plan without touching the image' {
-        $r = Invoke-WinISOChildScript -ScriptPath (Join-Path $script:root 'Build-WinISOUpdated.ps1') `
-             -ScriptArgs @('-DryRun', '-SkipPackages', '-SkipDrivers', '-Workspace', 'D:\WimMount')
+        # A throwaway workspace with a placeholder ISO keeps this test
+        # independent of the machine: the dry run must not need real media, and
+        # the free-space gate is disabled so a small volume cannot fail it.
+        $ws = Join-Path $env:TEMP ('winiso-dryrun-' + [guid]::NewGuid().ToString('N'))
+        [void](New-Item -ItemType Directory -Path $ws -Force)
+        $iso = Join-Path $ws 'source.iso'
+        [System.IO.File]::WriteAllText($iso, 'placeholder')
+        try {
+            $r = Invoke-WinISOChildScript -ScriptPath (Join-Path $script:root 'Build-WinISOUpdated.ps1') `
+                 -ScriptArgs @('-DryRun', '-SkipPackages', '-SkipDrivers', '-Workspace', $ws, '-SourceIso', $iso, '-MinimumFreeGB', '0')
+            $r.ExitCode | Should Be 0
+            $r.StdOut | Should Match 'DRY RUN'
+            $r.StdOut | Should Match 'Would export index 6'
+        }
+        finally { Remove-Item -LiteralPath $ws -Recurse -Force -ErrorAction SilentlyContinue }
+    }
+
+    It 'Test-WinISOIntegrity.ps1 -SelfTest succeeds' {
+        $r = Invoke-WinISOChildScript -ScriptPath (Join-Path $script:root 'Test-WinISOIntegrity.ps1') -ScriptArgs @('-SelfTest')
         $r.ExitCode | Should Be 0
-        $r.StdOut | Should Match 'DRY RUN'
-        $r.StdOut | Should Match 'Would export index 6'
+        $r.StdOut | Should Match 'SELFTEST OK'
     }
 
     It 'the GUI builds headlessly with every control wired' {

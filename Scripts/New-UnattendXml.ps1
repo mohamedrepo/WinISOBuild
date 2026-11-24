@@ -49,11 +49,31 @@ param(
     [switch]$InstallToAvailablePartition,
     [string]$ProductKey = '',
     [ValidateSet('amd64', 'x86', 'arm64')][string]$Architecture = 'amd64',
-    [string]$OutputPath = ''
+    [string]$OutputPath = '',
+    [string]$ValidatePath = ''
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
+
+$modulePath = Join-Path $PSScriptRoot 'WinISOIntegrity.psm1'
+if (-not (Test-Path -LiteralPath $modulePath)) { throw ('Required module not found: ' + $modulePath) }
+Import-Module -Name $modulePath -Force -ErrorAction Stop
+
+# -ValidatePath checks an answer file that already exists (for example the one
+# copied to a USB stick) and exits non-zero when Setup would reject it.
+if ($ValidatePath) {
+    $check = Test-WinUnattendDocument -Path $ValidatePath
+    if ($check.Ok) {
+        Write-Host ('unattend OK: ' + $ValidatePath)
+        Write-Host ('  passes: ' + (@($check.Passes) -join ', '))
+        Write-Host ('  components: ' + @($check.Components).Count)
+        exit 0
+    }
+    Write-Host ('unattend INVALID: ' + $ValidatePath)
+    foreach ($p in @($check.Problems)) { Write-Host ('  - ' + $p) }
+    exit 1
+}
 
 if (-not $OutputPath) { $OutputPath = 'D:\WimMount\Output\unattend.xml' }
 $OutputPath = [System.IO.Path]::GetFullPath($OutputPath)
@@ -260,12 +280,18 @@ finally {
     $w.Close()
 }
 
-# Validate: the file must be well-formed XML before we hand it to setup.
+# Validate: the file must be well-formed XML before we hand it to setup, and it
+# must carry the passes and components Setup needs (a missing specialize pass
+# is otherwise only discovered halfway through an installation).
 try {
     [void]([xml](Get-Content -LiteralPath $OutputPath -Raw -Encoding UTF8))
 }
 catch {
     throw ('Generated unattend.xml failed XML validation: ' + $_.Exception.Message)
+}
+$structure = Test-WinUnattendDocument -Path $OutputPath
+if (-not $structure.Ok) {
+    throw ('Generated unattend.xml is structurally incomplete: ' + (@($structure.Problems) -join '; '))
 }
 
 [pscustomobject]@{
@@ -281,4 +307,6 @@ catch {
     WorkaroundApplied         = [bool]$EnableBypassNRO
     InstallToAvailablePartition = [bool]$InstallToAvailablePartition
     HideOnlineAccountScreens  = $hideOnline
+    Validated                 = [bool]$structure.Ok
+    Passes                    = @($structure.Passes)
 }

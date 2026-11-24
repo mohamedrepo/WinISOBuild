@@ -46,7 +46,7 @@ finally {
 $gi2 = & $script:Dism /English /Get-ImageInfo /ImageFile:$wim /Index:1 2>&1 | Out-String
 $mv = [regex]::Match($gi2, '(?im)^\s*Version\s+:\s*10\.0\.(\d+)'); $b = '0'; if ($mv.Success) { $b = $mv.Groups[1].Value }
 $mr = [regex]::Match($gi2, '(?im)^\s*ServicePack Build\s+:\s*(\d+)'); $rv = '0'; if ($mr.Success) { $rv = $mr.Groups[1].Value }
-$name = 'Win11_Pro_Updated_' + $b + '.' + $rv + '.iso'
+$name = 'windows11pro' + $b + '.' + $rv + '.iso'
 if (-not (Test-Path -LiteralPath $OutDir)) { [void](New-Item -ItemType Directory -Path $OutDir -Force) }
 $outIso = Join-Path $OutDir $name
 Log ('rebuilding ISO -> ' + $outIso)

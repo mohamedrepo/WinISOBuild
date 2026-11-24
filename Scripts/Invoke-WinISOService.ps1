@@ -30,6 +30,7 @@ param(
     [string]$UpdateManifest = '',
     [int[]]$ImageIndexes = @(),
     [switch]$RunCleanup,
+    [switch]$ResetBase,
     [hashtable]$Unattend = @{},
     [string]$UnattendFile = '',
     [string]$OutputIsoName = '',
@@ -142,6 +143,7 @@ try {
                 if ($Drivers) { $par.DriversPath = $Drivers }
                 if ($ImageIndexes) { $par.ImageIndexes = $ImageIndexes }
                 $par.RunCleanup = [bool]$RunCleanup
+                $par.ResetBase = [bool]$ResetBase
             }
             5 {
                 $par.Unattend = $Unattend
