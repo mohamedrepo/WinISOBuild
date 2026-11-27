@@ -1,0 +1,12 @@
+add button to export all drivers to user choice folder default is ".\WimMount\Drivers" 
+
+add a progress bar for all download update file with size indicated next to them for example "xxxMB of xxx MB"
+
+add a button to select a usb flash drive to burn iso to it 
+
+add install the Windows ADK Deployment Tools 
+
+
+
+
+
