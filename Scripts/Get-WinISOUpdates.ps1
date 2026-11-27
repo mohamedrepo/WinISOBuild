@@ -143,6 +143,131 @@ function Test-WinISOFileDigest {
     }
     return [pscustomobject]$result
 }
+# The GUI parses "DL-PROGBAR <file> <done>MB / <total>MB <pct>%", so the
+# numbers must be dot-separated whatever the host locale uses.
+function Format-WinISOMebibytes {
+    param([double]$Bytes)
+    return ([math]::Round($Bytes / 1MB, 1)).ToString('0.0', [System.Globalization.CultureInfo]::InvariantCulture)
+}
+
+# A copy that fails its published digest is moved out of the download folder
+# instead of being deleted, so the bad bytes can be inspected later. The
+# timestamp keeps every bad copy the catalog serves.
+function Move-WinISOToQuarantine {
+    param([string]$Path = '', [string]$QuarantineDir = '', [string]$Reason = '', [string]$Name = '')
+    $source = [string]$Path
+    if (-not $source -or -not (Test-Path -LiteralPath $source -PathType Leaf)) { return '' }
+    $dir = [string]$QuarantineDir
+    if (-not $dir) { $dir = Join-Path (Split-Path -Parent $source) 'Quarantine' }
+    if (-not (Test-Path -LiteralPath $dir)) { [void](New-Item -ItemType Directory -Path $dir -Force) }
+    $base = [System.IO.Path]::GetFileNameWithoutExtension($source)
+    $ext = [System.IO.Path]::GetExtension($source)
+    # A download still in its .part file keeps the name it was downloaded as, so
+    # the quarantined copy is recognisable instead of ending in .part.
+    if ($Name) {
+        $base = [System.IO.Path]::GetFileNameWithoutExtension($Name)
+        $ext = [System.IO.Path]::GetExtension($Name)
+    }
+    $stamp = [DateTime]::UtcNow.ToString('yyyyMMddTHHmmssZ')
+    $target = Join-Path $dir ($base + '.' + $stamp + $ext)
+    $n = 1
+    while (Test-Path -LiteralPath $target) {
+        $target = Join-Path $dir ($base + '.' + $stamp + '-' + $n + $ext)
+        $n++
+    }
+    Move-Item -LiteralPath $source -Destination $target -Force
+    if ($Reason) {
+        try { [System.IO.File]::WriteAllText(($target + '.reason.txt'), ($Reason + [Environment]::NewLine), (New-Object System.Text.UTF8Encoding($false))) } catch { }
+    }
+    return $target
+}
+
+# Downloads one catalog file to a .part copy, reports progress as it goes and
+# only renames it into place once the published digest matches. A mismatch goes
+# to quarantine and is reported, never left in the download folder.
+function Save-WinISOUpdateFile {
+    param(
+        [string]$Url = '',
+        [string]$DestPath = '',
+        [string]$Name = '',
+        [string]$Sha1 = '',
+        [string]$Sha256 = '',
+        [string]$QuarantineDir = '',
+        [string]$UserAgent = ''
+    )
+    $result = [ordered]@{ Ok = $false; Bytes = [long]0; Sha256 = ''; Detail = ''; Quarantined = @() }
+    $fileName = [string]$Name
+    if (-not $fileName) { $fileName = ($Url.Split('/'))[-1] }
+    $dir = Split-Path -Parent $DestPath
+    if ($dir -and -not (Test-Path -LiteralPath $dir)) { [void](New-Item -ItemType Directory -Path $dir -Force) }
+    $part = $DestPath + '.part'
+    Remove-Item -LiteralPath $part -Force -ErrorAction SilentlyContinue
+    # Windows PowerShell 5.1 can still start a request at TLS 1.0.
+    try {
+        $protocol = [System.Net.ServicePointManager]::SecurityProtocol
+        if (($protocol -band [System.Net.SecurityProtocolType]::Tls12) -eq 0) {
+            [System.Net.ServicePointManager]::SecurityProtocol = $protocol -bor [System.Net.SecurityProtocolType]::Tls12
+        }
+    }
+    catch { }
+    $client = $null
+    $resp = $null
+    $stream = $null
+    $out = $null
+    try {
+        Add-Type -AssemblyName System.Net.Http -ErrorAction SilentlyContinue
+        $client = New-Object System.Net.Http.HttpClient
+        $client.Timeout = [TimeSpan]::FromHours(1)
+        if ($UserAgent) { [void]$client.DefaultRequestHeaders.TryAddWithoutValidation('User-Agent', $UserAgent) }
+        $resp = $client.GetAsync($Url, [System.Net.Http.HttpCompletionOption]::ResponseHeadersRead).GetAwaiter().GetResult()
+        if (-not $resp.IsSuccessStatusCode) { throw ('HTTP ' + [int]$resp.StatusCode + ' ' + $resp.ReasonPhrase) }
+        $total = [long]0
+        if ($resp.Content.Headers.ContentLength) { $total = [long]$resp.Content.Headers.ContentLength }
+        $stream = $resp.Content.ReadAsStreamAsync().GetAwaiter().GetResult()
+        $out = [System.IO.File]::Create($part)
+        $buffer = New-Object byte[] (1MB)
+        $done = [long]0
+        $lastReport = [DateTime]::UtcNow
+        while ($true) {
+            $read = $stream.Read($buffer, 0, $buffer.Length)
+            if ($read -le 0) { break }
+            $out.Write($buffer, 0, $read)
+            $done += $read
+            $now = [DateTime]::UtcNow
+            if (($now - $lastReport).TotalSeconds -ge 1) {
+                $lastReport = $now
+                $pct = 0.0
+                if ($total -gt 0) { $pct = [math]::Round(([double]$done / [double]$total) * 100, 1) }
+                Write-Host ('DL-PROGBAR ' + $fileName + ' ' + (Format-WinISOMebibytes $done) + 'MB / ' + (Format-WinISOMebibytes $total) + 'MB ' + $pct.ToString('0.0', [System.Globalization.CultureInfo]::InvariantCulture) + '%')
+            }
+        }
+        $out.Flush()
+        $out.Dispose(); $out = $null
+        $stream.Dispose(); $stream = $null
+        $resp.Dispose(); $resp = $null
+        $result.Bytes = [long](Get-Item -LiteralPath $part).Length
+        $check = Test-WinISOFileDigest -Path $part -ExpectedSha1 $Sha1 -ExpectedSha256 $Sha256
+        $result.Sha256 = [string]$check.Sha256
+        $result.Detail = [string]$check.Detail
+        if (-not $check.Ok) {
+            $bad = Move-WinISOToQuarantine -Path $part -QuarantineDir $QuarantineDir -Name $fileName -Reason ('digest mismatch after download: ' + $check.Detail)
+            $result.Quarantined = @($bad)
+            $result.Detail = ('the download does not match the catalog digest: ' + $check.Detail)
+            return [pscustomobject]$result
+        }
+        if (Test-Path -LiteralPath $DestPath) { Remove-Item -LiteralPath $DestPath -Force }
+        Move-Item -LiteralPath $part -Destination $DestPath -Force
+        $result.Ok = $true
+    }
+    catch {
+        $result.Detail = $_.Exception.Message
+        Remove-Item -LiteralPath $part -Force -ErrorAction SilentlyContinue
+    }
+    finally {
+        foreach ($x in @($out, $stream, $resp, $client)) { if ($null -ne $x) { try { $x.Dispose() } catch { } } }
+    }
+    return [pscustomobject]$result
+}
 $script:Dism = "$env:SystemRoot\System32\Dism.exe"
 
 # Build -> marketing version hints. Hint only.
@@ -390,6 +515,27 @@ function Invoke-WinISOUpdateSelfTest {
     if ((ConvertFrom-CatalogDigest -Base64 'qED0j4Hnn0UTESj5+CNjOln1eHk=' -ExpectedBytes 32) -ne '') { $problems += 'a digest of the wrong length was accepted' }
     if ((ConvertFrom-CatalogDigest -Base64 'not base64 !!') -ne '') { $problems += 'invalid base64 digest was accepted' }
 
+    # The download path itself: both helpers must exist, and a bad copy must
+    # leave the download folder instead of being picked up by the next build.
+    if (-not (Get-Command -Name Save-WinISOUpdateFile -ErrorAction SilentlyContinue)) { $problems += 'Save-WinISOUpdateFile is not defined' }
+    if (-not (Get-Command -Name Move-WinISOToQuarantine -ErrorAction SilentlyContinue)) { $problems += 'Move-WinISOToQuarantine is not defined' }
+    $qDir = Join-Path ([System.IO.Path]::GetTempPath()) ('winiso-quarantine-' + [guid]::NewGuid().ToString('N'))
+    $qFile = Join-Path ([System.IO.Path]::GetTempPath()) ('winiso-badcopy-' + [guid]::NewGuid().ToString('N') + '.msu')
+    try {
+        [System.IO.File]::WriteAllText($qFile, 'not the published digest')
+        $qPath = Move-WinISOToQuarantine -Path $qFile -QuarantineDir $qDir -Reason 'self test'
+        if (-not $qPath -or -not (Test-Path -LiteralPath $qPath)) { $problems += 'quarantine did not move the bad copy' }
+        elseif (Test-Path -LiteralPath $qFile) { $problems += 'quarantine left the bad copy in the download folder' }
+        elseif (-not $qPath.StartsWith($qDir, [System.StringComparison]::OrdinalIgnoreCase)) { $problems += 'quarantine wrote outside its folder' }
+        if ((Move-WinISOToQuarantine -Path $qFile -QuarantineDir $qDir) -ne '') { $problems += 'quarantine reported a move for a file that was already gone' }
+        if ((Format-WinISOMebibytes 0) -ne '0.0') { $problems += ('progress MB formatting failed: ' + (Format-WinISOMebibytes 0)) }
+        if ((Format-WinISOMebibytes (2.5 * 1MB)) -ne '2.5') { $problems += ('progress MB formatting failed: ' + (Format-WinISOMebibytes (2.5 * 1MB))) }
+    }
+    finally {
+        Remove-Item -LiteralPath $qDir -Recurse -Force -ErrorAction SilentlyContinue
+        Remove-Item -LiteralPath $qFile -Force -ErrorAction SilentlyContinue
+    }
+
     $probe = Join-Path ([System.IO.Path]::GetTempPath()) ('winiso-digest-' + [guid]::NewGuid().ToString('N') + '.bin')
     try {
         [System.IO.File]::WriteAllText($probe, 'catalog digest self test')
@@ -435,7 +581,7 @@ downloadInformation[0].files[1].fileName = 'other.cab';
         $problems | ForEach-Object { Write-Host ('  - ' + $_) }
         exit 2
     }
-    Write-Host 'SELFTEST OK: module found; build/version maps; search URL + download body; target-level parse; missed-state classification; applicability filter; catalog size cross-check; catalog SHA1/SHA256 digest cross-check and download-dialog parsing.'
+    Write-Host 'SELFTEST OK: module found; build/version maps; search URL + download body; target-level parse; missed-state classification; applicability filter; catalog size cross-check; catalog SHA1/SHA256 digest cross-check and download-dialog parsing; download helpers and quarantine.'
     exit 0
 }
 
@@ -449,6 +595,9 @@ Import-Module -Name $script:ModulePath -Force -ErrorAction Stop
 $fullWs = [System.IO.Path]::GetFullPath($Workspace)
 if (-not $OutDir) { $OutDir = Join-Path $fullWs 'Updates' }
 if (-not (Test-Path -LiteralPath $OutDir)) { [void](New-Item -ItemType Directory -Path $OutDir -Force) }
+# A copy that fails its published digest must land outside the download folder,
+# otherwise the next build picks the bad file up again.
+$quarantineDir = Join-Path $fullWs 'Backup\Quarantine'
 
 if ($Build -eq 0 -and $Iso) {
     Write-Host ('Detecting build/architecture from ISO: ' + $Iso)
@@ -596,7 +745,7 @@ foreach ($c in $toProcess) {
             # otherwise the next build picks the bad copy up again.
             Write-Host ('  WARNING: ' + $name + ' failed its catalog digest: ' + $hashCheck.Detail)
             Write-Host '  moving it to quarantine and downloading it again'
-            $moved = Move-WinISOToQuarantine -Path $dest -QuarantineDir $QuarantineDir -Reason ('digest mismatch: ' + $hashCheck.Detail)
+            $moved = Move-WinISOToQuarantine -Path $dest -QuarantineDir $quarantineDir -Reason ('digest mismatch: ' + $hashCheck.Detail)
             if ($moved) {
                 $quarantined += [pscustomobject]@{ file = $name; path = $moved; reason = ('digest mismatch: ' + $hashCheck.Detail) }
                 Write-Host ('  quarantined: ' + $moved)
@@ -611,10 +760,9 @@ foreach ($c in $toProcess) {
         if ($len -le 0) { $len = 64MB }
         $totalBytes += $len
         $dlIndex++
-        $expectedMb = [math]::Round($len / 1MB, 1)
-        Write-Host ('DL-PROGBAR ' + $name + ' 0.0MB / ' + $expectedMb + 'MB 0.0%')
+        Write-Host ('DL-PROGBAR ' + $name + ' 0.0MB / ' + (Format-WinISOMebibytes $len) + 'MB 0.0%')
         Write-Host ('  downloading: ' + $name)
-        $saved = Save-WinISOUpdateFile -Url $u -DestPath $dest -Name $name -Sha1 $catalogSha1 -Sha256 $catalogSha256 -QuarantineDir $QuarantineDir -UserAgent $script:UserAgent
+        $saved = Save-WinISOUpdateFile -Url $u -DestPath $dest -Name $name -Sha1 $catalogSha1 -Sha256 $catalogSha256 -QuarantineDir $quarantineDir -UserAgent $script:UserAgent
         foreach ($q in @($saved.Quarantined)) {
             $quarantined += [pscustomobject]@{ file = $name; path = [string]$q; reason = 'digest mismatch after re-download' }
         }
@@ -625,7 +773,7 @@ foreach ($c in $toProcess) {
             continue
         }
         $actualBytes = [long]$saved.Bytes
-        Write-Host ('DL-DONE ' + $name + ' ' + [math]::Round($actualBytes / 1MB, 1) + 'MB')
+        Write-Host ('DL-DONE ' + $name + ' ' + (Format-WinISOMebibytes $actualBytes) + 'MB')
         $sizeCheck = Test-WinISOCatalogSize -Text ([string]$c.Size) -Bytes $actualBytes
         if (-not $sizeCheck.Ok) { Write-Host ('  WARNING: ' + $name + ' does not match the catalog size: ' + $sizeCheck.Detail) }
         else { Write-Host ('  ' + $saved.Detail) }
@@ -640,7 +788,7 @@ if (@($hashFailures).Count -gt 0) {
 }
 else { Write-Host 'DL-VERIFY OK: every file matches the digest the catalog publishes.' }
 if (@($quarantined).Count -gt 0) {
-    Write-Host ('DL-QUARANTINE ' + @($quarantined).Count + ' bad copy(ies) moved to ' + $QuarantineDir)
+    Write-Host ('DL-QUARANTINE ' + @($quarantined).Count + ' bad copy(ies) moved to ' + $quarantineDir)
 }
 
 $manifest = [ordered]@{
@@ -656,7 +804,7 @@ $manifest = [ordered]@{
     missed_count   = $missed.Count
     present_count  = $present.Count
     out_dir        = $OutDir
-    quarantine_dir = $QuarantineDir
+    quarantine_dir = $quarantineDir
     hash_verified  = (@($manifestFiles | Where-Object { $_.hash_match }).Count)
     hash_failures  = @($hashFailures)
     quarantined    = @($quarantined)

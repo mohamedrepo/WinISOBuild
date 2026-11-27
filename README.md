@@ -5,8 +5,8 @@ installation ISO, researches the applicable Microsoft updates, downloads them,
 integrates them offline into the install image, injects drivers, applies optional
 OOBE/unattend configuration, and rebuilds a bootable ISO.
 
-**Current version: v1.11.0** - recorded once in `VERSION` and read from there by
-the GUI title (`WinISOBuild v1.11.0 - Windows ISO Servicing Console`), the
+**Current version: v1.11.1** - recorded once in `VERSION` and read from there by
+the GUI title (`WinISOBuild v1.11.1 - Windows ISO Servicing Console`), the
 orchestrator banner and the catalog user agent. Releases are tagged
 `vMAJOR.MINOR.PATCH` and published on the repository's Releases page; bump
 `VERSION` and tag the same commit to cut one.
