@@ -11,6 +11,12 @@
 # -FileSystem exFAT also stores the image whole and avoids FAT32's per-file
 # limit; -FileSystem Auto picks FAT32 unless the media cannot fit it.
 #
+# Nothing is erased until the media is trusted: the ISO's own autounattend.xml
+# and -AnswerFile are audited for a credential that would ship on the stick, and
+# the media tree is compared with the per-file <iso>.media.json manifest the
+# build writes beside the ISO. A damaged tree or a plaintext password is
+# otherwise only discovered at install time, after the drive is already wiped.
+#
 # Progress protocol: one line per event, echoed to stdout and appended to
 # -ProgressPath (the GUI polls that file):
 #   PHASE:<text>
@@ -25,6 +31,7 @@
 #   .\Burn-WinISOToUsb.ps1 -IsoPath D:\WimMount\Output\win11.iso -DiskNumber 1
 #   .\Burn-WinISOToUsb.ps1 -IsoPath D:\WimMount\Output\win11.iso -DiskNumber 1 -FileSystem FAT32
 #   .\Burn-WinISOToUsb.ps1 -IsoPath D:\WimMount\Output\win11.iso -DiskNumber 1 -DryRun
+#   .\Burn-WinISOToUsb.ps1 -IsoPath D:\WimMount\Output\win11.iso -DiskNumber 1 -MediaManifest D:\WimMount\Output\win11.iso.media.json
 
 [CmdletBinding()]
 param(
@@ -34,6 +41,7 @@ param(
     [ValidateSet('NTFS', 'FAT32', 'exFAT', 'Auto')][string]$FileSystem = 'NTFS',
     [string]$Label = 'WINISO',
     [string]$AnswerFile = '',
+    [string]$MediaManifest = '',
     [switch]$Force,
     [switch]$DryRun
 )
@@ -164,6 +172,11 @@ if ($AnswerFile) {
     if (-not $answerCheck.Ok) {
         Stop-Burn ('the answer file is not usable: ' + (@($answerCheck.Problems) -join '; '))
     }
+    $answerSecrets = Test-WinUnattendSecrets -Path $AnswerFile
+    $answerRisky = @($answerSecrets.Findings | Where-Object { $_.Severity -eq 'high' })
+    if ($answerRisky.Count -gt 0) {
+        Stop-Burn ('the answer file carries a credential that would be copied to the drive root as autounattend.xml (' + (($answerRisky | ForEach-Object { $_.Kind }) -join ', ') + '). Remove the password/product key, or provision it after deployment, before burning.')
+    }
     $answerSource = (Resolve-Path -LiteralPath $AnswerFile).ProviderPath
 }
 
@@ -202,6 +215,41 @@ try {
     Write-BurnLine ('PHASE:reading the media tree from ' + $mediaRoot)
     $files = @(Get-ChildItem -LiteralPath $mediaRoot -Recurse -File -Force -ErrorAction Stop)
     if ($files.Count -eq 0) { Stop-Burn ('the ISO media tree is empty: ' + $mediaRoot) }
+
+    # An answer file inside the ISO is copied to the stick verbatim and read by
+    # Setup, so a credential in it ships with the media.
+    foreach ($shippedAnswer in @((Join-Path $mediaRoot 'autounattend.xml'), (Join-Path $mediaRoot 'sources\unattend.xml'))) {
+        if (-not (Test-Path -LiteralPath $shippedAnswer -PathType Leaf)) { continue }
+        $shippedAudit = Test-WinUnattendSecrets -Path $shippedAnswer
+        $shippedRisky = @($shippedAudit.Findings | Where-Object { $_.Severity -eq 'high' })
+        if ($shippedRisky.Count -gt 0) {
+            Stop-Burn ('the ISO ships a credential in ' + (Split-Path -Leaf $shippedAnswer) + ' (' + (($shippedRisky | ForEach-Object { $_.Kind }) -join ', ') + '), which would be copied to the drive and read by Setup. Remove it and rebuild the ISO before burning.')
+        }
+    }
+
+    # The build records every media file's size and SHA256 beside the ISO; check
+    # the tree against it while the drive is still untouched.
+    $manifestPath = $MediaManifest
+    if (-not $manifestPath) { $manifestPath = $isoFull + '.media.json' }
+    if (Test-Path -LiteralPath $manifestPath -PathType Leaf) {
+        Write-BurnLine ('PHASE:verifying the media tree against ' + [System.IO.Path]::GetFileName($manifestPath))
+        try {
+            $mediaCheck = Test-WinISOMediaManifest -MediaRoot $mediaRoot -ManifestPath $manifestPath
+        }
+        catch {
+            Stop-Burn ('the media manifest could not be read: ' + $_.Exception.Message)
+        }
+        if ($mediaCheck.Failed) {
+            $details = @()
+            foreach ($m in @($mediaCheck.Missing)) { $details += ('missing ' + $m) }
+            foreach ($m in @($mediaCheck.Mismatched)) { $details += ($m.Path + ' ' + $m.Reason) }
+            Stop-Burn ('the ISO does not match its media manifest (' + $details.Count + ' file(s)): ' + (($details | Select-Object -First 5) -join '; ') + '. Rebuild the ISO instead of burning a damaged one.')
+        }
+        Write-BurnLine ('PHASE:media manifest verified (' + $mediaCheck.Checked + ' file(s))')
+    }
+    else {
+        Write-BurnLine ('PHASE:no media manifest beside the ISO (' + $manifestPath + '), so the per-file check is skipped')
+    }
 
     $bigImage = ''
     foreach ($candidate in @('install.wim', 'install.esd')) {

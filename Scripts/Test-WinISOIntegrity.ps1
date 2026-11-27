@@ -8,6 +8,10 @@
 #     reports the ones whose size or SHA256 no longer matches (a truncated
 #     multi-gigabyte .msu otherwise fails deep inside Add-Package)
 #   * validates an unattend.xml structurally (passes, components, local account)
+#   * compares a media tree with the per-file <iso>.media.json manifest the
+#     build wrote beside the ISO (every file's size and SHA256)
+#   * audits an answer file for credentials, AutoLogon and a product key, and
+#     with -StrictSecrets fails when one would ship on the media
 #
 # It never mounts an image, touches a disk or needs elevation.
 #
@@ -20,6 +24,8 @@
 #   .\Test-WinISOIntegrity.ps1 -IsoPath D:\WimMount\Output\win11.iso -WriteSidecar
 #   .\Test-WinISOIntegrity.ps1 -Updates D:\WimMount\Updates -Manifest D:\WimMount\Reports\DOWNLOAD-MANIFEST.json
 #   .\Test-WinISOIntegrity.ps1 -Unattend D:\WimMount\Output\unattend.xml
+#   .\Test-WinISOIntegrity.ps1 -Unattend D:\WimMount\Output\unattend.xml -StrictSecrets
+#   .\Test-WinISOIntegrity.ps1 -MediaRoot D:\WimMount\ExtractedISO -MediaManifest D:\WimMount\Output\win11.iso.media.json
 #   .\Test-WinISOIntegrity.ps1 -SelfTest
 
 [CmdletBinding()]
@@ -31,6 +37,9 @@ param(
     [string]$DownloadDir = '',
     [string[]]$Algorithm = @('MD5', 'SHA256'),
     [string]$Unattend = '',
+    [string]$MediaRoot = '',
+    [string]$MediaManifest = '',
+    [switch]$StrictSecrets,
     [switch]$WriteSidecar,
     [switch]$CopyHash,
     [switch]$RequireAllPayloads,
@@ -167,6 +176,35 @@ Applicable : Yes
         # 8. ADK guidance names a supported install route
         $guidance = Get-WinISOAdkGuidanceText
         if ($guidance -notmatch 'winget install') { $problems += 'the ADK guidance text does not mention winget' }
+
+        # 9. media manifest: intact tree passes, an altered or missing file does not
+        $media = Join-Path $tmp 'media'
+        [void](New-Item -ItemType Directory -Path (Join-Path $media 'sources') -Force)
+        [System.IO.File]::WriteAllText((Join-Path $media 'bootmgr'), 'boot')
+        [System.IO.File]::WriteAllText((Join-Path (Join-Path $media 'sources') 'boot.wim'), 'wim')
+        $mediaDoc = New-WinISOMediaManifest -MediaRoot $media -IsoName 'x.iso'
+        $mediaPath = Join-Path $tmp 'x.iso.media.json'
+        [System.IO.File]::WriteAllText($mediaPath, ($mediaDoc | ConvertTo-Json -Depth 6), (New-Object System.Text.UTF8Encoding($false)))
+        $mediaCheck = Test-WinISOMediaManifest -MediaRoot $media -ManifestPath $mediaPath
+        if ($mediaCheck.Failed) { $problems += 'media manifest verification failed on an intact tree' }
+        if (@($mediaCheck.Ok).Count -ne 2) { $problems += ('media manifest verification accepted ' + @($mediaCheck.Ok).Count + ' of 2 files') }
+        [System.IO.File]::WriteAllText((Join-Path (Join-Path $media 'sources') 'boot.wim'), 'WIM')
+        if (-not (Test-WinISOMediaManifest -MediaRoot $media -ManifestPath $mediaPath).Failed) { $problems += 'media manifest verification accepted an altered file' }
+        Remove-Item -LiteralPath (Join-Path $media 'bootmgr') -Force
+        $mediaGone = Test-WinISOMediaManifest -MediaRoot $media -ManifestPath $mediaPath
+        if (@($mediaGone.Missing).Count -ne 1) { $problems += 'media manifest verification did not flag a missing file' }
+
+        # 10. answer-file secret audit: a plaintext password is found, a clean file is not
+        $secretFile = Join-Path $tmp 'secret.xml'
+        $secretXml = '<?xml version="1.0"?><unattend xmlns="urn:schemas-microsoft-com:unattend"><settings pass="oobeSystem"><component name="x"><UserAccounts><LocalAccounts><LocalAccount Name="a"><Password><Value>p@ss</Value><PlainText>true</PlainText></Password></LocalAccount></LocalAccounts></UserAccounts></component></settings></unattend>'
+        [System.IO.File]::WriteAllText($secretFile, $secretXml)
+        $secretAudit = Test-WinUnattendSecrets -Path $secretFile
+        if (-not $secretAudit.HasSecrets) { $problems += 'the secret audit missed a plaintext password' }
+        if (@($secretAudit.Findings | Where-Object { $_.Kind -eq 'password' }).Count -ne 1) { $problems += 'the secret audit did not name the password finding' }
+        $cleanFile = Join-Path $tmp 'clean.xml'
+        [System.IO.File]::WriteAllText($cleanFile, '<unattend xmlns="urn:schemas-microsoft-com:unattend"><settings pass="oobeSystem"/></unattend>')
+        $cleanAudit = Test-WinUnattendSecrets -Path $cleanFile
+        if ($cleanAudit.HasSecrets) { $problems += ('the secret audit flagged a clean answer file: ' + $cleanAudit.Summary) }
     }
     finally {
         Remove-Item -LiteralPath $tmp -Recurse -Force -ErrorAction SilentlyContinue
@@ -177,7 +215,7 @@ Applicable : Yes
         foreach ($p in $problems) { Write-Host ('  - ' + $p) }
         exit 2
     }
-    Write-Host 'SELFTEST OK: MD5/SHA256 hashing, sidecar parsing, manifest payload verification, package ordering and already-applied rules, unattend validation, profile round-trip, ADK guidance.'
+    Write-Host 'SELFTEST OK: MD5/SHA256 hashing, sidecar parsing, manifest payload verification, package ordering and already-applied rules, unattend validation, profile round-trip, ADK guidance, media manifest verification, answer-file secret audit.'
     exit 0
 }
 
@@ -278,6 +316,42 @@ if ($Updates -or $Manifest -or $DownloadDir) {
 }
 
 # ---------------------------------------------------------------------------
+# Media manifest (the per-file list the build wrote beside the ISO)
+# ---------------------------------------------------------------------------
+if ($MediaRoot) {
+    if (-not $MediaManifest -and $IsoPath) { $MediaManifest = $IsoPath + '.media.json' }
+    if (-not $MediaManifest) {
+        Fail '-MediaRoot needs -MediaManifest, or -IsoPath so that <iso>.media.json can be found beside it.'
+    }
+    elseif (-not (Test-Path -LiteralPath $MediaRoot -PathType Container)) {
+        Fail ('the media tree was not found: ' + $MediaRoot)
+    }
+    elseif (-not (Test-Path -LiteralPath $MediaManifest -PathType Leaf)) {
+        Fail ('the media manifest was not found: ' + $MediaManifest)
+    }
+    else {
+        Say ('Media   : ' + $MediaRoot)
+        Say ('Manifest: ' + $MediaManifest)
+        $mediaResult = $null
+        try {
+            $mediaResult = Test-WinISOMediaManifest -MediaRoot $MediaRoot -ManifestPath $MediaManifest
+        }
+        catch {
+            Fail ('media manifest: ' + $_.Exception.Message)
+        }
+        if ($mediaResult) {
+            Say ('Checked : ' + $mediaResult.Checked + ' media file(s), ' + @($mediaResult.Ok).Count + ' intact')
+            foreach ($m in @($mediaResult.Missing)) {
+                Fail ('media: ' + $m + ' is listed in the manifest but missing from ' + $MediaRoot)
+            }
+            foreach ($m in @($mediaResult.Mismatched)) {
+                Fail ('media: ' + $m.Path + ': ' + $m.Reason)
+            }
+        }
+    }
+}
+
+# ---------------------------------------------------------------------------
 # unattend.xml validation
 # ---------------------------------------------------------------------------
 if ($Unattend) {
@@ -288,6 +362,42 @@ if ($Unattend) {
     }
     else {
         foreach ($p in @($doc.Problems)) { Fail ('unattend: ' + $p) }
+    }
+}
+
+# ---------------------------------------------------------------------------
+# Answer-file secret audit
+# ---------------------------------------------------------------------------
+# An answer file that ships on the media hands its credentials to anyone who
+# has the stick or the ISO. Report them always; -StrictSecrets turns a finding
+# into a failure.
+$secretFiles = @()
+if ($Unattend) { $secretFiles += $Unattend }
+if ($MediaRoot) {
+    foreach ($candidate in @('autounattend.xml', 'sources\unattend.xml')) {
+        $shipped = Join-Path $MediaRoot $candidate
+        if (Test-Path -LiteralPath $shipped -PathType Leaf) { $secretFiles += $shipped }
+    }
+}
+foreach ($secretFile in $secretFiles) {
+    $audit = Test-WinUnattendSecrets -Path $secretFile
+    if (-not $audit.Ok) {
+        $line = ('secrets: ' + $audit.Summary)
+        if ($StrictSecrets) { Fail $line } else { Say ('SKIP    : ' + $line) }
+        continue
+    }
+    Say ('Secrets : ' + $secretFile)
+    if (-not $audit.HasSecrets) {
+        Say 'MATCH   : no credential, AutoLogon or product key in the answer file'
+        continue
+    }
+    foreach ($finding in @($audit.Findings)) {
+        $line = ($finding.Kind + ' (' + $finding.Severity + '): ' + $finding.Detail)
+        if ($StrictSecrets) { Fail ($secretFile + ': ' + $line) }
+        else { Say ('WARN    : ' + $line) }
+    }
+    if (-not $StrictSecrets) {
+        Say ('Secrets : ' + @($audit.Findings).Count + ' finding(s); pass -StrictSecrets to fail the check')
     }
 }
 
@@ -303,8 +413,8 @@ if ($CopyHash -and $hashObjects.Count -gt 0) {
     }
 }
 
-if (-not $IsoPath -and -not $Updates -and -not $Manifest -and -not $Unattend -and -not $DownloadDir) {
-    Say 'Nothing to verify: pass -IsoPath, -Updates/-Manifest, or -Unattend. Use -SelfTest to exercise the rules.'
+if (-not $IsoPath -and -not $Updates -and -not $Manifest -and -not $Unattend -and -not $DownloadDir -and -not $MediaRoot) {
+    Say 'Nothing to verify: pass -IsoPath, -Updates/-Manifest, -Unattend, or -MediaRoot/-MediaManifest. Use -SelfTest to exercise the rules.'
 }
 
 if ($script:Failures -gt 0) {

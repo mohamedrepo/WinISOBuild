@@ -4,6 +4,12 @@
 # profile, OOBE/unattend, output) and runs Scripts\Invoke-WinISOService.ps1 as a
 # child process, streaming its output into a log pane.
 #
+# Resume runs Scripts\Build-WinISOUpdated.ps1 -Resume when
+# State\BUILD-CHECKPOINT.json records an interrupted build, so the stages that
+# finished are skipped. Stop writes State\BUILD-CANCEL.json instead of killing
+# the child: the stage that is running finishes and unmounts, and the run exits
+# at the next stage boundary, so a stopped build cannot leave an image mounted.
+#
 # Compatibility : Windows PowerShell 5.1 (Desktop). No external modules.
 # Encoding      : BOM-less UTF-8, ASCII-only content.
 #
@@ -18,18 +24,23 @@ Set-StrictMode -Version 2
 $ErrorActionPreference = 'Stop'
 
 $script:Orchestrator = Join-Path $PSScriptRoot 'Invoke-WinISOService.ps1'
+$script:Builder      = Join-Path $PSScriptRoot 'Build-WinISOUpdated.ps1'
 $script:UnattendGen  = Join-Path $PSScriptRoot 'New-UnattendXml.ps1'
 $script:BurnScript   = Join-Path $PSScriptRoot 'Burn-WinISOToUsb.ps1'
 $script:IntegrityScript = Join-Path $PSScriptRoot 'Test-WinISOIntegrity.ps1'
 $script:IntegrityModule = Join-Path $PSScriptRoot 'WinISOIntegrity.psm1'
 if (Test-Path -LiteralPath $script:IntegrityModule) { Import-Module -Name $script:IntegrityModule -Force -ErrorAction SilentlyContinue }
+$script:AppVersion   = Get-WinISOVersion
 $script:ProfilePath  = ''
 $script:Child        = $null
+$script:OutTask      = $null
+$script:ErrTask      = $null
 $script:LogOut       = ''
 $script:LogErr       = ''
 $script:ShownOut     = 0
 $script:ShownErr     = 0
 $script:Finished     = $false
+$script:CloseWhenFinished = $false
 $script:UsbBurn      = $null
 $script:DetectedBuild    = 0
 $script:DetectedRevision = 0
@@ -75,6 +86,36 @@ function New-WinISOOrchestratorArgs {
     return ,$a
 }
 
+# Arguments for a direct builder run (Resume build). -Resume makes
+# Build-WinISOUpdated.ps1 skip the stages State\BUILD-CHECKPOINT.json records as
+# finished and continue with the next one.
+function New-WinISOBuildArgs {
+    param(
+        [Parameter(Mandatory)][string]$Workspace,
+        [string]$SourceIso = '',
+        [string]$Drivers = '',
+        [int[]]$ImageIndexes = @(),
+        [string]$OutputIsoName = '',
+        [string]$OutDir = '',
+        [switch]$SkipDrivers,
+        [switch]$Resume,
+        [switch]$CleanupStaleMounts
+    )
+    $a = @()
+    $a += '-NoProfile'; $a += '-ExecutionPolicy'; $a += 'Bypass'
+    $a += '-File'; $a += $script:Builder
+    $a += '-Workspace'; $a += $Workspace
+    if ($SourceIso) { $a += '-SourceIso'; $a += $SourceIso }
+    if ($OutDir) { $a += '-OutDir'; $a += $OutDir }
+    if ($Drivers) { $a += '-Drivers'; $a += $Drivers }
+    if ($SkipDrivers) { $a += '-SkipDrivers' }
+    if ($ImageIndexes -and $ImageIndexes.Count -gt 0) { $a += '-Indexes'; $a += (($ImageIndexes | ForEach-Object { [string]$_ }) -join ',') }
+    if ($OutputIsoName) { $a += '-OutputName'; $a += $OutputIsoName }
+    if ($Resume) { $a += '-Resume' }
+    if ($CleanupStaleMounts) { $a += '-CleanupStaleMounts' }
+    return ,$a
+}
+
 function New-WinISOUnattendArgs {
     param(
         [string]$OutputPath,
@@ -105,6 +146,104 @@ function Test-WinISOGuiAdmin {
     return $pr.IsInRole([System.Security.Principal.WindowsBuiltInRole]::Administrator)
 }
 
+# Decides what an already-recorded STATE.json phase means for this run:
+#   'media' - phase 7 is complete but Output\ holds no ISO: rebuild the media only
+#   'full'  - every target phase is complete: re-run everything
+#   'run'   - nothing is complete enough to skip: run normally
+function Get-GuiRunDecision {
+    param([int]$TargetPhase, [int]$StatePhase, [int]$IsoCount)
+    if ($StatePhase -ge 7 -and $TargetPhase -ge 7 -and $IsoCount -eq 0) { return 'media' }
+    if ($StatePhase -ge $TargetPhase) { return 'full' }
+    return 'run'
+}
+
+# ---------------------------------------------------------------------------
+# Child processes
+# ---------------------------------------------------------------------------
+# The child is started with System.Diagnostics.Process so its Id and ExitCode
+# are its own (Start-Process -RedirectStandardOutput leaves ExitCode null). The
+# streams are drained by Receive-GuiChildOutput from the tail timer: the waiting
+# happens inside ReadLineAsync, so no scriptblock runs on a foreign thread, and
+# everything that reads the log files keeps working.
+function ConvertTo-GuiChildArgument {
+    param([string]$Value)
+    if ($Value -match '^-[A-Za-z][A-Za-z0-9]*$') { return $Value }
+    if ($Value -match '^[0-9]+(,[0-9]+)*$') { return $Value }
+    $text = $Value.Replace('"', '\"')
+    if ($text.EndsWith('\')) { $text += '\' }
+    return ('"' + $text + '"')
+}
+
+function Start-GuiChild {
+    param(
+        [Parameter(Mandatory)][string[]]$Arguments,
+        [Parameter(Mandatory)][string]$LogDir
+    )
+    $psi = New-Object System.Diagnostics.ProcessStartInfo
+    $psi.FileName = (Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.exe')
+    $psi.Arguments = (@($Arguments | ForEach-Object { ConvertTo-GuiChildArgument ([string]$_) }) -join ' ')
+    $psi.UseShellExecute = $false
+    $psi.CreateNoWindow = $true
+    $psi.RedirectStandardOutput = $true
+    $psi.RedirectStandardError = $true
+
+    $out = Join-Path $LogDir 'stdout.log'
+    $err = Join-Path $LogDir 'stderr.log'
+    [System.IO.File]::WriteAllText($out, '')
+    [System.IO.File]::WriteAllText($err, '')
+    $script:LogOut = $out
+    $script:LogErr = $err
+    $script:ShownOut = 0
+    $script:ShownErr = 0
+    $script:Finished = $false
+
+    $process = New-Object System.Diagnostics.Process
+    $process.StartInfo = $psi
+    [void]$process.Start()
+    $script:OutTask = $process.StandardOutput.ReadLineAsync()
+    $script:ErrTask = $process.StandardError.ReadLineAsync()
+    return $process
+}
+
+# Copies the lines the child has produced so far into its log files, one pending
+# read per stream. Bounded per call so a chatty phase cannot stall the UI.
+function Receive-GuiChildOutput {
+    if (-not $script:Child) { return }
+    if ($script:OutTask) {
+        $read = 0
+        while ($script:OutTask -and $script:OutTask.IsCompleted -and $read -lt 200) {
+            try { $line = $script:OutTask.Result } catch { $script:OutTask = $null; break }
+            if ($null -eq $line) { $script:OutTask = $null; break }
+            [System.IO.File]::AppendAllText($script:LogOut, $line + [Environment]::NewLine)
+            $script:OutTask = $script:Child.StandardOutput.ReadLineAsync()
+            $read++
+        }
+    }
+    if ($script:ErrTask) {
+        $read = 0
+        while ($script:ErrTask -and $script:ErrTask.IsCompleted -and $read -lt 200) {
+            try { $line = $script:ErrTask.Result } catch { $script:ErrTask = $null; break }
+            if ($null -eq $line) { $script:ErrTask = $null; break }
+            [System.IO.File]::AppendAllText($script:LogErr, $line + [Environment]::NewLine)
+            $script:ErrTask = $script:Child.StandardError.ReadLineAsync()
+            $read++
+        }
+    }
+}
+
+# Drains what is left once the child has exited, so its last lines reach the log
+# pane before the exit code is reported. Bounded: a stuck read cannot hang the UI.
+function Complete-GuiChildOutput {
+    if (-not $script:Child) { return }
+    $deadline = (Get-Date).AddSeconds(3)
+    while (($script:OutTask -or $script:ErrTask) -and ((Get-Date) -lt $deadline)) {
+        Receive-GuiChildOutput
+        if ($script:OutTask -or $script:ErrTask) { Start-Sleep -Milliseconds 50 }
+    }
+    $script:OutTask = $null
+    $script:ErrTask = $null
+}
+
 function Invoke-WinISOSelfTest {
     $problems = @()
     if (-not (Test-Path -LiteralPath $script:Orchestrator)) { $problems += ('orchestrator not found: ' + $script:Orchestrator) }
@@ -132,12 +271,48 @@ function Invoke-WinISOSelfTest {
     $phases = @(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
     if ($phases.Count -ne 10) { $problems += 'phase map is not 1..10' }
 
+    if (-not (Test-Path -LiteralPath $script:Builder)) { $problems += ('builder not found: ' + $script:Builder) }
+    $b = New-WinISOBuildArgs -Workspace 'D:\WimMount' -SourceIso 'D:\WimMount\ISO\demo.iso' -ImageIndexes @(6) `
+         -OutputIsoName 'demo.iso' -Resume -CleanupStaleMounts
+    if ($b -notcontains '-Resume') { $problems += 'build arg builder missing -Resume' }
+    if ($b -notcontains '-CleanupStaleMounts') { $problems += 'build arg builder missing -CleanupStaleMounts' }
+    if (($b -join ' ') -notmatch 'Build-WinISOUpdated\.ps1') { $problems += 'build arg builder does not run Build-WinISOUpdated.ps1' }
+    if (($b -join ' ') -notmatch '-Indexes\s+6') { $problems += 'build arg builder did not pass the image indexes' }
+
+    # Child argument quoting: switches and index lists stay bare, values quoted.
+    if ((ConvertTo-GuiChildArgument '-Resume') -ne '-Resume') { $problems += 'child quoting changed a switch' }
+    if ((ConvertTo-GuiChildArgument '6,7') -ne '6,7') { $problems += 'child quoting quoted an index list' }
+    if ((ConvertTo-GuiChildArgument 'D:\Wim Mount\Output') -ne '"D:\Wim Mount\Output"') { $problems += 'child quoting did not quote a path with a space' }
+    if ((ConvertTo-GuiChildArgument 'D:\Out\') -ne '"D:\Out\\"') { $problems += 'child quoting did not escape a trailing backslash' }
+
+    # What an already-complete state means for the run.
+    if ((Get-GuiRunDecision -TargetPhase 7 -StatePhase 7 -IsoCount 0) -ne 'media') { $problems += 'media-only rebuild not offered when the ISO is gone' }
+    if ((Get-GuiRunDecision -TargetPhase 8 -StatePhase 7 -IsoCount 0) -ne 'media') { $problems += 'media-only rebuild not offered for validation without an ISO' }
+    if ((Get-GuiRunDecision -TargetPhase 7 -StatePhase 7 -IsoCount 1) -ne 'full') { $problems += 'an existing ISO should still ask for a full re-run' }
+    if ((Get-GuiRunDecision -TargetPhase 7 -StatePhase 6 -IsoCount 0) -ne 'run') { $problems += 'an incomplete media phase should run without a prompt' }
+    if ((Get-GuiRunDecision -TargetPhase 3 -StatePhase 7 -IsoCount 0) -ne 'full') { $problems += 'a read-only target should still ask before re-running' }
+
+    # The stop request the Stop button writes and the build reads.
+    $cancelDir = Join-Path $env:TEMP ('winiso-cancel-' + [guid]::NewGuid().ToString('N'))
+    [void](New-Item -ItemType Directory -Path $cancelDir -Force)
+    $cancelFile = Join-Path $cancelDir 'BUILD-CANCEL.json'
+    try {
+        [void](New-WinISOCancelRequest -Path $cancelFile -ProcessId 4242)
+        if (-not (Test-WinISOCancelRequest -Path $cancelFile -ProcessId 4242)) { $problems += 'a stop request was not seen by its own pid' }
+        if (Test-WinISOCancelRequest -Path $cancelFile -ProcessId 4243) { $problems += 'a stop request leaked to another pid' }
+        [void](Remove-WinISOCancelRequest -Path $cancelFile)
+        if (Test-WinISOCancelRequest -Path $cancelFile) { $problems += 'a stop request was not cleared' }
+    }
+    finally {
+        Remove-Item -LiteralPath $cancelDir -Recurse -Force -ErrorAction SilentlyContinue
+    }
+
     if ($problems.Count -gt 0) {
         Write-Host 'SELFTEST FAILED:'
         $problems | ForEach-Object { Write-Host ('  - ' + $_) }
         exit 2
     }
-    Write-Host 'SELFTEST OK: orchestrator, unattend generator, integrity checker and verification module found; arg builders verified; phase map 1..10 consistent.'
+    Write-Host 'SELFTEST OK: orchestrator, builder, unattend generator, integrity checker and verification module found; arg builders (including -Resume) verified; stop request scoped and cleared; phase map 1..10 consistent.'
     exit 0
 }
 
@@ -161,7 +336,7 @@ Add-Type -AssemblyName System.Drawing
 [System.Windows.Forms.Application]::EnableVisualStyles()
 
 $form = New-Object System.Windows.Forms.Form
-$form.Text = 'WinISOBuild - Windows ISO Servicing Console'
+$form.Text = ('WinISOBuild v' + $script:AppVersion + ' - Windows ISO Servicing Console')
 $form.Size = New-Object System.Drawing.Size(1180, 950)
 $form.StartPosition = 'CenterScreen'
 $form.MinimumSize = New-Object System.Drawing.Size(1040, 820)
@@ -441,7 +616,13 @@ $btnCustom = New-Object System.Windows.Forms.Button
 $btnCustom.Text = 'Run'; $btnCustom.Size = New-Object System.Drawing.Size(55, 25); $btnCustom.Location = '322,54'
 $btnStop = New-Object System.Windows.Forms.Button
 $btnStop.Text = 'Stop'; $btnStop.Size = New-Object System.Drawing.Size(60, 25); $btnStop.Location = '384,54'
-$grpAc.Controls.AddRange(@($btnInsp, $btnP3, $btnP4, $btnP8, $lblCustomPhase, $numPhase, $btnCustom, $btnStop))
+$btnResume = New-Object System.Windows.Forms.Button
+$btnResume.Text = 'Resume build'; $btnResume.Size = New-Object System.Drawing.Size(130, 26); $btnResume.Location = '14,86'
+$btnResume.Enabled = $false
+$lblResume = New-Object System.Windows.Forms.Label
+$lblResume.Text = 'No build checkpoint in State\'; $lblResume.AutoSize = $false
+$lblResume.Location = '150,90'; $lblResume.Size = New-Object System.Drawing.Size(290, 20)
+$grpAc.Controls.AddRange(@($btnInsp, $btnP3, $btnP4, $btnP8, $lblCustomPhase, $numPhase, $btnCustom, $btnStop, $btnResume, $lblResume))
 $actRow.Controls.Add($grpAc, 2, 0)
 
 Add-Cell $actRow 5 0 2
@@ -473,6 +654,111 @@ function Add-Log { param([string]$Text)
 }
 
 function Get-Workspace { return ([string]$txtWs.Text).TrimEnd('\') }
+
+# ---------------------------------------------------------------------------
+# Resume and stop
+# ---------------------------------------------------------------------------
+function Get-BuildCheckpoint {
+    $ws = Get-Workspace
+    if (-not $ws) { return $null }
+    if (-not (Get-Command Read-WinISOBuildCheckpoint -ErrorAction SilentlyContinue)) { return $null }
+    $path = Join-Path (Join-Path $ws 'State') 'BUILD-CHECKPOINT.json'
+    if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { return $null }
+    $cp = Read-WinISOBuildCheckpoint -Path $path
+    if (-not $cp.Exists) { return $null }
+    return $cp
+}
+
+# Offers Resume only when State\BUILD-CHECKPOINT.json records an interrupted
+# build, and says which stage it reached.
+function Update-ResumeState {
+    if (-not $btnResume) { return }
+    $cp = Get-BuildCheckpoint
+    if (-not $cp) {
+        $btnResume.Enabled = $false
+        if ($lblResume) { $lblResume.Text = 'No build checkpoint in State\: nothing to resume.' }
+        return
+    }
+    $stages = @($cp.Stages)
+    $last = ''
+    if ($stages.Count -gt 0) { $last = [string]$stages[$stages.Count - 1] }
+    $text = 'Checkpoint: ' + $stages.Count + ' stage(s)'
+    if ($last) { $text += ', last ' + $last }
+    if ($cp.SourceIso) { $text += ' (' + (Split-Path -Leaf $cp.SourceIso) + ')' }
+    $btnResume.Enabled = $true
+    if ($lblResume) { $lblResume.Text = $text }
+}
+
+# Asks the running build to stop at its next stage boundary. The build finishes
+# the stage it is in (and unmounts), so nothing is left mounted; the child is
+# not killed.
+function Request-BuildStop {
+    if (-not $script:Child -or $script:Child.HasExited) { return $false }
+    $ws = Get-Workspace
+    if (-not $ws) { Add-Log '[gui] cannot stop: no workspace is set.'; return $false }
+    if (-not (Get-Command New-WinISOCancelRequest -ErrorAction SilentlyContinue)) {
+        Add-Log '[gui] cannot stop: WinISOIntegrity.psm1 is not loaded.'
+        return $false
+    }
+    $path = Get-WinISOCancelPath -Workspace $ws
+    try {
+        [void](New-WinISOCancelRequest -Path $path -ProcessId $script:Child.Id)
+    }
+    catch {
+        Add-Log ('[gui] could not write the stop request: ' + $_.Exception.Message)
+        return $false
+    }
+    Add-Log ('[gui] stop requested (' + $path + '): the running stage finishes and unmounts, then the build stops before the next stage.')
+    $lblStatus.Text = 'Stopping at the next stage boundary...'
+    $btnStop.Enabled = $false
+    return $true
+}
+
+function Start-BuildRun {
+    param([switch]$Resume)
+    if ($script:Child -and -not $script:Child.HasExited) { [void][System.Windows.Forms.MessageBox]::Show('A run is already in progress.'); return }
+    $ws = Get-Workspace
+    if (-not $ws) { [void][System.Windows.Forms.MessageBox]::Show('Workspace is required.'); return }
+    if (-not (Test-Path -LiteralPath $script:Builder)) {
+        [void][System.Windows.Forms.MessageBox]::Show(('Builder not found:' + [Environment]::NewLine + $script:Builder), 'Resume build', 'OK', 'Error')
+        return
+    }
+    $cp = Get-BuildCheckpoint
+    if ($Resume -and -not $cp) {
+        [void][System.Windows.Forms.MessageBox]::Show('There is no State\BUILD-CHECKPOINT.json to resume.', 'Resume build', 'OK', 'Warning')
+        return
+    }
+
+    $iso = ([string]$txtIso.Text).Trim()
+    $drv = ''
+    if ($chkDrv.Checked) { $drv = ([string]$txtDrv.Text).Trim() }
+    $idx = Get-SelectedIndexes
+    $outName = ([string]$txtOut.Text).Trim()
+
+    $what = 'This runs Build-WinISOUpdated.ps1, which mounts and modifies image copies. The source ISO is not changed.'
+    if ($Resume) { $what = 'This resumes the interrupted build: stages recorded in State\BUILD-CHECKPOINT.json are skipped and servicing continues with the next one.' }
+    $msg = $what + "`r`n`r`nWorkspace: " + $ws + "`r`nProceed?"
+    $title = 'Build ISO'
+    if ($Resume) { $title = 'Resume build' }
+    if ([System.Windows.Forms.MessageBox]::Show($msg, $title, 'YesNo', 'Warning') -ne 'Yes') { return }
+
+    $skipDrivers = -not [bool]$chkDrv.Checked
+    $buildArgs = New-WinISOBuildArgs -Workspace $ws -SourceIso $iso -Drivers $drv -ImageIndexes $idx -OutputIsoName $outName `
+                 -SkipDrivers:$skipDrivers -Resume:$Resume -CleanupStaleMounts:$Resume
+
+    # A stop request from an earlier run must not stop this one.
+    $cancelPath = Get-WinISOCancelPath -Workspace $ws
+    if (Test-Path -LiteralPath $cancelPath) { [void](Remove-WinISOCancelRequest -Path $cancelPath) }
+
+    $logDir = Join-Path $env:TEMP ('winiso-build-' + (Get-Date -Format 'yyyyMMdd-HHmmss'))
+    [void](New-Item -ItemType Directory -Path $logDir -Force)
+
+    Add-Log ('[gui] running: powershell ' + ($buildArgs -join ' '))
+    if ($Resume) { $lblStatus.Text = 'Resuming the build ...' } else { $lblStatus.Text = 'Building ...' }
+    $btnStop.Enabled = $true
+    $script:Child = Start-GuiChild -Arguments $buildArgs -LogDir $logDir
+    $script:TailTimer.Start()
+}
 
 function Update-UpdateInfo {
     $ws = Get-Workspace
@@ -738,15 +1024,12 @@ function Search-DownloadUpdates {
     if ($chkOpt.Checked) { $a += '-IncludeOptional' }
     $logDir = Join-Path $env:TEMP ('winiso-dl-' + (Get-Date -Format 'yyyyMMdd-HHmmss'))
     [void](New-Item -ItemType Directory -Path $logDir -Force)
-    $script:LogOut = Join-Path $logDir 'stdout.log'; $script:LogErr = Join-Path $logDir 'stderr.log'
-    $script:ShownOut = 0; $script:ShownErr = 0; $script:Finished = $false
-    [System.IO.File]::WriteAllText($script:LogOut, ''); [System.IO.File]::WriteAllText($script:LogErr, '')
     Add-Log ('[gui] downloader: powershell ' + ($a -join ' '))
     $lblStatus.Text = 'Searching / downloading updates ...'
     try { $progUp.Style = 'Continuous' } catch { } $progUp.Value = 0; $progUp.Visible = $true
     $lblUpProg.Text = 'Starting update search...'
     $script:DlTotalMb = 0; $script:DlDoneMb = 0; $script:DlCurrentName = ''
-    $script:Child = Start-Process -FilePath 'powershell.exe' -ArgumentList $a -PassThru -WindowStyle Hidden -RedirectStandardOutput $script:LogOut -RedirectStandardError $script:LogErr
+    $script:Child = Start-GuiChild -Arguments $a -LogDir $logDir
     $script:TailTimer.Start()
 }
 
@@ -787,6 +1070,51 @@ function Start-Run {
         if ([System.Windows.Forms.MessageBox]::Show($msg, 'Confirm mutating run', 'YesNo', 'Warning') -ne 'Yes') { return }
     }
 
+    # The orchestrator skips every phase STATE.json records as complete, so a run
+    # whose target is already done would exit without building anything. Offer a
+    # forced rebuild instead of a silent no-op - and, when the media itself is
+    # what went missing, a rebuild that skips the servicing phases.
+    $force = $false
+    $skipPhases = @()
+    $statePath = Join-Path (Join-Path $ws 'State') 'STATE.json'
+    if (Test-Path -LiteralPath $statePath -PathType Leaf) {
+        try {
+            $stateDoc = Get-Content -LiteralPath $statePath -Raw -Encoding UTF8 | ConvertFrom-Json
+            $statePhase = [int](Get-MetaValue $stateDoc 'phase')
+            $outputDir = Join-Path $ws 'Output'
+            $isoCount = 0
+            if (Test-Path -LiteralPath $outputDir -PathType Container) {
+                $isoCount = @(Get-ChildItem -LiteralPath $outputDir -Filter '*.iso' -File -ErrorAction SilentlyContinue).Count
+            }
+            $decision = Get-GuiRunDecision -TargetPhase $TargetPhase -StatePhase $statePhase -IsoCount $isoCount
+            if ($decision -eq 'media') {
+                $reach = 'phase 7'
+                if ($TargetPhase -ge 8) { $reach = 'phases 7 and 8' }
+                $ask = 'State\STATE.json records phases through ' + $statePhase + ' as complete, but Output\ has no ISO, so the media that was built is gone.' + [Environment]::NewLine + [Environment]::NewLine +
+                       'Yes  = rebuild the media only: re-runs ' + $reach + ' from the serviced image and skips phases 1-6, so servicing is not repeated (minutes).' + [Environment]::NewLine +
+                       'No   = re-run every phase from phase 1, including servicing (slow).' + [Environment]::NewLine +
+                       'Cancel = do nothing.'
+                $answer = [System.Windows.Forms.MessageBox]::Show($ask, 'Output\ has no ISO', 'YesNoCancel', 'Question')
+                if ($answer -eq 'Cancel') { return }
+                $force = $true
+                if ($answer -eq 'Yes') {
+                    $skipPhases = @(1, 2, 3, 4, 5, 6)
+                    Add-Log ('[gui] phases through ' + $statePhase + ' are complete but Output\ has no ISO; rebuilding the media only with -Force -SkipPhase 1,2,3,4,5,6')
+                }
+                else {
+                    Add-Log ('[gui] phases through ' + $statePhase + ' are complete; re-running every phase with -Force')
+                }
+            }
+            elseif ($decision -eq 'full') {
+                $ask = 'State\STATE.json records phases through ' + $statePhase + ' as complete, so a run to phase ' + $TargetPhase + ' would skip every phase and build nothing.' + [Environment]::NewLine + [Environment]::NewLine + 'Re-run them from the beginning? This repeats servicing.'
+                if ([System.Windows.Forms.MessageBox]::Show($ask, 'Already complete', 'YesNo', 'Warning') -ne 'Yes') { return }
+                $force = $true
+                Add-Log ('[gui] phases through ' + $statePhase + ' are complete; re-running with -Force')
+            }
+        }
+        catch { }
+    }
+
     $drv = ''
     if ($chkDrv.Checked) { $drv = ([string]$txtDrv.Text).Trim() }
     $idx = Get-SelectedIndexes
@@ -813,25 +1141,18 @@ function Start-Run {
         Add-Log ('[gui] unattend generator exit ' + $gen.ExitCode)
     }
 
-    $skip = @()
-    if ($TargetPhase -ge 4) { $skip = @() }
+    $skip = $skipPhases
 
     $args = New-WinISOOrchestratorArgs -Workspace $ws -SourceIso $iso -TargetPhase $TargetPhase -Profile ([string]$cmbPf.SelectedItem) `
             -Drivers $drv -ImageIndexes $idx -UnattendFile $uaFile -OutputIsoName $outName -SkipPhase $skip `
-            -RunCleanup:([bool]$chkCleanup.Checked) -RunResetBase:([bool]$chkCleanup.Checked)
+            -RunCleanup:([bool]$chkCleanup.Checked) -RunResetBase:([bool]$chkCleanup.Checked) -Force:$force
 
     $logDir = Join-Path $env:TEMP ('winiso-gui-' + (Get-Date -Format 'yyyyMMdd-HHmmss'))
     [void](New-Item -ItemType Directory -Path $logDir -Force)
-    $script:LogOut = Join-Path $logDir 'stdout.log'
-    $script:LogErr = Join-Path $logDir 'stderr.log'
-    $script:ShownOut = 0; $script:ShownErr = 0; $script:Finished = $false
-    [System.IO.File]::WriteAllText($script:LogOut, '')
-    [System.IO.File]::WriteAllText($script:LogErr, '')
 
     Add-Log ('[gui] running: powershell ' + ($args -join ' '))
     $lblStatus.Text = ('Running phase target ' + $TargetPhase + ' ...')
-    $script:Child = Start-Process -FilePath 'powershell.exe' -ArgumentList $args -PassThru -WindowStyle Hidden `
-                    -RedirectStandardOutput $script:LogOut -RedirectStandardError $script:LogErr
+    $script:Child = Start-GuiChild -Arguments $args -LogDir $logDir
     $script:TailTimer.Start()
 }
 
@@ -983,12 +1304,13 @@ if ($btnCustom) { $btnCustom.Add_Click({ Start-Run -TargetPhase ([int]$numPhase.
 if ($btnP8) { $btnP8.Add_Click({ Start-Run -TargetPhase 8 }) }
 if ($btnStop) { $btnStop.Add_Click({
     if ($script:Child -and -not $script:Child.HasExited) {
-        try { $script:Child.Kill() } catch { }
-        Add-Log '[gui] child process killed by user.'
-        Add-Log '[gui] IMPORTANT: if an image was mounted, run  dism /Get-MountedImageInfo  and unmount with /Discard.'
-        $lblStatus.Text = 'Stopped'
-    } else { Add-Log '[gui] nothing running.' }
+        [void](Request-BuildStop)
+    } else {
+        Add-Log '[gui] nothing running.'
+        $lblStatus.Text = 'Idle'
+    }
 }) }
+if ($btnResume) { $btnResume.Add_Click({ Start-BuildRun -Resume }) }
 
 if ($btnCopySummary) { $btnCopySummary.Add_Click({
     $ws = Get-Workspace
@@ -1505,10 +1827,14 @@ $txtIso.Add_TextChanged({
 
 $form.Add_FormClosing({
     if ($script:Child -and -not $script:Child.HasExited) {
-        if ([System.Windows.Forms.MessageBox]::Show('A run is in progress. Kill it and exit?', 'Confirm', 'YesNo', 'Warning') -ne 'Yes') {
+        $ask = 'A run is in progress.' + [Environment]::NewLine + [Environment]::NewLine +
+               'Stop it at the next stage boundary (the running stage finishes and unmounts its image) and close when it has stopped?'
+        if ([System.Windows.Forms.MessageBox]::Show($ask, 'Confirm', 'YesNo', 'Warning') -ne 'Yes') {
             $_.Cancel = $true
         } else {
-            try { $script:Child.Kill() } catch { }
+            [void](Request-BuildStop)
+            $script:CloseWhenFinished = $true
+            $_.Cancel = $true
         }
     }
     if ($script:UsbBurn -and $script:UsbBurn.Running) {
@@ -1527,7 +1853,9 @@ $form.Add_FormClosing({
 # ---------------------------------------------------------------------------
 $script:TailTimer = New-Object System.Windows.Forms.Timer
 $script:TailTimer.Interval = 400
-$script:TailTimer.Add_Tick({
+# Moves everything the child has written into the log pane, keeping the
+# downloader's progress lines as progress.
+function Show-GuiChildLog {
     if ($script:LogOut -and (Test-Path -LiteralPath $script:LogOut)) {
         $all = @(Get-Content -LiteralPath $script:LogOut -ErrorAction SilentlyContinue)
         if ($all.Count -gt $script:ShownOut) {
@@ -1568,15 +1896,35 @@ $script:TailTimer.Add_Tick({
             Add-Log ($newE -join [Environment]::NewLine)
         }
     }
+}
+
+$script:TailTimer.Add_Tick({
+    Receive-GuiChildOutput
+    Show-GuiChildLog
     if ($script:Child -and $script:Child.HasExited -and -not $script:Finished) {
+        Complete-GuiChildOutput
+        Show-GuiChildLog
         $script:Finished = $true
         $script:TailTimer.Stop()
         $progUp.Visible = $false
         $lblUpProg.Text = ''
         Add-Log ('[gui] child exited with code ' + $script:Child.ExitCode)
-        $lblStatus.Text = ('Finished (exit ' + $script:Child.ExitCode + ')')
+        if ($script:Child.ExitCode -eq 3) {
+            Add-Log '[gui] stopped at a stage boundary on request; the running stage finished and unmounted, so no image is left mounted. Resume build continues from the checkpoint.'
+            $lblStatus.Text = 'Stopped at a stage boundary (resumable)'
+        }
+        else {
+            $lblStatus.Text = ('Finished (exit ' + $script:Child.ExitCode + ')')
+        }
         if ($script:Child.ExitCode -eq 0) { Refresh-OutputFromMeta }
+        $btnStop.Enabled = $true
         Update-UpdateInfo
+        Update-ResumeState
+        if ($script:CloseWhenFinished) {
+            $script:CloseWhenFinished = $false
+            Add-Log '[gui] the run has stopped; closing the window.'
+            $form.Close()
+        }
     }
 })
 
@@ -1593,6 +1941,7 @@ if ($script:OutNameAuto) { Set-OutputIsoName (New-OutputIsoName -IsoPath ([strin
 Add-Log ('[gui] output ISO will be written as: ' + [string]$txtOut.Text)
 
 Update-UpdateInfo
+Update-ResumeState
 Add-Log '[gui] ready. Choose a source, then Inspect (read-only) or Run.'
 Add-Log ('[gui] orchestrator: ' + $script:Orchestrator)
 if ($NoShow) {

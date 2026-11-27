@@ -9,6 +9,10 @@
 #
 # Exit codes    : 0 = all executed phases Succeeded/Partial/Skipped
 #                 1 = at least one phase Failed (or a pre-flight error)
+#                 3 = stopped between phases on request (State\BUILD-CANCEL.json)
+#
+# A stop request is only honoured at a phase boundary: the phase that is running
+# finishes, so a run stopped from the GUI cannot leave an image mounted.
 #
 # Examples:
 #   .\Invoke-WinISOService.ps1 -TargetPhase 1
@@ -41,13 +45,23 @@ param(
     [switch]$SkipHash,
     [switch]$Force,
     [switch]$DryRun,
-    [int[]]$SkipPhase = @(),
+    [string[]]$SkipPhase = @(),
     [switch]$ContinueOnError,
     [switch]$ShowState
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
+
+# -SkipPhase accepts an array and the command-line form "1,2,3": a -File
+# argument arrives as one string, which [int[]] would read as a single number.
+$skipPhases = @()
+foreach ($entry in @($SkipPhase)) {
+    foreach ($part in ([string]$entry).Split(',')) {
+        $text = $part.Trim()
+        if ($text -match '^\d+$') { $skipPhases += [int]$text }
+    }
+}
 
 $modulePath = Join-Path $PSScriptRoot 'WinISOService.psm1'
 if (-not (Test-Path -LiteralPath $modulePath)) {
@@ -56,6 +70,17 @@ if (-not (Test-Path -LiteralPath $modulePath)) {
 Import-Module -Name $modulePath -Force -ErrorAction Stop
 
 $fullWorkspace = [System.IO.Path]::GetFullPath($Workspace)
+
+# The stop request the GUI writes (pid-scoped, so a leftover file cannot stop a
+# later run) and the shared helpers that read it.
+$integrityModulePath = Join-Path $PSScriptRoot 'WinISOIntegrity.psm1'
+if (Test-Path -LiteralPath $integrityModulePath) { Import-Module -Name $integrityModulePath -Force -ErrorAction SilentlyContinue }
+$cancelPath = Get-WinISOCancelPath -Workspace $fullWorkspace
+if (Test-Path -LiteralPath $cancelPath) {
+    if (-not (Test-WinISOCancelRequest -Path $cancelPath -ProcessId $PID)) {
+        [void](Remove-WinISOCancelRequest -Path $cancelPath)
+    }
+}
 
 # Ensure the workspace layout exists (idempotent; Initialize-WorkSpace.ps1 is
 # the dedicated tool, this is just a safety net so the state machine can run).
@@ -80,6 +105,8 @@ if ($ShowState) {
 $transcriptPath = Join-Path $fullWorkspace ('Logs\orchestrator-' + (Get-Date -Format 'yyyyMMdd-HHmmss') + '.transcript.txt')
 Start-Transcript -Path $transcriptPath -Force
 try {
+    Write-Host ('WinISOBuild v' + (Get-WinISOVersion) + ' - Windows ISO servicing toolchain')
+
     # Reads the existing state; creates the initial STATE.json when absent.
     # Never overwrites state - restartability depends on it.
     $state = Initialize-WinISOState -Workspace $fullWorkspace
@@ -104,10 +131,17 @@ try {
         Write-Output 'DRY RUN - phases that would execute:'
         foreach ($n in 1..$TargetPhase) {
             $alreadyDone = ([int]$state.phase -ge $n) -and (-not $Force)
-            $userSkip = $SkipPhase -contains $n
+            $userSkip = $skipPhases -contains $n
             $verdict = 'RUN'
             if ($userSkip) { $verdict = 'SKIP (user-requested)' }
-            elseif ($alreadyDone) { $verdict = 'SKIP (already completed; use -Force)' }
+            elseif ($alreadyDone) {
+                if (@(Get-WinISOMissingPhaseArtifacts -State $state -Phase $n).Count -eq 0) {
+                    $verdict = 'SKIP (already completed; use -Force)'
+                }
+                else {
+                    $verdict = 'RUN (recorded artifacts are gone)'
+                }
+            }
             Write-Output ('{0,2}. {1} -> {2}' -f $n, $phaseMap[$n].Name, $verdict)
         }
         exit 0
@@ -116,13 +150,31 @@ try {
     $failed = $false
     foreach ($n in 1..$TargetPhase) {
         $name = $phaseMap[$n].Name
-        if ($SkipPhase -contains $n) {
+        if ($skipPhases -contains $n) {
             Write-Host ('Phase {0} ({1}): skipped by -SkipPhase.' -f $n, $name)
             continue
         }
         if (-not $Force -and [int]$state.phase -ge $n) {
-            Write-Host ('Phase {0} ({1}): already completed (state.phase={2}); skipping. Use -Force to re-run.' -f $n, $name, $state.phase)
-            continue
+            # The phase number alone is not proof: STATE.json also names the files
+            # the phase produced, and a phase whose output was deleted must run
+            # again rather than be reported as done.
+            $missing = @(Get-WinISOMissingPhaseArtifacts -State $state -Phase $n)
+            if ($missing.Count -eq 0) {
+                Write-Host ('Phase {0} ({1}): already completed (state.phase={2}); skipping. Use -Force to re-run.' -f $n, $name, $state.phase)
+                continue
+            }
+            Write-Host ('Phase {0} ({1}): recorded as complete, but {2} of its artifacts are gone; re-running it.' -f $n, $name, $missing.Count)
+            foreach ($m in $missing) { Write-Host ('  missing: ' + $m) }
+        }
+        if (Test-WinISOCancelRequest -Path $cancelPath -ProcessId $PID) {
+            Write-Host ('Phase {0} ({1}): not started because a stop was requested.' -f $n, $name)
+            $state.status = 'cancelled'
+            $state.next_action = 'Stopped at a phase boundary on request. Re-run Invoke-WinISOService.ps1 to continue from phase ' + ([int]$state.phase + 1) + '.'
+            Save-WinISOState -Workspace $fullWorkspace -State $state
+            [void](Remove-WinISOCancelRequest -Path $cancelPath)
+            Write-Host ''
+            Write-Host ('Stopped at a phase boundary after phase {0}; no image is mounted.' -f $state.phase)
+            exit 3
         }
         Write-Host ('Phase {0} ({1}): running...' -f $n, $name)
         $par = @{}
@@ -198,7 +250,7 @@ try {
     # Determine the first phase that is not yet completed (used for next_action).
     $blocked = $null
     foreach ($n in 1..$TargetPhase) {
-        if ($SkipPhase -contains $n) { continue }
+        if ($skipPhases -contains $n) { continue }
         if ([int]$state.phase -ge $n) { continue }
         $blocked = $n
         break

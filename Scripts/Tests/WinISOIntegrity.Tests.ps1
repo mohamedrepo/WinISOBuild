@@ -38,6 +38,17 @@ function Invoke-WinISOChild {
 $script:temp = Join-Path $env:TEMP ('winiso-integrity-tests-' + [guid]::NewGuid().ToString('N'))
 [void](New-Item -ItemType Directory -Path $script:temp -Force)
 
+Describe 'Version information' {
+    It 'reads the release version from the repository VERSION file' {
+        $version = Get-WinISOVersion
+        $version | Should Match '^\d+\.\d+\.\d+'
+        $file = Join-Path (Split-Path -Parent $script:root) 'VERSION'
+        if (Test-Path -LiteralPath $file) {
+            ([string](Get-Content -LiteralPath $file -TotalCount 1)).Trim() | Should Be $version
+        }
+    }
+}
+
 Describe 'File hashing' {
     It 'returns MD5 and SHA256 for the same file in one call' {
         $file = Join-Path $script:temp 'payload.bin'
@@ -274,6 +285,70 @@ Describe 'Answer file validation mode' {
         $r2 = Invoke-WinISOChild -ScriptPath (Join-Path $script:root 'New-UnattendXml.ps1') -ScriptArgs @('-ValidatePath', $bad)
         $r2.ExitCode | Should Be 1
         $r2.StdOut | Should Match 'unattend INVALID'
+    }
+}
+
+Describe 'Build stop requests' {
+    It 'is scoped to the pid that requested it and can be cleared' {
+        $path = Join-Path $script:temp 'State\BUILD-CANCEL.json'
+        [void](New-WinISOCancelRequest -Path $path -ProcessId 4242)
+        (Test-WinISOCancelRequest -Path $path -ProcessId 4242) | Should Be $true
+        (Test-WinISOCancelRequest -Path $path -ProcessId 4243) | Should Be $false
+        (Test-WinISOCancelRequest -Path $path) | Should Be $true
+        [void](Remove-WinISOCancelRequest -Path $path)
+        (Test-WinISOCancelRequest -Path $path) | Should Be $false
+    }
+
+    It 'lives under the workspace State folder' {
+        (Get-WinISOCancelPath -Workspace 'D:\WimMount') | Should Be 'D:\WimMount\State\BUILD-CANCEL.json'
+    }
+}
+
+Describe 'Media manifest and answer-file secrets' {
+    It 'verifies a media tree against the manifest and flags an altered file' {
+        $media = Join-Path $script:temp 'media-tree'
+        [void](New-Item -ItemType Directory -Path (Join-Path $media 'sources') -Force)
+        [System.IO.File]::WriteAllText((Join-Path $media 'bootmgr'), 'boot')
+        [System.IO.File]::WriteAllText((Join-Path (Join-Path $media 'sources') 'boot.wim'), 'wim')
+        $doc = New-WinISOMediaManifest -MediaRoot $media -IsoName 'test.iso'
+        $manifest = Join-Path $script:temp 'test.iso.media.json'
+        [System.IO.File]::WriteAllText($manifest, ($doc | ConvertTo-Json -Depth 6))
+
+        $ok = Invoke-WinISOChild -ScriptPath (Join-Path $script:root 'Test-WinISOIntegrity.ps1') `
+              -ScriptArgs @('-MediaRoot', $media, '-MediaManifest', $manifest)
+        $ok.ExitCode | Should Be 0
+        $ok.StdOut | Should Match 'Checked : 2 media file\(s\), 2 intact'
+
+        [System.IO.File]::WriteAllText((Join-Path (Join-Path $media 'sources') 'boot.wim'), 'WIM')
+        $bad = Invoke-WinISOChild -ScriptPath (Join-Path $script:root 'Test-WinISOIntegrity.ps1') `
+               -ScriptArgs @('-MediaRoot', $media, '-MediaManifest', $manifest)
+        $bad.ExitCode | Should Be 1
+        $bad.StdOut | Should Match 'SHA256 differs from the manifest'
+    }
+
+    It 'reports a shipped credential but only fails with -StrictSecrets' {
+        $answer = Join-Path $script:temp 'strict-unattend.xml'
+        & (Join-Path $script:root 'New-UnattendXml.ps1') -OutputPath $answer -ComputerName 'LAB03' `
+          -LocalAccountName 'labuser' -LocalAccountPassword 'ChangeMe123!' -LocalAccountAdmin | Out-Null
+
+        $warn = Invoke-WinISOChild -ScriptPath (Join-Path $script:root 'Test-WinISOIntegrity.ps1') -ScriptArgs @('-Unattend', $answer)
+        $warn.ExitCode | Should Be 0
+        $warn.StdOut | Should Match 'WARN\s+: password'
+
+        $strict = Invoke-WinISOChild -ScriptPath (Join-Path $script:root 'Test-WinISOIntegrity.ps1') `
+                  -ScriptArgs @('-Unattend', $answer, '-StrictSecrets')
+        $strict.ExitCode | Should Be 1
+        $strict.StdOut | Should Match 'FAIL: .*password'
+    }
+
+    It 'refuses to burn an answer file that carries a credential' {
+        $answer = Join-Path $script:temp 'burn-secret.xml'
+        & (Join-Path $script:root 'New-UnattendXml.ps1') -OutputPath $answer -ComputerName 'LAB04' `
+          -LocalAccountName 'labuser' -LocalAccountPassword 'ChangeMe123!' -LocalAccountAdmin | Out-Null
+        $r = Invoke-WinISOChild -ScriptPath (Join-Path $script:root 'Burn-WinISOToUsb.ps1') `
+             -ScriptArgs @('-IsoPath', (Join-Path $script:temp 'nope.iso'), '-DiskNumber', '99', '-AnswerFile', $answer, '-DryRun')
+        $r.ExitCode | Should Be 1
+        $r.StdOut | Should Match 'carries a credential'
     }
 }
 

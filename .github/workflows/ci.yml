@@ -1,0 +1,111 @@
+# Continuous integration for the WinISOBuild toolchain.
+#
+# Three independent gates on every push and pull request:
+#   1. validate   - Validate-WinISO.ps1 (parse + headless GUI wiring)
+#   2. lint       - PSScriptAnalyzer with PSScriptAnalyzerSettings.psd1
+#   3. pester     - the Pester suite under Scripts\Tests
+#   4. servicing  - a real DISM mount / Add-Package / commit against a small
+#                   WinPE image built on the runner (needs the Windows ADK)
+#
+# The suite uses the legacy "Should Be" assertion syntax, which Pester 5
+# removed, so the Pester step pins a 3.4/4.x version instead of the 5.x that
+# the runner image also ships.
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Validate scripts
+    runs-on: windows-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Parse and headless GUI wiring
+        shell: powershell
+        run: .\Scripts\Validate-WinISO.ps1
+
+  lint:
+    name: PSScriptAnalyzer
+    runs-on: windows-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Analyze the shipped scripts
+        shell: powershell
+        run: |
+          $settings = Join-Path $PWD 'PSScriptAnalyzerSettings.psd1'
+          $scripts = Join-Path $PWD 'Scripts'
+          $files = @(Get-ChildItem -Path $scripts -File | Where-Object {
+              $_.Extension -in '.ps1', '.psm1' -and $_.Name -notlike '_*'
+          })
+          $files += @(Get-ChildItem -Path (Join-Path $scripts 'Tests') -Filter '*.ps1' -File)
+
+          $findings = @(foreach ($file in $files) {
+              Invoke-ScriptAnalyzer -Path $file.FullName -Settings $settings -Severity Error, Warning
+          })
+          foreach ($finding in $findings) {
+              Write-Host ('{0}:{1} [{2}] {3}' -f $finding.ScriptName, $finding.Line, $finding.RuleName, $finding.Message)
+          }
+          if ($findings.Count -gt 0) {
+              Write-Host ('PSScriptAnalyzer reported ' + $findings.Count + ' problem(s).')
+              exit 1
+          }
+          Write-Host ('PSScriptAnalyzer clean on ' + $files.Count + ' files.')
+
+  pester:
+    name: Pester
+    runs-on: windows-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Run the test suite
+        shell: powershell
+        run: |
+          $pester = Get-Module -ListAvailable Pester |
+              Where-Object { $_.Version -ge [version]'3.4' -and $_.Version -lt [version]'5.0' } |
+              Sort-Object Version -Descending |
+              Select-Object -First 1
+          if (-not $pester) {
+              Write-Host 'Pester 3.4/4.x is required: the suite uses the legacy "Should Be" syntax that Pester 5 removed.'
+              exit 1
+          }
+          Write-Host ('Using Pester ' + $pester.Version)
+          Import-Module $pester.Path -Force
+
+          $result = Invoke-Pester -Path (Join-Path $PWD 'Scripts\Tests') -PassThru
+          Write-Host ('Pester: {0} passed, {1} failed, {2} skipped' -f $result.PassedCount, $result.FailedCount, $result.SkippedCount)
+          if ($result.FailedCount -gt 0) { exit 1 }
+
+  servicing:
+    name: DISM mount / Add-Package / commit
+    runs-on: windows-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Install the Windows ADK deployment tools and WinPE add-on
+        shell: powershell
+        run: |
+          choco install windows-adk-deploy windows-adk-winpe --no-progress --yes
+          # 3010/1641 mean the install succeeded but wants a reboot, which this job does not need.
+          if ($LASTEXITCODE -ne 0 -and $LASTEXITCODE -ne 3010 -and $LASTEXITCODE -ne 1641) { exit $LASTEXITCODE }
+
+      - name: Real DISM servicing test
+        shell: powershell
+        run: .\Scripts\Test-WinISODismServicing.ps1

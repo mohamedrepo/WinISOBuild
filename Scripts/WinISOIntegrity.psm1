@@ -13,6 +13,25 @@
 Set-StrictMode -Version 2
 
 # ---------------------------------------------------------------------------
+# Version
+# ---------------------------------------------------------------------------
+
+# The release version lives in the repository's VERSION file, so a release has
+# one number to bump. The GUI title, the orchestrator banner and the catalog
+# user agent all read it from here. Scripts copied without the file still run:
+# they report '0.0.0-unknown' instead of failing.
+function Get-WinISOVersion {
+    [CmdletBinding()]
+    param([string]$Root = '')
+    if (-not $Root) { $Root = Split-Path -Parent $PSScriptRoot }
+    $path = Join-Path $Root 'VERSION'
+    if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { return '0.0.0-unknown' }
+    $text = ([string](Get-Content -LiteralPath $path -TotalCount 1 -ErrorAction SilentlyContinue)).Trim()
+    if (-not $text) { return '0.0.0-unknown' }
+    return $text
+}
+
+# ---------------------------------------------------------------------------
 # Hashing
 # ---------------------------------------------------------------------------
 
@@ -1097,6 +1116,49 @@ function Save-WinISOBuildCheckpoint {
     }
     [void](Write-WinISOJsonHashtable -Path $Path -Values $values)
     return $Path
+}
+
+# A stop request is a small file the GUI writes when the user presses Stop. The
+# build and the orchestrator read it between stages, so the stage that is
+# running finishes and unmounts its image instead of being killed in the middle
+# of servicing. The pid in the file scopes the request to one run.
+function Get-WinISOCancelPath {
+    param([Parameter(Mandatory)][string]$Workspace)
+    return (Join-Path (Join-Path $Workspace 'State') 'BUILD-CANCEL.json')
+}
+
+function New-WinISOCancelRequest {
+    param(
+        [Parameter(Mandatory)][string]$Path,
+        [int]$ProcessId = $PID,
+        [string]$Reason = 'stop requested by the user'
+    )
+    [void](Write-WinISOJsonHashtable -Path $Path -Values @{
+        requested_utc = [DateTime]::UtcNow.ToString('o')
+        pid           = $ProcessId
+        reason        = $Reason
+    })
+    return $Path
+}
+
+function Test-WinISOCancelRequest {
+    param(
+        [Parameter(Mandatory)][string]$Path,
+        [int]$ProcessId = 0
+    )
+    if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) { return $false }
+    $values = Read-WinISOJsonHashtable -Path $Path
+    if (-not $values.ContainsKey('pid')) { return $true }
+    $requested = [int]$values['pid']
+    if ($requested -le 0) { return $true }
+    if ($ProcessId -le 0) { return $true }
+    return ($requested -eq $ProcessId)
+}
+
+function Remove-WinISOCancelRequest {
+    param([Parameter(Mandatory)][string]$Path)
+    if (Test-Path -LiteralPath $Path) { Remove-Item -LiteralPath $Path -Force -ErrorAction SilentlyContinue }
+    return (-not (Test-Path -LiteralPath $Path))
 }
 
 function Get-WinISOBuildLock {

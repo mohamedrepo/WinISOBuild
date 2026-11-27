@@ -5,7 +5,14 @@ installation ISO, researches the applicable Microsoft updates, downloads them,
 integrates them offline into the install image, injects drivers, applies optional
 OOBE/unattend configuration, and rebuilds a bootable ISO.
 
+**Current version: v1.11.0** - recorded once in `VERSION` and read from there by
+the GUI title (`WinISOBuild v1.11.0 - Windows ISO Servicing Console`), the
+orchestrator banner and the catalog user agent. Releases are tagged
+`vMAJOR.MINOR.PATCH` and published on the repository's Releases page; bump
+`VERSION` and tag the same commit to cut one.
+
 ## Files
+- `VERSION`                             - the release version (single source of truth).
 - `Scripts/Invoke-WinISOService.ps1`    - master orchestrator / state machine (Phases 1-10).
 - `Scripts/WinISOService.psm1`          - all phase implementations and helpers.
 - `Scripts/Initialize-WorkSpace.ps1`    - creates the workspace layout + initial STATE.json.
@@ -36,6 +43,10 @@ Integrity is checked before anything is modified, not after a failure:
 .\Scripts\Test-WinISOIntegrity.ps1 -Updates .\Updates -RequireAllPayloads
 # check an answer file without installing anything
 .\Scripts\New-UnattendXml.ps1 -ValidatePath .\Output\unattend.xml
+# compare a media tree with the per-file manifest the build wrote beside the ISO
+.\Scripts\Test-WinISOIntegrity.ps1 -MediaRoot .\ExtractedISO -MediaManifest .\Output\win11.iso.media.json
+# fail when the answer file would ship a credential on the media
+.\Scripts\Test-WinISOIntegrity.ps1 -Unattend .\Output\unattend.xml -StrictSecrets
 ```
 
 `Build-WinISOUpdated.ps1` and `Invoke-WinISOIntegrate.ps1` use the same rules:
@@ -49,6 +60,10 @@ Integrity is checked before anything is modified, not after a failure:
 - `Dism /Cleanup-Image /CheckHealth` runs on the mounted image before servicing
   (`-ScanHealth` for the slow full scan), and a damaged component store aborts
   the build with a precise message
+- the USB burner verifies the ISO against the per-file `<iso>.media.json` the
+  build wrote (or `-MediaManifest`), and refuses to erase a drive when the tree
+  is damaged or when the ISO's `autounattend.xml` or `-AnswerFile` would ship a
+  password or product key
 
 Optional build switches: `-StartComponentCleanup` (with `/ResetBase` from the GUI),
 `-Capabilities NetFx3,OpenSSH.Client`, `-OptionalFeatures`,
@@ -102,6 +117,38 @@ a separate, explicit step, and integration only consumes packages already under 
 - Prefer Microsoft-supported servicing (DISM /Add-Package, /Add-Driver).
 - Stop and diagnose on failure; never force a package.
 - Log every significant operation and make the workflow restartable via State/STATE.json.
+- A phase is skipped only while the artifacts STATE.json recorded for it still exist;
+  when one is gone the phase re-runs and the missing paths are listed.
+
+## Continuous integration
+`.github/workflows/ci.yml` runs on every push to `main`, on pull requests and on
+demand (`workflow_dispatch`), as four jobs on `windows-latest`:
+
+- `validate` - `Scripts/Validate-WinISO.ps1` parses every entry point and builds
+  the GUI headlessly.
+- `lint` - PSScriptAnalyzer with `PSScriptAnalyzerSettings.psd1` (cmdlet aliases,
+  `Invoke-Expression`, positional parameters, global variables, null comparisons,
+  plain-text secrets and Windows PowerShell 5.1 syntax compatibility).
+- `pester` - the suite in `Scripts/Tests`, pinned to Pester 3.4/4.x because the
+  suite uses the legacy `Should Be` syntax that Pester 5 removed.
+- `servicing` - `Scripts/Test-WinISODismServicing.ps1` installs the Windows ADK
+  deployment tools and WinPE add-on, builds a small WinPE image with `copype`,
+  mounts it, adds the signed `WinPE-WMI` optional component with DISM
+  `/Add-Package`, unmounts with `/Commit`, then mounts the committed image again
+  and proves the package is still there.
+
+A WIM captured from a plain folder cannot stand in for the servicing test: DISM
+refuses to service it (error 50, the image has no servicing stack), so the WinPE
+image built from the ADK is the smallest image that really accepts a package.
+
+Run the same checks locally from the repository root:
+
+```powershell
+.\Scripts\Validate-WinISO.ps1
+Invoke-Pester -Path .\Scripts\Tests
+Invoke-ScriptAnalyzer -Path .\Scripts -Recurse -Settings .\PSScriptAnalyzerSettings.psd1
+.\Scripts\Test-WinISODismServicing.ps1   # elevated, needs the Windows ADK
+```
 
 ## Requirements
 - Windows host, **elevated** PowerShell (DISM requires admin), DISM.
@@ -114,6 +161,23 @@ choices - source ISO, editions to service (read from the selected ISO), update s
 driver injection, customization profile, OOBE/unattend fields and output name - and
 runs the orchestrator as a child process while streaming its log. It self-elevates
 at launch and asks for confirmation before any mutating phase (>=4).
+
+Stop does not kill the child: it writes `State\BUILD-CANCEL.json` (scoped to the
+running pid), the stage that is running finishes and unmounts, and the run exits
+at the next stage boundary with code 3, so a stopped build cannot leave an image
+mounted. `Resume build` is offered whenever `State\BUILD-CHECKPOINT.json` exists
+and runs `Build-WinISOUpdated.ps1 -Resume`, which skips the stages that already
+finished and continues with the next one.
+
+A target phase that `State\STATE.json` already records as complete would make the
+orchestrator skip every phase and build nothing, so the GUI asks first and passes
+`-Force` to re-run them. When phases through 7 are complete but `Output\` holds no
+ISO, the prompt offers a media-only rebuild instead: `-Force -SkipPhase 1,2,3,4,5,6`
+re-runs phase 7 (and phase 8 when that is the target) from the serviced image, so
+servicing is not repeated. The log then reports the child's real exit code (0 ok,
+1 failed, 2 preflight, 3 stopped at a boundary): the child is started with
+`System.Diagnostics.Process`, whose `Id` and `ExitCode` are its own, and its
+streams are drained into the log by the tail timer.
 
 ```powershell
 .\Scripts\WinISO-GUI.ps1

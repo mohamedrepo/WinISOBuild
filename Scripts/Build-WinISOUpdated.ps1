@@ -15,7 +15,14 @@
 # Requires : an elevated PowerShell session (DISM image servicing).
 # Platform : Windows PowerShell 5.1 and PowerShell 7. ASCII-only, BOM-less UTF-8.
 #
-# Exit codes : 0 = ISO produced, 1 = failure, 2 = pre-flight/DryRun problem.
+# Exit codes : 0 = ISO produced, 1 = failure, 2 = pre-flight/DryRun problem,
+#              3 = stopped between stages on request (the checkpoint is kept
+#              for -Resume).
+#
+# State\BUILD-CANCEL.json is a stop request: the GUI writes it with this build's
+# pid when the user presses Stop. The build reads it between stages, so the
+# stage that is running finishes and unmounts its image before the build exits
+# - a stopped run never leaves an image mounted.
 #
 # Examples:
 #   .\Build-WinISOUpdated.ps1 -DryRun
@@ -83,6 +90,7 @@ $script:DismLog = ''
 $script:StartedUtc = [DateTime]::UtcNow
 $script:CheckpointPath = ''
 $script:LockPath = ''
+$script:CancelPath = ''
 $script:Stages = @()
 $script:ServicedIndexes = @()
 
@@ -132,6 +140,19 @@ function Complete-Stage {
     param([string]$Name, [switch]$MediaReady, [switch]$Exported)
     if ($script:Stages -notcontains $Name) { $script:Stages += $Name }
     Save-Checkpoint -Stage $Name -MediaReady:$MediaReady -Exported:$Exported
+}
+
+# A stop request is honoured between stages, never in the middle of one: the
+# DISM stage that is running returns, unmounts and commits/discards, and only
+# then does the build leave. The sentinel unwinds to the catch block.
+$script:StopSentinel = 'WINISO-BUILD-STOPPED'
+
+function Assert-NotStopped {
+    param([string]$Before = 'the next stage')
+    if (-not $script:CancelPath) { return }
+    if (-not (Test-WinISOCancelRequest -Path $script:CancelPath -ProcessId $PID)) { return }
+    Write-Stage ('STOP requested: the running stage finished, so the build stops before ' + $Before + '.')
+    throw $script:StopSentinel
 }
 
 function Invoke-Dism {
@@ -357,6 +378,16 @@ $script:DismLog = Join-Path $logDir ('dism-' + (Get-Date -Format 'yyyyMMdd-HHmms
 $script:StatusPath = Join-Path $stateDir 'BUILD-STATUS.json'
 $script:CheckpointPath = Join-Path $stateDir 'BUILD-CHECKPOINT.json'
 $script:LockPath = Join-Path $stateDir 'BUILD-LOCK.json'
+$script:CancelPath = Join-Path $stateDir 'BUILD-CANCEL.json'
+
+# A stop request left behind by a run that is no longer alive must not stop
+# this one; the file carries the pid of the run it was meant for.
+if (Test-Path -LiteralPath $script:CancelPath) {
+    if (-not (Test-WinISOCancelRequest -Path $script:CancelPath -ProcessId $PID)) {
+        Write-Stage 'Clearing a stale stop request left by a previous run'
+        [void](Remove-WinISOCancelRequest -Path $script:CancelPath)
+    }
+}
 
 Write-BuildStatus -Stage 'preflight' -Percent 0
 Write-Stage ('Build-WinISOUpdated starting. log=' + $script:Log)
@@ -580,6 +611,7 @@ try {
     if ($primary.architecture) { $archToken = [string]$primary.architecture }
     Complete-Stage -Name 'media-export' -MediaReady -Exported
     Write-Stage ('  media ready with ' + $images.Count + ' index(es); architecture ' + $archToken)
+    Assert-NotStopped -Before 'servicing the first image index'
 
     $srcWim = Join-Path $media 'sources\install.wim'
 
@@ -588,6 +620,7 @@ try {
     foreach ($im in $images) {
         $position++
         $newIndex = [int]$im.index
+        Assert-NotStopped -Before ('servicing index ' + $newIndex + ' (' + [string]$im.name + ')')
         $pct = 20 + [int](35 * ($position - 1) / $images.Count)
         if ($Resume -and ($script:ServicedIndexes -contains $newIndex)) {
             Write-Stage ('Index ' + $newIndex + ' (' + $im.name + ') was already serviced in the previous run; reading its level')
@@ -628,6 +661,7 @@ try {
     }
 
     # 6d. boot.wim (WinPE): storage drivers and the cumulative update
+    Assert-NotStopped -Before 'servicing sources\boot.wim'
     if (-not $SkipBootWim) {
         $bootWim = Join-Path $media 'sources\boot.wim'
         if (-not (Test-Path -LiteralPath $bootWim)) {
@@ -645,6 +679,7 @@ try {
     }
 
     # 7b. optional ESD re-encode
+    Assert-NotStopped -Before 're-encoding install.wim as install.esd'
     if ($Esd) {
         Write-Stage 'STAGE 7b/9 re-encoding install.wim as install.esd (/Compress:recovery)'
         Write-BuildStatus -Stage 'compress-esd' -Percent 68
@@ -661,6 +696,7 @@ try {
     }
 
     # 8. output name, media manifest, ISO
+    Assert-NotStopped -Before 'rebuilding the ISO with oscdimg'
     Write-Stage 'STAGE 8/9 rebuilding the ISO with oscdimg'
     Write-BuildStatus -Stage 'oscdimg' -Percent 75
     $imageBuild = [int]$imageResults[0].build
@@ -889,6 +925,27 @@ try {
 }
 catch {
     $msg = $_.Exception.Message
+    if ($msg -eq $script:StopSentinel) {
+        Write-Stage 'BUILD STOPPED at a stage boundary on request.'
+        Write-Stage ('  State\BUILD-CHECKPOINT.json is kept; re-run with -Resume to continue from the last finished stage.')
+        Write-BuildStatus -Stage 'stopped' -Percent 100 -Detail 'stopped at a stage boundary; re-run with -Resume' -State 'cancelled'
+        try {
+            Add-WinISORunHistory -Path (Join-Path $reportsDir 'RUN-HISTORY.json') -Run @{
+                built_utc       = [DateTime]::UtcNow.ToString('o')
+                source_iso      = $SourceIso
+                edition         = $(if ($primary) { [string]$primary.name } else { '' })
+                build           = 0
+                revision        = 0
+                iso_gb          = 0
+                elapsed_minutes = [math]::Round(([DateTime]::UtcNow - $script:StartedUtc).TotalMinutes, 1)
+                outcome         = 'stopped'
+                error           = 'stopped at a stage boundary on request'
+            } | Out-Null
+        }
+        catch { }
+        [void](Remove-WinISOCancelRequest -Path $script:CancelPath)
+        exit 3
+    }
     Write-Stage ('BUILD FAILED: ' + $msg)
     Write-BuildStatus -Stage 'failed' -Percent 100 -Detail $msg -State 'failed'
     try {

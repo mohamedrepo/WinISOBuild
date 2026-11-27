@@ -598,6 +598,43 @@ function Save-WinISOState {
     Write-WinISOJsonFile -Path (Get-WinISOStatePath -Workspace $Workspace) -Object $normalized
 }
 
+# A phase is only as complete as the artifacts STATE.json recorded for it. A
+# recorded path that no longer exists means the phase has to run again; a phase
+# that recorded nothing is trusted, because there is nothing to check.
+function Get-WinISOPhaseArtifactPaths {
+    param([Parameter(Mandatory)][object]$State, [Parameter(Mandatory)][int]$Phase)
+    $bag = $null
+    try { $bag = $State.artifacts } catch { return @() }
+    if ($null -eq $bag) { return @() }
+    $key = 'Phase' + $Phase
+    $value = $null
+    if ($bag -is [System.Collections.IDictionary]) {
+        if (-not $bag.Contains($key)) { return @() }
+        $value = $bag[$key]
+    }
+    else {
+        $prop = $bag.PSObject.Properties[$key]
+        if ($null -eq $prop) { return @() }
+        $value = $prop.Value
+    }
+    $paths = @()
+    foreach ($item in @($value)) {
+        if ($null -eq $item) { continue }
+        $text = ([string]$item).Trim()
+        if ($text) { $paths += $text }
+    }
+    return @($paths)
+}
+
+function Get-WinISOMissingPhaseArtifacts {
+    param([Parameter(Mandatory)][object]$State, [Parameter(Mandatory)][int]$Phase)
+    $missing = @()
+    foreach ($path in @(Get-WinISOPhaseArtifactPaths -State $State -Phase $Phase)) {
+        if (-not (Test-Path -LiteralPath $path)) { $missing += $path }
+    }
+    return @($missing)
+}
+
 function Read-WinISOState {
     param([string]$Workspace = $script:DefaultWorkspace)
     $path = Get-WinISOStatePath -Workspace $Workspace

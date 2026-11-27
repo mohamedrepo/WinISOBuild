@@ -171,4 +171,52 @@ Describe 'Entry point self tests' {
         $r.StdOut | Should Match 'DRY RUN'
         $r.StdOut | Should Match 'Final report'
     }
+
+    It 'the orchestrator honours -SkipPhase passed as a comma list' {
+        $r = Invoke-WinISOChildScript -ScriptPath (Join-Path $script:root 'Invoke-WinISOService.ps1') `
+             -ScriptArgs @('-Workspace', 'D:\WimMount', '-TargetPhase', '8', '-DryRun', '-Force', '-SkipPhase', '1,2,3,4,5,6')
+        $r.ExitCode | Should Be 0
+        $r.StdOut | Should Match 'Environment audit -> SKIP \(user-requested\)'
+        $r.StdOut | Should Match 'Boot media rebuild -> RUN'
+        $r.StdOut | Should Match 'Validation -> RUN'
+    }
+
+    It 're-runs a completed phase whose recorded artifacts are gone' {
+        $ws = Join-Path $env:TEMP ('winiso-stale-' + [guid]::NewGuid().ToString('N'))
+        [void](New-Item -ItemType Directory -Path (Join-Path $ws 'State') -Force)
+        $state = [ordered]@{
+            phase = 7; status = 'complete'; completed_steps = @(); failed_steps = @()
+            artifacts = [ordered]@{ Phase7 = @((Join-Path $ws 'Output\gone.iso')) }
+            errors = @(); next_action = ''
+        }
+        $state | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath (Join-Path $ws 'State\STATE.json') -Encoding UTF8
+        try {
+            $r = Invoke-WinISOChildScript -ScriptPath (Join-Path $script:root 'Invoke-WinISOService.ps1') `
+                 -ScriptArgs @('-Workspace', $ws, '-TargetPhase', '7', '-DryRun')
+            $r.ExitCode | Should Be 0
+            $r.StdOut | Should Match 'Boot media rebuild -> RUN \(recorded artifacts are gone\)'
+        }
+        finally { Remove-Item -LiteralPath $ws -Recurse -Force -ErrorAction SilentlyContinue }
+    }
+
+    It 'still skips a completed phase whose recorded artifacts exist' {
+        $ws = Join-Path $env:TEMP ('winiso-kept-' + [guid]::NewGuid().ToString('N'))
+        [void](New-Item -ItemType Directory -Path (Join-Path $ws 'State') -Force)
+        [void](New-Item -ItemType Directory -Path (Join-Path $ws 'Output') -Force)
+        $iso = Join-Path $ws 'Output\kept.iso'
+        Set-Content -LiteralPath $iso -Value 'x' -Encoding ASCII
+        $state = [ordered]@{
+            phase = 7; status = 'complete'; completed_steps = @(); failed_steps = @()
+            artifacts = [ordered]@{ Phase7 = @($iso) }
+            errors = @(); next_action = ''
+        }
+        $state | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath (Join-Path $ws 'State\STATE.json') -Encoding UTF8
+        try {
+            $r = Invoke-WinISOChildScript -ScriptPath (Join-Path $script:root 'Invoke-WinISOService.ps1') `
+                 -ScriptArgs @('-Workspace', $ws, '-TargetPhase', '7', '-DryRun')
+            $r.ExitCode | Should Be 0
+            $r.StdOut | Should Match 'Boot media rebuild -> SKIP \(already completed'
+        }
+        finally { Remove-Item -LiteralPath $ws -Recurse -Force -ErrorAction SilentlyContinue }
+    }
 }
